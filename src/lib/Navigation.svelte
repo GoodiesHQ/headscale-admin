@@ -9,6 +9,7 @@
 	import RawMdiHomeGroupPlus from '~icons/mdi/home-group-plus';
 	// import RawMdiSecurity from '~icons/mdi/security';
 
+	import { base } from '$app/paths';
 	import { page } from '$app/stores';
 	import { ApiKeyStore, hasApiKey } from './Stores';
 	import { onMount } from 'svelte';
@@ -35,12 +36,12 @@
 	};
 
 	const allPages: Page[] = [
-		{ path: '/', name: 'Home', logo: RawMdiHome },
-		{ path: '/users', name: 'Users', logo: RawMdiPerson },
-		{ path: '/nodes', name: 'Nodes', logo: RawMdiDevices },
-		{ path: '/deploy', name: 'Deploy', logo: RawMdiHomeGroupPlus },
+		{ path: `${base}/`, name: 'Home', logo: RawMdiHome },
+		{ path: `${base}/users`, name: 'Users', logo: RawMdiPerson },
+		{ path: `${base}/nodes`, name: 'Nodes', logo: RawMdiDevices },
+		{ path: `${base}/deploy`, name: 'Deploy', logo: RawMdiHomeGroupPlus },
 		// { path: '/acls', name: 'ACLs', logo: RawMdiSecurity },
-		{ path: '/settings', name: 'Settings', logo: RawMdiSettings },
+		{ path: `${base}/settings`, name: 'Settings', logo: RawMdiSettings },
 	];
 
 	$: getPages = (): Page[] => {
