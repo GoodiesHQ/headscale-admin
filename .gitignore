@@ -1,3 +1,9 @@
+# VSCode
+.vscode
+
+# Svelte:
+.svelte-kit
+
 # Logs
 logs
 *.log

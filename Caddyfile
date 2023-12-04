@@ -1,0 +1,5 @@
+:80
+root * /app/build/
+encode gzip zstd
+try_files {path}.html {path}
+file_server

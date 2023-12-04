@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
+		<meta name="viewport" content="width=device-width" />
+		%sveltekit.head%
+	</head>
+	<body data-sveltekit-preload-data="hover" data-theme="skeleton">
+		<div style="display: contents" class="h-full overflow-hidden">%sveltekit.body%</div>
+	</body>
+</html>
+
+<style lang="postcss">
+	/*html {
+		overflow: -moz-scrollbars-vertical;
+		overflow-y: scroll;
+	}*/
+
+	.overlap-children {
+		display: grid;
+	}
+	.overlap-children > * {
+		grid-area: 1/1;
+	}
+</style>
