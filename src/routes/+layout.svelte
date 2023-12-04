@@ -13,6 +13,7 @@
 		type DrawerSettings,
 	} from '@skeletonlabs/skeleton';
 
+	import { base } from '$app/paths';
 	import { goto } from '$app/navigation';
 
 	initializeStores();
@@ -46,7 +47,7 @@
 		populateStores();
 
 		if (!hasApi()) {
-			goto('/settings');
+			goto(`${base}/settings`);
 		}
 
 		return () => {};
