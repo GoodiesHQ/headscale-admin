@@ -1,5 +1,8 @@
 FROM node:20-alpine AS build
 
+ARG ENDPOINT=/admin
+ENV ENDPOINT=$ENDPOINT
+
 # Set up app directory
 WORKDIR /app
 COPY package.json ./
