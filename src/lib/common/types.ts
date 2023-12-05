@@ -191,3 +191,24 @@ export function getApiDeviceNode(device: ApiDevice): Node {
 /*export type Nodes = {
 	nodes: Node[];
 };*/
+
+export type ApiKey = {
+	id: string;
+	createdAt: string;
+	prefix: string;
+	expiration: string;
+	lastSeen: string;
+};
+export type ApiApiKey = {
+	apiKey: string;
+};
+export type ApiApiKeys = {
+	apiKeys: ApiKey[];
+};
+
+export type ApiKeyInfo = {
+	authorized: boolean | null;
+	expires: string; // validity period of the API key. Alert the user if it is within 30 days.
+	informedUnauthorized: boolean; // whether or not the user has been informed that the key is unauthorized
+	informedExpiringSoon: boolean; // whether or not the user has been informed that the key is expiring soon
+};

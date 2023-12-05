@@ -1,8 +1,11 @@
 import { get, writable, type Writable } from 'svelte/store';
-import type { User, Node, PreAuthKey, Route } from '$lib/common/types';
+import { Mutex } from 'async-mutex';
+
+import type { User, Node, PreAuthKey, Route, ApiKeyInfo, ApiApiKeys } from '$lib/common/types';
 import { getUsers, getPreAuthKeys, getNodes, getRoutes } from '$lib/common/api/get';
-import { localStorageStore } from '@skeletonlabs/skeleton';
-import { debug } from './common/debug';
+import { localStorageStore, type ToastStore } from '@skeletonlabs/skeleton';
+import { API_URL_APIKEY, apiGet } from './common/api';
+import { toastError } from './common/funcs';
 
 export const RouteStore: Writable<Route[]> = writable([]);
 export const UserStore: Writable<User[]> = writable([]);
@@ -10,8 +13,14 @@ export const NodeStore: Writable<Node[]> = writable([]);
 export const PreAuthKeyStore: Writable<PreAuthKey[]> = writable([]);
 export const DebugStore: Writable<boolean> = localStorageStore('debug', false);
 export const ApiValid: Writable<boolean> = writable(false);
-export const ApiKeyStore: Writable<string> = localStorageStore('apiKey', '');
-export const ApiUrlStore: Writable<string> = localStorageStore('apiUrl', '');
+export const ApiUrlStore: Writable<string> = localStorageStore<string>('apiUrl', '');
+export const ApiKeyStore: Writable<string> = localStorageStore<string>('apiKey', '');
+export const ApiKeyInfoStore: Writable<ApiKeyInfo> = localStorageStore<ApiKeyInfo>('apiKeyInfo', {
+	authorized: null,
+	expires: '',
+	informedUnauthorized: false,
+	informedExpiringSoon: false,
+} as ApiKeyInfo);
 export const ApiTtlStore: Writable<number> = localStorageStore('apiTTL', 10000);
 
 // Layouts
@@ -74,63 +83,86 @@ export function appendStoreItem<T>(store: Writable<T[]>, item: T) {
 }
 
 export async function populateUserStore(users?: User[]) {
-	try {
-		if (users === undefined) {
-			users = await getUsers();
-		}
-		populateStore(UserStore, users);
-	} catch (error) {
-		debug(error);
+	if (users === undefined) {
+		users = await getUsers();
 	}
+	populateStore(UserStore, users);
 }
 
 export async function populateNodeStore(nodes?: Node[]) {
-	try {
-		if (nodes === undefined) {
-			nodes = await getNodes();
-		}
-		populateStore(NodeStore, nodes);
-	} catch (error) {
-		debug(error);
+	if (nodes === undefined) {
+		nodes = await getNodes();
 	}
+	populateStore(NodeStore, nodes);
 }
 
 export async function populatePreAuthKeyStore(preAuthKeys?: PreAuthKey[]) {
-	try {
-		if (preAuthKeys === undefined) {
-			preAuthKeys = await getPreAuthKeys();
-		}
-		populateStore(PreAuthKeyStore, preAuthKeys);
-	} catch (error) {
-		debug(error);
+	if (preAuthKeys === undefined) {
+		preAuthKeys = await getPreAuthKeys();
 	}
+	populateStore(PreAuthKeyStore, preAuthKeys);
 }
 
 export async function populateRouteStore(routes?: Route[]) {
-	try {
-		if (routes === undefined) {
-			routes = await getRoutes();
-		}
-		populateStore(RouteStore, routes);
-	} catch (error) {
-		debug(error);
+	if (routes === undefined) {
+		routes = await getRoutes();
 	}
+	populateStore(RouteStore, routes);
 }
 
-export async function populateStores(repeat: boolean = true) {
+export async function populateApiKeyInfoStore() {
+	const { apiKeys } = await apiGet<ApiApiKeys>(`${API_URL_APIKEY}`);
+	const apiKey = get(ApiKeyStore);
+	const myKey = apiKeys.filter((key) => apiKey.startsWith(key.prefix))[0];
+	const info = get(ApiKeyInfoStore);
+	info.expires = myKey.expiration;
+	info.authorized = true;
+	ApiKeyInfoStore.set(info);
+}
+
+export async function populateStores(handler?: (err: unknown) => void, repeat: boolean = true) {
 	if (hasApi()) {
 		const promises = [];
 		promises.push(populateUserStore());
 		promises.push(populateNodeStore());
 		promises.push(populatePreAuthKeyStore());
 		promises.push(populateRouteStore());
+		promises.push(populateApiKeyInfoStore());
 		await Promise.allSettled(promises);
-		debug('Populated All Stores');
+		promises.forEach((p) => p.catch(handler));
 	}
 
 	if (repeat) {
 		setTimeout(() => {
-			populateStores(true);
+			populateStores(handler, true);
 		}, get(ApiTtlStore));
 	}
+}
+
+const storageMu = new Mutex();
+
+export function informUserUnauthorized(toastStore: ToastStore) {
+	storageMu.runExclusive(() => {
+		const storedApiKeyInfo = get(ApiKeyInfoStore);
+		if (storedApiKeyInfo.informedUnauthorized === true) {
+			return;
+		}
+		toastError('API Key is Unauthorized or Invalid', toastStore);
+		storedApiKeyInfo.informedUnauthorized = true;
+		storedApiKeyInfo.authorized = false;
+		ApiKeyInfoStore.set(storedApiKeyInfo);
+	});
+}
+
+export function informUserExpiringSoon(toastStore: ToastStore) {
+	storageMu.runExclusive(() => {
+		const storedApiKeyInfo = get(ApiKeyInfoStore);
+		if (storedApiKeyInfo.informedExpiringSoon === true) {
+			return;
+		}
+		toastError('API Key Expires Soon', toastStore);
+		storedApiKeyInfo.informedUnauthorized = true;
+		storedApiKeyInfo.authorized = false;
+		ApiKeyInfoStore.set(storedApiKeyInfo);
+	});
 }
