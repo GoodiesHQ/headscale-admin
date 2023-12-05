@@ -11,6 +11,7 @@
 		getDrawerStore,
 		initializeStores,
 		type DrawerSettings,
+		getToastStore,
 	} from '@skeletonlabs/skeleton';
 
 	import { base } from '$app/paths';
@@ -39,12 +40,16 @@
 	import { onMount } from 'svelte';
 	storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
 
-	import { hasApi, populateStores } from '$lib/Stores';
+	import { hasApi, informUserUnauthorized, populateStores } from '$lib/Stores';
 	import PageDrawer from '$lib/page/PageDrawer.svelte';
 	import { fade } from 'svelte/transition';
+	import { debug } from '$lib/common/debug';
+	import { ApiAuthErrorUnauthorized, createPopulateErrorHandler } from '$lib/common/errors';
+
+	$: ToastStore = getToastStore();
 
 	onMount(() => {
-		populateStores();
+		populateStores(createPopulateErrorHandler(ToastStore), true);
 
 		if (!hasApi()) {
 			goto(`${base}/settings`);
@@ -57,7 +62,6 @@
 <Toast />
 <PageDrawer />
 <Modal />
-
 <AppShell slotSidebarLeft="w-0 mr-2 lg:w-48" scrollGutter="stable both-edges">
 	<svelte:fragment slot="header">
 		<!-- App Bar -->

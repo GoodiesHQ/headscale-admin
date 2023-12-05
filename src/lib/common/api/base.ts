@@ -1,5 +1,7 @@
-import { ApiKeyStore, ApiUrlStore } from '$lib/Stores';
+import { ApiKeyInfoStore, ApiKeyStore, ApiUrlStore } from '$lib/Stores';
 import { get } from 'svelte/store';
+import { ApiAuthErrorUnauthorized } from '../errors';
+import { debug } from '../debug';
 
 // errors received from headscale
 export type ApiError = {
@@ -15,10 +17,21 @@ function isApiError<T>(response: ApiResponse<T>): response is ApiError {
 }
 
 async function toApiResponse<T>(response: Response): Promise<T> {
+	if (!response.ok) {
+		const text = await response.text();
+		if (text === 'Unauthorized') {
+			throw new ApiAuthErrorUnauthorized();
+		}
+
+		// unspecified errors
+		throw new Error('Unspecified Error: ' + text);
+	}
+
 	const data = await response.json();
 	if (isApiError(data)) {
 		throw new Error(data.message);
 	}
+
 	return data as T;
 }
 
@@ -35,16 +48,28 @@ function headers(): { headers: HeadersInit } {
 }
 
 export function toUrl(path: string): string {
-	const base = get(ApiUrlStore);
-	return base + path;
+	return get(ApiUrlStore) + path;
 }
 
 async function apiFetch<T>(path: string, init?: RequestInit, verbose: boolean = false): Promise<T> {
-	const response = await fetch(toUrl(path), { ...headers(), ...init });
-	if (verbose) {
-		console.log(JSON.stringify(response));
+	try {
+		const response = await fetch(toUrl(path), { ...headers(), ...init });
+		if (verbose) {
+			debug(response);
+		}
+		const apiResponse = await toApiResponse<T>(response);
+		if (get(ApiKeyInfoStore).authorized === null) {
+			const info = get(ApiKeyInfoStore);
+			info.authorized = true;
+			ApiKeyInfoStore.set(info);
+		}
+		return apiResponse;
+	} catch (err) {
+		if (err instanceof Error) {
+			// debug('Fetch Error:', err.message);
+		}
+		throw err;
 	}
-	return await toApiResponse<T>(response);
 }
 
 export async function apiGet<T>(

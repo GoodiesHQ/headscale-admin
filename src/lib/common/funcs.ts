@@ -1,5 +1,5 @@
 import type { ToastStore } from '@skeletonlabs/skeleton';
-import type { ExpirationMessage, Node } from './types';
+import type { ExpirationMessage } from './types';
 import IPAddr from 'ipaddr.js';
 import { debug } from './debug';
 
@@ -14,8 +14,8 @@ const DurationInfinite = new Date(DurationInfiniteString);
 const ExpirationColorFuture = 'text-success-800 dark:text-success-400';
 const ExpirationColorPast = 'text-error-600 dark:text-error-400';
 
-export function isExpired(node: Node): boolean {
-	const date = new Date(node.expiry ?? DurationInfiniteString);
+export function isExpired(expiry: string): boolean {
+	const date = new Date(expiry ?? DurationInfiniteString);
 	const now = new Date();
 	if (date.getTime() == DurationInfinite.getTime()) {
 		return false;
@@ -23,8 +23,8 @@ export function isExpired(node: Node): boolean {
 	return date.getTime() - now.getTime() < 0;
 }
 
-export function getExpirationMessage(node: Node): ExpirationMessage {
-	const date = new Date(node.expiry ?? DurationInfiniteString);
+export function getExpirationMessage(expiry: string): ExpirationMessage {
+	const date = new Date(expiry ?? DurationInfiniteString);
 	if (date.getTime() == DurationInfinite.getTime()) {
 		return {
 			message: 'Does Not Expire',
@@ -77,6 +77,13 @@ export function toastSuccess(message: string, toastStore: ToastStore) {
 	toastStore.trigger({
 		message,
 		background: 'variant-filled-success',
+	});
+}
+
+export function toastWarning(message: string, toastStore: ToastStore) {
+	toastStore.trigger({
+		message,
+		background: 'variant-filled-warning',
 	});
 }
 
