@@ -44,6 +44,7 @@
   "type": "module",
   "dependencies": {
     "@floating-ui/dom": "^1.5.3",
+    "async-mutex": "^0.4.0",
     "highlight.js": "11.9.0",
     "ipaddr.js": "^2.1.0",
     "js-xxhash": "^3.0.0",
