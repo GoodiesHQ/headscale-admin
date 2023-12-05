@@ -40,18 +40,17 @@
 	import { onMount } from 'svelte';
 	storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
 
-	import { hasApi, informUserUnauthorized, populateStores } from '$lib/Stores';
+	import { hasValidApi, populateStores } from '$lib/Stores';
 	import PageDrawer from '$lib/page/PageDrawer.svelte';
 	import { fade } from 'svelte/transition';
-	import { debug } from '$lib/common/debug';
-	import { ApiAuthErrorUnauthorized, createPopulateErrorHandler } from '$lib/common/errors';
+	import { createPopulateErrorHandler } from '$lib/common/errors';
 
 	$: ToastStore = getToastStore();
 
 	onMount(() => {
 		populateStores(createPopulateErrorHandler(ToastStore), true);
 
-		if (!hasApi()) {
+		if (!hasValidApi()) {
 			goto(`${base}/settings`);
 		}
 
