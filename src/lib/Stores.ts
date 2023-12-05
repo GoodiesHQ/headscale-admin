@@ -128,9 +128,7 @@ export async function populateStores(handler?: (err: unknown) => void, repeat: b
 		promises.push(populatePreAuthKeyStore());
 		promises.push(populateRouteStore());
 		promises.push(populateApiKeyInfoStore());
-		console.log('a');
 		await Promise.allSettled(promises);
-		console.log('b');
 		promises.forEach((p) => p.catch(handler));
 	}
 
