@@ -5,6 +5,7 @@
 		ApiTtlStore,
 		ApiUrlStore,
 		DebugStore,
+		populateApiKeyInfoStore,
 		populateStores,
 	} from '$lib/Stores';
 	import { debug } from '$lib/common/debug';
@@ -56,7 +57,9 @@
 			});
 
 			toastSuccess('Saved Settings', ToastStore);
-			await populateStores(createPopulateErrorHandler(ToastStore), false);
+			const handler = createPopulateErrorHandler(ToastStore);
+			await populateApiKeyInfoStore().catch(handler);
+			await populateStores(handler, false);
 		} catch (err) {
 			debug(err);
 		} finally {
