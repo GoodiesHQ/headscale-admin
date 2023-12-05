@@ -44,8 +44,8 @@ export function hasApi(): boolean {
 	return hasApiUrl() && hasApiKey();
 }
 
-export async function hasValidApi(): Promise<boolean> {
-	return hasApiUrl() && hasApiKey();
+export function hasValidApi(): boolean {
+	return hasApi() && get(ApiKeyInfoStore).authorized === true;
 }
 
 function populateStore<T>(store: Writable<T>, data: T, force = false) {
@@ -121,14 +121,16 @@ export async function populateApiKeyInfoStore() {
 }
 
 export async function populateStores(handler?: (err: unknown) => void, repeat: boolean = true) {
-	if (hasApi()) {
+	if (hasValidApi()) {
 		const promises = [];
 		promises.push(populateUserStore());
 		promises.push(populateNodeStore());
 		promises.push(populatePreAuthKeyStore());
 		promises.push(populateRouteStore());
 		promises.push(populateApiKeyInfoStore());
+		console.log('a');
 		await Promise.allSettled(promises);
+		console.log('b');
 		promises.forEach((p) => p.catch(handler));
 	}
 

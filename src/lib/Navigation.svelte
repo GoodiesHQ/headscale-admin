@@ -10,7 +10,7 @@
 	// import RawMdiSecurity from '~icons/mdi/security';
 
 	import { page } from '$app/stores';
-	import { ApiKeyStore, hasApiKey } from './Stores';
+	import { ApiKeyStore, hasApi, hasValidApi } from './Stores';
 	import { onMount } from 'svelte';
 
 	export let labels = true;
@@ -49,7 +49,7 @@
 			return [];
 		}
 
-		return hasApiKey() ? allPages : allPages.slice(-1);
+		return hasValidApi() ? allPages : allPages.slice(-1);
 	};
 
 	$: pages = getPages();
