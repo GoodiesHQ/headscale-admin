@@ -3,6 +3,7 @@
 
 # Svelte:
 .svelte-kit
+build/
 
 # Logs
 logs
