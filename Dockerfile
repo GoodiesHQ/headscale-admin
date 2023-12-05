@@ -1,6 +1,7 @@
-FROM node:20-alpine AS build
-
 ARG ENDPOINT=/admin
+
+FROM node:20-alpine AS build
+ARG ENDPOINT
 ENV ENDPOINT=$ENDPOINT
 
 # Set up app directory
@@ -27,27 +28,17 @@ COPY vite.config.ts ./
 COPY static/ ./static/
 COPY src/ ./src/
 
-# Build static application
-RUN npm run build
+# Build static application, endpoint is provided by $ENDPOINT
+RUN npm run build 
 
 FROM caddy:latest
+
+ARG ENDPOINT
+
 WORKDIR /app
-COPY --from=build /app/build/ ./build
+
+# Use the endpoint name as the directory so it can be served without URL stripping
+COPY --from=build /app/build/ ./${ENDPOINT}
+
 COPY Caddyfile /etc/caddy/Caddyfile
 CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile"]
-
-# # Fresh container
-# FROM node:20-alpine
-# WORKDIR /app
-# 
-# # Copy built application
-# COPY --from=build /app/build/ ./build
-# COPY --from=build /app/package.json ./
-# COPY --from=build /app/package-lock.json ./
-# 
-# # Install dependencies
-# RUN npm install --omit=dev
-# 
-# # Run on default node port
-# EXPOSE 3000
-# CMD ["node", "/app/build/index.js"]
