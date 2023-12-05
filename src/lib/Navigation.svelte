@@ -10,7 +10,7 @@
 	// import RawMdiSecurity from '~icons/mdi/security';
 
 	import { page } from '$app/stores';
-	import { ApiKeyStore, hasApi, hasValidApi } from './Stores';
+	import { ApiKeyInfoStore, ApiKeyStore, hasApi, hasValidApi } from './Stores';
 	import { onMount } from 'svelte';
 
 	export let labels = true;
@@ -58,8 +58,12 @@
 		const unsubApiKeyStore = ApiKeyStore.subscribe(() => {
 			pages = getPages();
 		});
+		const unsubApiKeyInfoStore = ApiKeyInfoStore.subscribe(() => {
+			pages = getPages();
+		});
 		return () => {
 			unsubApiKeyStore();
+			unsubApiKeyInfoStore();
 		};
 	});
 </script>
