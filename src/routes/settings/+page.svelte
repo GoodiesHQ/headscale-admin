@@ -1,5 +1,6 @@
 <script lang="ts">
 	import {
+		ApiEndpointsStore,
 		ApiKeyInfoStore,
 		ApiKeyStore,
 		ApiTtlStore,
@@ -8,6 +9,7 @@
 		populateApiKeyInfoStore,
 		populateStores,
 	} from '$lib/Stores';
+	import { API_URL_MACHINE, API_URL_NODE } from '$lib/common/api';
 	import { debug } from '$lib/common/debug';
 	import { createPopulateErrorHandler } from '$lib/common/errors';
 	import { getExpirationMessage, toastSuccess } from '$lib/common/funcs';
@@ -24,6 +26,7 @@
 		apiUrl: string;
 		apiKey: string;
 		apiTtl: number;
+		legacyApi: boolean;
 		debug: boolean;
 	};
 
@@ -32,6 +35,7 @@
 		apiKey: get(ApiKeyStore),
 		apiTtl: get(ApiTtlStore) / 1000,
 		debug: get(DebugStore),
+		legacyApi: get(ApiEndpointsStore).Node === API_URL_MACHINE,
 	} as Settings;
 
 	$: apiKeyInfo = get(ApiKeyInfoStore);
@@ -55,6 +59,10 @@
 				informedUnauthorized: false,
 				informedExpiringSoon: false,
 			});
+
+			const oldApiEndpoint = get(ApiEndpointsStore);
+			oldApiEndpoint.Node = settings.legacyApi ? API_URL_MACHINE : API_URL_NODE;
+			ApiEndpointsStore.set(oldApiEndpoint);
 
 			toastSuccess('Saved Settings', ToastStore);
 			const handler = createPopulateErrorHandler(ToastStore);
@@ -159,7 +167,20 @@
 			</div>
 			<div class="col-span-12 lg:col-span-8">
 				<div class="pt-4 flex flex-row items-center">
-					<label class="text-2xl font-mono">
+					<label class="text-lg font-mono">
+						Legacy API (Headscale &lt; 0.23):
+						<input
+							class="checkbox"
+							type="checkbox"
+							disabled={loading}
+							bind:checked={settings.legacyApi}
+						/>
+					</label>
+				</div>
+			</div>
+			<div class="col-span-12 lg:col-span-8">
+				<div class="pt-4 flex flex-row items-center">
+					<label class="text-lg font-mono">
 						Console Debugging:
 						<input
 							class="checkbox"

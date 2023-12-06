@@ -1,3 +1,4 @@
+import { ApiEndpointsStore } from '$lib/Stores';
 import { apiGet } from '$lib/common/api';
 import { isApiMachines, isApiNodes } from '$lib/common/types';
 import type {
@@ -10,10 +11,10 @@ import type {
 	PreAuthKey,
 	Route,
 } from '$lib/common/types';
-import { API_URL_NODE, API_URL_PREAUTHKEY, API_URL_ROUTES, API_URL_USER } from './url';
+import { get } from 'svelte/store';
 
 export async function getUsers(init?: RequestInit): Promise<User[]> {
-	const { users } = await apiGet<ApiUsers>(API_URL_USER, init);
+	const { users } = await apiGet<ApiUsers>(get(ApiEndpointsStore).User, init);
 	return users;
 }
 
@@ -23,7 +24,9 @@ export async function getPreAuthKeys(init?: RequestInit): Promise<PreAuthKey[]> 
 	let preAuthKeysAll: PreAuthKey[] = [];
 
 	users.forEach(async (user: User) => {
-		promises.push(apiGet<ApiPreAuthKeys>(API_URL_PREAUTHKEY + '?user=' + user.name, init));
+		promises.push(
+			apiGet<ApiPreAuthKeys>(get(ApiEndpointsStore).PreAuthKey + '?user=' + user.name, init),
+		);
 	});
 
 	promises.forEach(async (p) => {
@@ -36,7 +39,7 @@ export async function getPreAuthKeys(init?: RequestInit): Promise<PreAuthKey[]> 
 }
 
 export async function getNodes(): Promise<Node[]> {
-	const devices = await apiGet<ApiDevices>(API_URL_NODE);
+	const devices = await apiGet<ApiDevices>(get(ApiEndpointsStore).Node);
 	if (isApiMachines(devices)) {
 		const { machines } = devices;
 		return machines;
@@ -49,6 +52,6 @@ export async function getNodes(): Promise<Node[]> {
 }
 
 export async function getRoutes(): Promise<Route[]> {
-	const { routes } = await apiGet<ApiRoutes>(API_URL_ROUTES);
+	const { routes } = await apiGet<ApiRoutes>(get(ApiEndpointsStore).Routes);
 	return routes;
 }

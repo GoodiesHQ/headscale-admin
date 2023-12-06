@@ -4,7 +4,7 @@ import { Mutex } from 'async-mutex';
 import type { User, Node, PreAuthKey, Route, ApiKeyInfo, ApiApiKeys } from '$lib/common/types';
 import { getUsers, getPreAuthKeys, getNodes, getRoutes } from '$lib/common/api/get';
 import { localStorageStore, type ToastStore } from '@skeletonlabs/skeleton';
-import { API_URL_APIKEY, apiGet } from './common/api';
+import { /*API_URL_APIKEY,*/ apiGet, defaultApiEndpoints, type ApiEndpoints } from './common/api';
 import { toastError } from './common/funcs';
 
 export const RouteStore: Writable<Route[]> = writable([]);
@@ -13,6 +13,10 @@ export const NodeStore: Writable<Node[]> = writable([]);
 export const PreAuthKeyStore: Writable<PreAuthKey[]> = writable([]);
 export const DebugStore: Writable<boolean> = localStorageStore('debug', false);
 export const ApiValid: Writable<boolean> = writable(false);
+export const ApiEndpointsStore: Writable<ApiEndpoints> = localStorageStore(
+	'apiEndpoints',
+	defaultApiEndpoints(),
+);
 export const ApiUrlStore: Writable<string> = localStorageStore<string>('apiUrl', '');
 export const ApiKeyStore: Writable<string> = localStorageStore<string>('apiKey', '');
 export const ApiKeyInfoStore: Writable<ApiKeyInfo> = localStorageStore<ApiKeyInfo>('apiKeyInfo', {
@@ -111,7 +115,8 @@ export async function populateRouteStore(routes?: Route[]) {
 }
 
 export async function populateApiKeyInfoStore() {
-	const { apiKeys } = await apiGet<ApiApiKeys>(`${API_URL_APIKEY}`);
+	//const { apiKeys } = await apiGet<ApiApiKeys>(`${API_URL_APIKEY}`);
+	const { apiKeys } = await apiGet<ApiApiKeys>(`/api/v1/apikey`);
 	const apiKey = get(ApiKeyStore);
 	const myKey = apiKeys.filter((key) => apiKey.startsWith(key.prefix))[0];
 	const info = get(ApiKeyInfoStore);
