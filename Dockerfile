@@ -1,4 +1,5 @@
 ARG ENDPOINT=/admin
+ARG PORT=80
 
 FROM node:20-alpine AS build
 ARG ENDPOINT
@@ -34,6 +35,8 @@ RUN npm run build
 FROM caddy:latest
 
 ARG ENDPOINT
+ARG PORT
+ENV PORT=${PORT}
 
 WORKDIR /app
 
