@@ -1,4 +1,4 @@
-:{$PORT}
+:{$PORT:80}
 root * /app
 encode gzip zstd
 try_files {path}.html {path}
