@@ -1,4 +1,5 @@
-import type { ToastStore } from '@skeletonlabs/skeleton';
+import type { DrawerStore, ToastStore } from '@skeletonlabs/skeleton';
+import type { DrawerSettings } from '@skeletonlabs/skeleton';
 import type { ExpirationMessage } from './types';
 import IPAddr from 'ipaddr.js';
 import { debug } from './debug';
@@ -147,7 +148,6 @@ export function getInverseMask6(prefix: number): number[] {
 export function isValidCIDR(cidr: string): boolean {
 	try {
 		const [addr, mask] = IPAddr.parseCIDR(cidr);
-		debug(addr, mask);
 		let imask: number[];
 		if (addr instanceof IPAddr.IPv4) {
 			imask = getInverseMask4(mask);
@@ -174,4 +174,18 @@ export function isValidCIDR(cidr: string): boolean {
 		debug(err);
 	}
 	return false;
+}
+
+function makeDrawerSettings(id: string, meta: unknown) {
+	return {
+		id: id,
+		position: 'right',
+		width: 'w-10/12 md:w-9/12 lg:w-8/12 xl:w-6/12',
+		padding: '',
+		meta,
+	} as DrawerSettings;
+}
+
+export function openDrawer(drawerStore: DrawerStore, id: string, meta: unknown) {
+	drawerStore.open(makeDrawerSettings(id, meta));
 }

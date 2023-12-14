@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { xxHash32 } from 'js-xxhash';
-	import type { Node } from '$lib/common/types';
+	import type { Node, Route } from '$lib/common/types';
 	import { onMount } from 'svelte';
 	import { RouteStore } from '$lib/Stores';
 	import { dateToStr } from '$lib/common/funcs';
@@ -9,9 +9,11 @@
 	import CardTileEntry from '../CardTileEntry.svelte';
 	import OnlineNodeIndicator from '$lib/parts/OnlineNodeIndicator.svelte';
 	import OnlineUserIndicator from '$lib/parts/OnlineUserIndicator.svelte';
+	import { get } from 'svelte/store';
 
 	export let node: Node;
-	let routeCount: number = 0;
+	let routes: Route[] = get(RouteStore);
+	$: routeCount = getRouteCount(routes, node);
 	const drawerStore = getDrawerStore();
 
 	$: drawerSettings = {
@@ -26,10 +28,12 @@
 		.toString(16)
 		.padStart(6, '0');
 
+	function getRouteCount(routes: Route[], node: Node) {
+		return routes.filter((r) => (r.node ?? r.machine).id == node.id).length;
+	}
+
 	onMount(() => {
-		const unsubRouteStore = RouteStore.subscribe((routes) => {
-			routeCount = routes.filter((r) => (r.node ?? r.machine).id == node.id).length;
-		});
+		const unsubRouteStore = RouteStore.subscribe((rs) => (routes = rs));
 		return () => {
 			unsubRouteStore();
 		};

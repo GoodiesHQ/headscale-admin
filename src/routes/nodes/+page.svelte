@@ -24,19 +24,23 @@
 		if (filterString === '') {
 			return true;
 		}
-		const r = RegExp(filterString);
-		const getTag = (tag: string) => {
-			if (tag.startsWith('tag:')) {
-				return tag.substring(0, 4);
-			}
-			return tag;
-		};
-		return (
-			r.test(node.name) ||
-			r.test(node.givenName) ||
-			node.forcedTags.map(getTag).some((tag) => r.test(tag)) ||
-			node.validTags.map(getTag).some((tag) => r.test(tag))
-		);
+		try {
+			const r = RegExp(filterString);
+			const getTag = (tag: string) => {
+				if (tag.startsWith('tag:')) {
+					return tag.substring(0, 4);
+				}
+				return tag;
+			};
+			return (
+				r.test(node.name) ||
+				r.test(node.givenName) ||
+				node.forcedTags.map(getTag).some((tag) => r.test(tag)) ||
+				node.validTags.map(getTag).some((tag) => r.test(tag))
+			);
+		} catch (err) {
+			return true;
+		}
 	}
 
 	onMount(() => {

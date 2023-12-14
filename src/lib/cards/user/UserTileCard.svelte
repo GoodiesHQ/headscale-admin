@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { xxHash32 } from 'js-xxhash';
-	import type { User } from '$lib/common/types';
+	import type { User, Node } from '$lib/common/types';
 	import { onMount } from 'svelte';
 	import { NodeStore } from '$lib/Stores';
 	import { dateToStr } from '$lib/common/funcs';
@@ -8,10 +8,16 @@
 	import CardTileContainer from '../CardTileContainer.svelte';
 	import OnlineUserIndicator from '$lib/parts/OnlineUserIndicator.svelte';
 	import { debug } from '$lib/common/debug';
+	import { get } from 'svelte/store';
 
 	export let user: User;
-	let nodeCount: number;
+	$: nodes = get(NodeStore);
+	$: nodeCount = getNodeCount(user, nodes); // react on user or node change
 	const drawerStore = getDrawerStore();
+
+	function getNodeCount(user: User, nodes: Node[]): number {
+		return nodes.filter((n) => n.user.id === user.id).length;
+	}
 
 	$: drawerSettings = {
 		id: 'userDrawer-' + user.id,
@@ -26,9 +32,7 @@
 		.padStart(6, '0');
 
 	onMount(() => {
-		const unsubNodeStore = NodeStore.subscribe((nodes) => {
-			nodeCount = nodes.filter((m) => m.user.id == user.id).length;
-		});
+		const unsubNodeStore = NodeStore.subscribe((ns) => (nodes = ns));
 		return () => {
 			unsubNodeStore();
 		};

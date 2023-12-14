@@ -6,9 +6,9 @@
 	import RawMdiCheckCircleOutline from '~icons/mdi/check-circle-outline';
 	import RawMdiCloseCircleOutline from '~icons/mdi/close-circle-outline';
 	import { changeNodeOwner } from '$lib/common/api';
-	import { toastError, toastSuccess } from '$lib/common/funcs';
+	import { openDrawer, toastError, toastSuccess } from '$lib/common/funcs';
 	import { debug } from '$lib/common/debug';
-	import { getToastStore } from '@skeletonlabs/skeleton';
+	import { getDrawerStore, getToastStore } from '@skeletonlabs/skeleton';
 	import { slide } from 'svelte/transition';
 	import { get } from 'svelte/store';
 	import { NodeStore, UserStore, updateStoreItem } from '$lib/Stores';
@@ -16,6 +16,7 @@
 
 	export let node: Node;
 	$: users = get(UserStore);
+	const drawerStore = getDrawerStore();
 	let transferUser: string = '';
 	let showTransfer = false;
 	let transferring = false;
@@ -34,7 +35,16 @@
 
 <CardListEntry title="Owner:" top>
 	<div class="flex flex-row items-center gap-3 justify-end">
-		{node.user.name}
+		<!--button type="button" class="btn-sm ml-0"-->
+		<a
+			href=" "
+			on:click={() => {
+				openDrawer(drawerStore, 'userDrawer-' + node.user.id, node.user);
+			}}
+		>
+			{node.user.name}
+		</a>
+		<!--/button-->
 		<OnlineUserIndicator user={node.user} />
 		<button
 			type="button"

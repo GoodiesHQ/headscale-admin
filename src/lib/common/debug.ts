@@ -4,6 +4,6 @@ import { get } from 'svelte/store';
 export function debug(...data: unknown[]) {
 	// output is console debugging is enabled
 	if (get(DebugStore)) {
-		console.log(...data);
+		console.log(new Date().toLocaleTimeString('en-US', { hour12: false }), ...data);
 	}
 }

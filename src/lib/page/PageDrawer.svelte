@@ -14,10 +14,7 @@
 	$: nodes = get(NodeStore);
 
 	onMount(() => {
-		const unsubUserStore = UserStore.subscribe((us) => {
-			users = us;
-			console.log('users set in page drawer', users);
-		});
+		const unsubUserStore = UserStore.subscribe((us) => (users = us));
 		const unsubNodeStore = NodeStore.subscribe((ns) => (nodes = ns));
 		return () => {
 			unsubUserStore();
@@ -29,14 +26,12 @@
 <Drawer>
 	<div class="px-4 lg:px-8 pt-4">
 		{#if $drawerStore?.id?.startsWith('userDrawer-')}
-			<DrawerEntry title={users.find((u) => u.id === $drawerStore?.meta.id)?.name ?? 'Unknown'}>
+			<DrawerEntry title={users.find((u) => u.id === $drawerStore?.meta.id)?.name ?? 'N/A'}>
 				<UserInfo user={users.find((u) => u.id === $drawerStore?.meta.id) || $drawerStore.meta} />
 			</DrawerEntry>
 		{/if}
 		{#if $drawerStore?.id?.startsWith('nodeDrawer-')}
-			<DrawerEntry
-				title={nodes.find((n) => n.id === $drawerStore?.meta.id)?.givenName ?? 'Unknown'}
-			>
+			<DrawerEntry title={nodes.find((n) => n.id === $drawerStore?.meta.id)?.givenName ?? 'N/A'}>
 				<NodeInfo node={nodes.find((n) => n.id === $drawerStore?.meta.id) || $drawerStore.meta} />
 			</DrawerEntry>
 		{/if}

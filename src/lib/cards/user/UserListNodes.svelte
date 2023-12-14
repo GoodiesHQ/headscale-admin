@@ -5,9 +5,13 @@
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
 	import OnlineNodeIndicator from '$lib/parts/OnlineNodeIndicator.svelte';
+	import { openDrawer } from '$lib/common/funcs';
+	import { getDrawerStore } from '@skeletonlabs/skeleton';
 
 	export let user: User;
 	export let title = 'Nodes:';
+
+	const drawerStore = getDrawerStore();
 
 	$: nodes = get(NodeStore);
 	$: users = get(UserStore);
@@ -33,7 +37,14 @@
 <CardListEntry {title}>
 	{#each filteredNodes as node}
 		<div class="flex flex-row items-center gap-3 justify-end">
-			{node.givenName} ({node.name})
+			<a
+				href=" "
+				on:click={() => {
+					openDrawer(drawerStore, 'nodeDrawer-' + node.id, node);
+				}}
+			>
+				{node.givenName} ({node.name})
+			</a>
 			<OnlineNodeIndicator {node} />
 		</div>
 	{/each}

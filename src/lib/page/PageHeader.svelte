@@ -6,6 +6,7 @@
 	import { slide } from 'svelte/transition';
 	import RawMdiViewListOutline from '~icons/mdi/view-list-outline';
 	import RawMdiViewGridOutline from '~icons/mdi/view-grid-outline';
+	import { focus } from '$lib/common/funcs';
 
 	export let filterString: string = '';
 	export let title: string;
@@ -13,6 +14,16 @@
 	export let showCreate = false;
 
 	$: layoutCurrent = layout ? get(layout) : null;
+	$: regexIsValid = validRegex(filterString);
+
+	function validRegex(filterString: string): boolean {
+		try {
+			const r = RegExp(filterString);
+			return true;
+		} catch (err) {
+			return false;
+		}
+	}
 
 	onMount(() => {
 		const unsubLayout = layout?.subscribe((l) => (layoutCurrent = l));
@@ -55,8 +66,9 @@
 		{#if $$props.filterString !== undefined}
 			<input
 				type="text"
-				class="input rounded-md text-sm w-64 md:w-96"
+				class="input rounded-md text-sm w-64 md:w-96 {regexIsValid ? '' : 'input-error'}"
 				bind:value={filterString}
+				use:focus
 				placeholder="Search..."
 			/>
 		{/if}

@@ -6,6 +6,7 @@ import { getUsers, getPreAuthKeys, getNodes, getRoutes } from '$lib/common/api/g
 import { localStorageStore, type ToastStore } from '@skeletonlabs/skeleton';
 import { /*API_URL_APIKEY,*/ apiGet, defaultApiEndpoints, type ApiEndpoints } from './common/api';
 import { toastError } from './common/funcs';
+import { debug } from './common/debug';
 
 export const RouteStore: Writable<Route[]> = writable([]);
 export const UserStore: Writable<User[]> = writable([]);
@@ -135,6 +136,7 @@ export async function populateStores(handler?: (err: unknown) => void, repeat: b
 		promises.push(populateApiKeyInfoStore());
 		await Promise.allSettled(promises);
 		promises.forEach((p) => p.catch(handler));
+		debug('Completed store population requests...');
 	}
 
 	if (repeat) {
