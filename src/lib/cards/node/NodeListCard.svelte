@@ -13,13 +13,13 @@
 
 <AccordionItem
 	{open}
-	id={node.id}
+	bind:id={node.id}
 	class="backdrop-blur-xl backdrop-brightness-100 bg-white/25 dark:bg-white/5 rounded-md"
 	padding="py-4 px-4"
 	regionControl="!rounded-none"
 >
 	<svelte:fragment slot="lead">
-		<OnlineNodeIndicator {node} />
+		<OnlineNodeIndicator bind:node />
 	</svelte:fragment>
 	<svelte:fragment slot="summary">
 		<div class="grid">

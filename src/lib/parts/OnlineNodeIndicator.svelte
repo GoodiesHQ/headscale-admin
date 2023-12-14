@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Node } from '$lib/common/types';
 	import RawMdiBroadcast from '~icons/mdi/broadcast';
-	import RawMdiDevices from '~icons/mdi/devices';
+	// import RawMdiDevices from '~icons/mdi/devices';
 
 	export let node: Node;
 

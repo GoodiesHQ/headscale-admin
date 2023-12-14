@@ -39,7 +39,7 @@
 <CardTileContainer onclick={(_) => drawerStore.open(drawerSettings)}>
 	<div class="flex justify-between items-center mb-4 mt-2">
 		<div class="flex items-center">
-			<OnlineNodeIndicator {node} />
+			<OnlineNodeIndicator bind:node />
 			<span class="ml-2 text-lg font-semibold">ID: {node.id}</span>
 		</div>
 		<div class="flex items-center font-bold">
@@ -52,7 +52,7 @@
 	<CardTileEntry title="User:">
 		<div class="flex flex-row gap-3 items-center">
 			{node.user.name}
-			<OnlineUserIndicator user={node.user} />
+			<OnlineUserIndicator bind:user={node.user} />
 		</div>
 	</CardTileEntry>
 	<CardTileEntry title="IPv4 Address:">

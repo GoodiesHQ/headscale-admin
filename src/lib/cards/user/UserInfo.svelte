@@ -12,13 +12,13 @@
 </script>
 
 <CardListContainer>
-	<ItemListName item={user} />
+	<ItemListName bind:item={user} />
 	<CardSeparator />
-	<ItemCreatedAt item={user} />
+	<ItemCreatedAt bind:item={user} />
 	<CardSeparator />
-	<UserListNodes {user} />
+	<UserListNodes bind:user />
 	<CardSeparator />
-	<UserListPreAuthKeys {user} />
+	<UserListPreAuthKeys bind:user />
 	<CardSeparator />
-	<ItemDelete item={user} />
+	<ItemDelete bind:item={user} />
 </CardListContainer>

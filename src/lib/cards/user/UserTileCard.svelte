@@ -7,6 +7,7 @@
 	import { getDrawerStore, type DrawerSettings } from '@skeletonlabs/skeleton';
 	import CardTileContainer from '../CardTileContainer.svelte';
 	import OnlineUserIndicator from '$lib/parts/OnlineUserIndicator.svelte';
+	import { debug } from '$lib/common/debug';
 
 	export let user: User;
 	let nodeCount: number;

@@ -12,12 +12,12 @@
 	import { onMount } from 'svelte';
 	import Page from '$lib/page/Page.svelte';
 	import type { User } from '$lib/common/types';
-	import { stringify } from 'querystring';
 
 	$: layout = get(LayoutUserStore);
 	$: showCreate = false;
 	$: users = get(UserStore);
 	$: filterString = '';
+	$: filteredUsers = getFilteredUsers(users, filterString); // react on users or filterString change
 
 	$: outer = layout == 'list' ? CardListPage : CardTilePage;
 	$: inner = layout == 'list' ? UserListCard : UserTileCard;
@@ -27,19 +27,22 @@
 			if (filterString === '') {
 				return true;
 			}
+			// use filterString as regex if people want it
 			const r = RegExp(filterString);
-			return r.test(user.name);
+			return r.test(user.name) || r.test(user.name.toLowerCase());
 		} catch (error) {
 			return true;
 		}
 	}
 
-	function getFilteredUsers(filterString: string): User[] {
+	function getFilteredUsers(users: User[], filterString: string): User[] {
 		return users.filter((user) => filter(user, filterString));
 	}
 
 	onMount(() => {
-		const unsubUserStore = UserStore.subscribe((u) => (users = u));
+		const unsubUserStore = UserStore.subscribe((us) => {
+			users = us;
+		});
 		const unsubLayoutUserStore = LayoutUserStore.subscribe((l) => (layout = l));
 		return () => {
 			unsubUserStore();
@@ -56,8 +59,7 @@
 	</PageHeader>
 
 	<svelte:component this={outer}>
-		{#each getFilteredUsers(filterString) as user}
-			{JSON.stringify(user)}
+		{#each filteredUsers as user}
 			<svelte:component this={inner} {user} />
 		{/each}
 	</svelte:component>

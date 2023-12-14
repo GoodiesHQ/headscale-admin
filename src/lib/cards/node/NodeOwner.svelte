@@ -23,7 +23,9 @@
 	const ToastStore = getToastStore();
 
 	onMount(() => {
-		const unsubUserStore = UserStore.subscribe((us) => (users = us));
+		const unsubUserStore = UserStore.subscribe((us) => {
+			users = us;
+		});
 		return () => {
 			unsubUserStore();
 		};
