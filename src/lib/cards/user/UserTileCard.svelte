@@ -37,7 +37,7 @@
 <CardTileContainer onclick={(_) => drawerStore.open(drawerSettings)}>
 	<div class="flex justify-between items-center mb-4 mt-2">
 		<div class="flex items-center">
-			<OnlineUserIndicator {user} />
+			<OnlineUserIndicator bind:user />
 			<span class="ml-2 text-lg font-semibold">ID: {user.id}</span>
 		</div>
 		<div class="flex items-center font-bold">

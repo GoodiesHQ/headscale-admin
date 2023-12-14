@@ -7,10 +7,10 @@
 	import RawMdiViewListOutline from '~icons/mdi/view-list-outline';
 	import RawMdiViewGridOutline from '~icons/mdi/view-grid-outline';
 
+	export let filterString: string = '';
 	export let title: string;
-	export let label: string = 'Create';
 	export let layout: Writable<LayoutStyle> | undefined = undefined;
-	export let show = false;
+	export let showCreate = false;
 
 	$: layoutCurrent = layout ? get(layout) : null;
 
@@ -26,7 +26,7 @@
 </script>
 
 <div class="py-5">
-	<div class="flex justify-between">
+	<div class="flex flex-row justify-between">
 		<div class="text-3xl md:text-4xl lg:text-5xl font-mono">{title}</div>
 		{#if layout && layoutCurrent}
 			<div class="flex pr-5">
@@ -44,18 +44,26 @@
 			</div>
 		{/if}
 	</div>
-	<div class="flex justify-start pt-4 {$$slots.default ? '' : 'invisible'}">
+	<div class="flex justify-start pt-4 space-x-5 {$$slots.button ? '' : 'invisible'}">
 		<button
 			type="button"
 			class="btn btn-sm variant-filled-success rounded-sm"
-			on:click={(_) => (show = !show)}
+			on:click={(_) => (showCreate = !showCreate)}
 		>
-			{label}
+			Create
 		</button>
+		{#if $$props.filterString !== undefined}
+			<input
+				type="text"
+				class="input rounded-md text-sm w-64 md:w-96"
+				bind:value={filterString}
+				placeholder="Search..."
+			/>
+		{/if}
 	</div>
 </div>
-{#if show}
+{#if $$slots.button && showCreate}
 	<div transition:slide class="pb-8">
-		<slot />
+		<slot name="button" />
 	</div>
 {/if}
