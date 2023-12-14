@@ -10,10 +10,11 @@
 	import { NodeStore, updateStoreItem } from '$lib/Stores';
 
 	export let node: Node;
-	$: diff = getExpirationMessage(node);
+
+	$: diff = getExpirationMessage(node.expiry ?? '');
 
 	function setMessage() {
-		diff = getExpirationMessage(node);
+		diff = getExpirationMessage(node.expiry ?? '');
 	}
 
 	onMount(() => {

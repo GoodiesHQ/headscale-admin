@@ -19,6 +19,13 @@ export async function renameNode(n: Node, nameNew: string): Promise<Node> {
 	return getApiDeviceNode(device);
 }
 
+export async function changeNodeOwner(n: Node, newUser: string): Promise<Node> {
+	const path = `${get(ApiEndpointsStore).Node}/${n.id}/user?user=${newUser}`;
+	const device = await apiPost<ApiDevice>(path, undefined);
+	debug('Re-assigned Node from "' + n.user.name + '" to "' + newUser + '"');
+	return getApiDeviceNode(device);
+}
+
 export async function expireNode(n: Node): Promise<Node> {
 	const path = `${get(ApiEndpointsStore).Node}/${n.id}/expire`;
 	const device = await apiPost<ApiDevice>(path, undefined);

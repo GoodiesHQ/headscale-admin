@@ -55,6 +55,11 @@
 			<OnlineUserIndicator user={node.user} />
 		</div>
 	</CardTileEntry>
+	<CardTileEntry title="IPv4 Address:">
+		<div class="flex flex-row gap-3 items-center">
+			{node.ipAddresses.filter((s) => /^\d+\.\d+\.\d+\.\d+$/.test(s)).at(0)}
+		</div>
+	</CardTileEntry>
 	<CardTileEntry title="Routes:">
 		{routeCount}
 	</CardTileEntry>
