@@ -24,7 +24,84 @@ export function isExpired(expiry: string): boolean {
 	return date.getTime() - now.getTime() < 0;
 }
 
-export function getExpirationMessage(expiry: string): ExpirationMessage {
+interface TimeDifference {
+	future: boolean;
+	finite: boolean;
+	message: string;
+}
+
+export function getTime(
+	msg?: string | null | Date,
+	fallback: string = DurationInfiniteString,
+): number {
+	if (msg === undefined) {
+		msg = new Date();
+	}
+	if (msg instanceof Date) {
+		return msg.getTime();
+	}
+	return new Date(msg ?? fallback).getTime();
+}
+
+export function getTimeDifferenceMessage(time1: number): string {
+	const difference = getTimeDifference(time1, new Date().getTime());
+	return difference.finite
+		? difference.message + ` ${difference.future ? 'from now' : 'ago'}`
+		: 'Does Not Expire';
+}
+
+export function getTimeDifferenceColor(td: TimeDifference): string {
+	return !td.finite || td.future ? ExpirationColorFuture : ExpirationColorPast;
+}
+
+export function getTimeDifference(time1: number, time2?: number): TimeDifference {
+	if (time2 === undefined) {
+		time2 = new Date().getTime();
+	}
+
+	if (time1 == DurationInfinite.getTime()) {
+		return {
+			future: true,
+			finite: false,
+			message: 'Does Not Expire',
+		};
+	}
+
+	time2 = Math.floor(time2 / 1000) * 1000;
+	let difference = time1 - time2;
+	const isFuture = difference > 0;
+	let message = '';
+
+	difference = Math.abs(difference);
+	const seconds = Math.floor(difference / 1000);
+	const minutes = Math.floor(seconds / 60);
+	const hours = Math.floor(minutes / 60);
+	const days = Math.floor(hours / 24);
+	const weeks = Math.floor(days / 7);
+	const months = Math.floor(weeks / 4);
+
+	if (months > 0) {
+		message = `${months} week${months == 1 ? '' : 's'}`;
+	} else if (weeks > 0) {
+		message = `${weeks} week${weeks == 1 ? '' : 's'}`;
+	} else if (days > 0) {
+		message = `${days} day${days == 1 ? '' : 's'}`;
+	} else if (hours > 0) {
+		message = `${hours} hour${hours == 1 ? '' : 's'}`;
+	} else if (minutes > 0) {
+		message = `${minutes} minute${minutes == 1 ? '' : 's'}`;
+	} else {
+		message = `${seconds} second${seconds == 1 ? '' : 's'}`;
+	}
+
+	return {
+		future: isFuture,
+		finite: true,
+		message: message + ` ${isFuture ? 'from now' : 'ago'}`,
+	};
+}
+
+export function getExpirationMessage3(expiry: string): ExpirationMessage {
 	const date = new Date(expiry ?? DurationInfiniteString);
 	if (date.getTime() == DurationInfinite.getTime()) {
 		return {
@@ -54,7 +131,7 @@ export function getExpirationMessage(expiry: string): ExpirationMessage {
 		message = `${seconds} second${seconds == 1 ? '' : 's'}`;
 	}
 	return {
-		message: message + `  ${isFuture ? 'from now' : 'ago'}`,
+		message: message + ` ${isFuture && seconds + minutes + hours + days > 0 ? 'from now' : 'ago'}`,
 		color: isFuture ? ExpirationColorFuture : ExpirationColorPast,
 	};
 }
@@ -176,14 +253,14 @@ export function isValidCIDR(cidr: string): boolean {
 	return false;
 }
 
-function makeDrawerSettings(id: string, meta: unknown) {
-	return {
-		id: id,
-		position: 'right',
-		width: 'w-10/12 md:w-9/12 lg:w-8/12 xl:w-6/12',
-		padding: '',
-		meta,
-	} as DrawerSettings;
+function makeDrawerSettings(
+	id: string,
+	meta: unknown,
+	position: 'top' | 'bottom' | 'left' | 'right' = 'right',
+	width: string = 'w-10/12 md:w-9/12 lg:w-8/12 xl:w-6/12',
+	padding: string = '',
+) {
+	return { id, position, width, padding, meta } as DrawerSettings;
 }
 
 export function openDrawer(drawerStore: DrawerStore, id: string, meta: unknown) {

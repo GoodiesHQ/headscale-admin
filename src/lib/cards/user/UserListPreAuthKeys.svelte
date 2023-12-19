@@ -11,6 +11,7 @@
 	import { slide } from 'svelte/transition';
 	import { createPreAuthKey } from '$lib/common/api';
 	import { debug } from '$lib/common/debug';
+	import CardSeparator from '../CardSeparator.svelte';
 
 	export let user: User;
 	export let title = 'PreAuth Keys:';
@@ -160,6 +161,7 @@
 	<svelte:fragment slot="bottom">
 		<div class="grid grid-cols-12 col-span-12 pt-4">
 			{#each preAuthKeys as preAuthKey}
+				<CardSeparator />
 				<UserListPreAuthKey {preAuthKey} />
 			{/each}
 		</div>

@@ -5,7 +5,7 @@ import type { User, Node, PreAuthKey, Route, ApiKeyInfo, ApiApiKeys } from '$lib
 import { getUsers, getPreAuthKeys, getNodes, getRoutes } from '$lib/common/api/get';
 import { localStorageStore, type ToastStore } from '@skeletonlabs/skeleton';
 import { /*API_URL_APIKEY,*/ apiGet, defaultApiEndpoints, type ApiEndpoints } from './common/api';
-import { toastError } from './common/funcs';
+import { toastError, toastWarning } from './common/funcs';
 import { debug } from './common/debug';
 
 export const RouteStore: Writable<Route[]> = writable([]);
@@ -167,7 +167,7 @@ export function informUserExpiringSoon(toastStore: ToastStore) {
 		if (storedApiKeyInfo.informedExpiringSoon === true) {
 			return;
 		}
-		toastError('API Key Expires Soon', toastStore);
+		toastWarning('API Key Expires Soon', toastStore);
 		storedApiKeyInfo.informedUnauthorized = true;
 		storedApiKeyInfo.authorized = false;
 		ApiKeyInfoStore.set(storedApiKeyInfo);

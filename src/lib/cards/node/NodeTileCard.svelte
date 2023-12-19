@@ -3,7 +3,13 @@
 	import type { Node, Route } from '$lib/common/types';
 	import { onMount } from 'svelte';
 	import { RouteStore } from '$lib/Stores';
-	import { dateToStr } from '$lib/common/funcs';
+	import {
+		dateToStr,
+		getTimeDifference,
+		getTime,
+		getTimeDifferenceMessage,
+		openDrawer,
+	} from '$lib/common/funcs';
 	import { getDrawerStore, type DrawerSettings } from '@skeletonlabs/skeleton';
 	import CardTileContainer from '../CardTileContainer.svelte';
 	import CardTileEntry from '../CardTileEntry.svelte';
@@ -13,16 +19,9 @@
 
 	export let node: Node;
 	let routes: Route[] = get(RouteStore);
+	$: lastSeen = getTimeDifferenceMessage(getTime(node.lastSeen));
 	$: routeCount = getRouteCount(routes, node);
 	const drawerStore = getDrawerStore();
-
-	$: drawerSettings = {
-		id: 'nodeDrawer-' + node.id,
-		position: 'right',
-		width: 'w-10/12 md:w-9/12 lg:w-8/12 xl:w-6/12',
-		padding: '',
-		meta: node,
-	} as DrawerSettings;
 
 	$: color = (xxHash32(node.id + ':' + node.givenName, 0xbeefbabe) & 0xff_ff_ff)
 		.toString(16)
@@ -33,14 +32,18 @@
 	}
 
 	onMount(() => {
+		const lastSeenInterval = setInterval(() => {
+			lastSeen = getTimeDifferenceMessage(getTime(node.lastSeen));
+		}, 1000);
 		const unsubRouteStore = RouteStore.subscribe((rs) => (routes = rs));
 		return () => {
+			clearInterval(lastSeenInterval);
 			unsubRouteStore();
 		};
 	});
 </script>
 
-<CardTileContainer onclick={(_) => drawerStore.open(drawerSettings)}>
+<CardTileContainer onclick={(_) => openDrawer(drawerStore, 'nodeDrawer-' + node.id, node)}>
 	<div class="flex justify-between items-center mb-4 mt-2">
 		<div class="flex items-center">
 			<OnlineNodeIndicator bind:node />
@@ -52,6 +55,9 @@
 	</div>
 	<CardTileEntry title="Created:">
 		{dateToStr(node.createdAt)}
+	</CardTileEntry>
+	<CardTileEntry title="Last Seen:">
+		{lastSeen}
 	</CardTileEntry>
 	<CardTileEntry title="User:">
 		<div class="flex flex-row gap-3 items-center">

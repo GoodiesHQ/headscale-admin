@@ -3,7 +3,7 @@
 	import type { User, Node } from '$lib/common/types';
 	import { onMount } from 'svelte';
 	import { NodeStore } from '$lib/Stores';
-	import { dateToStr } from '$lib/common/funcs';
+	import { dateToStr, openDrawer } from '$lib/common/funcs';
 	import { getDrawerStore, type DrawerSettings } from '@skeletonlabs/skeleton';
 	import CardTileContainer from '../CardTileContainer.svelte';
 	import OnlineUserIndicator from '$lib/parts/OnlineUserIndicator.svelte';
@@ -19,14 +19,6 @@
 		return nodes.filter((n) => n.user.id === user.id).length;
 	}
 
-	$: drawerSettings = {
-		id: 'userDrawer-' + user.id,
-		position: 'right',
-		width: 'w-10/12 md:w-9/12 lg:w-8/12 xl:w-6/12',
-		padding: '',
-		meta: user,
-	} as DrawerSettings;
-
 	$: color = (xxHash32(user.id + ':' + user.name, 0xbeefbabe) & 0xff_ff_ff)
 		.toString(16)
 		.padStart(6, '0');
@@ -39,7 +31,7 @@
 	});
 </script>
 
-<CardTileContainer onclick={(_) => drawerStore.open(drawerSettings)}>
+<CardTileContainer onclick={(_) => openDrawer(drawerStore, 'userDrawer-' + user.id, user)}>
 	<div class="flex justify-between items-center mb-4 mt-2">
 		<div class="flex items-center">
 			<OnlineUserIndicator bind:user />

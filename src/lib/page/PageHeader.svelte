@@ -11,8 +11,9 @@
 	export let filterString: string = '';
 	export let title: string;
 	export let layout: Writable<LayoutStyle> | undefined = undefined;
-	export let showCreate = false;
+	export let showButtonArea = false;
 
+	export let buttonText: string = 'Create';
 	$: layoutCurrent = layout ? get(layout) : null;
 	$: regexIsValid = validRegex(filterString);
 
@@ -59,9 +60,9 @@
 		<button
 			type="button"
 			class="btn btn-sm variant-filled-success rounded-sm"
-			on:click={(_) => (showCreate = !showCreate)}
+			on:click={(_) => (showButtonArea = !showButtonArea)}
 		>
-			Create
+			{buttonText}
 		</button>
 		{#if $$props.filterString !== undefined}
 			<input
@@ -74,7 +75,7 @@
 		{/if}
 	</div>
 </div>
-{#if $$slots.button && showCreate}
+{#if $$slots.button && showButtonArea}
 	<div transition:slide class="pb-8">
 		<slot name="button" />
 	</div>

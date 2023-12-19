@@ -2,26 +2,19 @@
 	import CardListEntry from '../CardListEntry.svelte';
 	import type { Node } from '$lib/common/types';
 	import { onMount } from 'svelte';
-	import { getExpirationMessage } from '$lib/common/funcs';
+	import { getTimeDifference, getTime, getTimeDifferenceColor } from '$lib/common/funcs';
 
 	import Delete from '$lib/parts/Delete.svelte';
 	import { expireNode } from '$lib/common/api';
-	import { get } from 'svelte/store';
 	import { NodeStore, updateStoreItem } from '$lib/Stores';
 
 	export let node: Node;
 
-	$: diff = getExpirationMessage(node.expiry ?? '');
-
-	function setMessage() {
-		diff = getExpirationMessage(node.expiry ?? '');
-	}
+	$: diff = getTimeDifference(getTime(node.expiry ?? ''));
 
 	onMount(() => {
-		setMessage();
-
 		const interval = setInterval(() => {
-			setMessage();
+			diff = getTimeDifference(getTime(node.expiry ?? ''));
 		}, 1000);
 
 		return () => {
@@ -32,7 +25,7 @@
 
 <CardListEntry title="Expires:">
 	<div class="flex flex-row items-start text-right justify-end">
-		<span class=" {diff.color} items-center">
+		<span class=" {getTimeDifferenceColor(diff)} items-center">
 			{diff.message}
 		</span>
 		<span class="items-center">

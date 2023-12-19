@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { PreAuthKey } from '$lib/common/types';
+	import RawMdiClipboard from '~icons/mdi/clipboard';
 	import RawMdiDotsVertical from '~icons/mdi/dots-vertical';
 	import RawMdiInformation from '~icons/mdi/information';
 	import { getToastStore, popup, type PopupSettings } from '@skeletonlabs/skeleton';
@@ -7,76 +8,67 @@
 
 	const toastStore = getToastStore();
 	export let preAuthKey: PreAuthKey;
-	const expired: boolean = new Date() > new Date(preAuthKey.expiration);
+	$: expired = isExpired(preAuthKey);
+
+	function isExpired(preAuthKey: PreAuthKey): boolean {
+		return new Date() > new Date(preAuthKey.expiration);
+	}
 
 	const popupPreAuthKeyActions: PopupSettings = {
 		event: 'click',
 		target: 'popupPreAuthKeyActions-' + preAuthKey.id,
-		placement: 'top-start'
+		placement: 'top-start',
 	};
 
 	const popupPreAuthKeyInfo: PopupSettings = {
 		event: 'hover',
 		target: 'popupPreAuthKeyInfo-' + preAuthKey.id,
-		placement: 'top'
+		placement: 'top',
 	};
 </script>
 
-<div class="flex text-xs sm:text-sm md:text-sm xl:text-lg font-mono col-span-12 w-full my-1">
-	<button
-		class="btn btn-icon variant-filled-surface rounded-md w-6 py-0 px-0 mr-2"
-		use:popup={popupPreAuthKeyActions}
-	>
-		<RawMdiDotsVertical />
-	</button>
-	<div class="card p-0 w-36 shadow-xl" data-popup={'popupPreAuthKeyActions-' + preAuthKey.id}>
-		<nav class="list">
-			<ul>
-				<li>
-					<button
-						class="w-full text-left px-4 py-2 !rounded-none hover:bg-primary-300 hover:dark:bg-primary-700"
-						on:click={() => copyToClipboard(preAuthKey.key, toastStore, 'Copied Key to Clipboard')}
-					>
-						Copy
-					</button>
-				</li>
-				<li>
-					<span
-						class="w-full text-left px-4 py-2 !rounded-none hover:bg-primary-300 hover:dark:bg-primary-700"
-					>
-						Expire Now
-					</span>
-				</li>
-			</ul>
-		</nav>
-		<div class="arrow bg-surface-100-800-token" />
-	</div>
-	<div class="truncate">
-		<div class="border-2 border-dashed px-2 py-1.5 border-slate-300 dark:border-slate-700">
-			{preAuthKey.key}
+<div class="grid grid-cols-12 col-span-12 py-2">
+	<!--div class="col-span-6 sm:col-span-5 md:col-span-5 lg:col-span-5"-->
+	<div class="flex flex-row items-start">
+		<button
+			class="font-mono flex items-center border-2 border-dashed w-auto px-2 py-1.5 mr-3 border-slate-300 dark:border-slate-700"
+			on:click={() => copyToClipboard(preAuthKey.key, toastStore)}
+		>
+			<span class="mr-2">
+				<RawMdiClipboard />
+			</span>
+			<!--/button-->
+			{preAuthKey.key.substring(0, 8) + '...'}
+		</button>
+		<div class="items-center flex flex-col sm:flex-row gap-1 lg:gap-2">
+			<span
+				class="badge badge-glass {preAuthKey.used
+					? 'variant-ghost-success'
+					: 'variant-flat opacity-50'}"
+			>
+				Used
+			</span>
+			<span
+				class="badge badge-glass {isExpired(preAuthKey)
+					? 'variant-ghost-error'
+					: 'variant-flat opacity-50'}"
+			>
+				Expired
+			</span>
+			<span
+				class="badge badge-glass {preAuthKey.ephemeral
+					? 'variant-ghost-secondary'
+					: 'variant-flat opacity-50'}"
+			>
+				Ephemeral
+			</span>
+			<span
+				class="badge badge-glass {preAuthKey.reusable
+					? 'variant-ghost-tertiary'
+					: 'variant-flat opacity-50'}"
+			>
+				Reusable
+			</span>
 		</div>
-	</div>
-	<button
-		class="btn btn-icon variant-filled-surface rounded-xl w-8 py-0 px-0 ml-2"
-		use:popup={popupPreAuthKeyInfo}
-	>
-		<RawMdiInformation />
-	</button>
-	<div class="card p-4 w-36 shadow-xl text-sm" data-popup={'popupPreAuthKeyInfo-' + preAuthKey.id}>
-		<ul class="list font-semibold text-lg">
-			{#if expired}
-				<li class="text-error-500 dark:text-error-500">Expired</li>
-			{/if}
-			{#if preAuthKey.used}
-				<li class="text-success-800 dark:text-success-400">Used</li>
-			{/if}
-			{#if preAuthKey.ephemeral}
-				<li class="text-secondary-600 dark:text-secondary-300">Ephemeral</li>
-			{/if}
-			{#if preAuthKey.reusable}
-				<li class="text-tertiary-600 dark:text-tertiary-300">Reusable</li>
-			{/if}
-		</ul>
-		<div class="arrow bg-surface-100-800-token" />
 	</div>
 </div>

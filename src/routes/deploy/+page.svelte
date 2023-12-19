@@ -1,15 +1,31 @@
 <script lang="ts">
-	import { ApiUrlStore, NodeStore } from '$lib/Stores';
-	import { isValidCIDR, isValidTag, toastError } from '$lib/common/funcs';
+	import { ApiUrlStore, NodeStore, PreAuthKeyStore, UserStore } from '$lib/Stores';
+	import {
+		copyToClipboard,
+		isExpired,
+		isValidCIDR,
+		isValidTag,
+		toastError,
+	} from '$lib/common/funcs';
 	import Page from '$lib/page/Page.svelte';
 	import PageHeader from '$lib/page/PageHeader.svelte';
 	import { InputChip, getToastStore } from '@skeletonlabs/skeleton';
 	import { get } from 'svelte/store';
 	import DeployCheck from './DeployCheck.svelte';
 	import { onMount } from 'svelte';
+	import type { PreAuthKey } from '$lib/common/types';
+	import { slide } from 'svelte/transition';
 
 	const ToastStore = getToastStore();
+	$: users = get(UserStore);
 	$: nodes = get(NodeStore);
+	$: preAuthKeys = get(PreAuthKeyStore);
+
+	function createFilter(username: string) {
+		return (pak: PreAuthKey) => {
+			return pak.user === username && pak.used === false && !isExpired(pak.expiration);
+		};
+	}
 
 	type Deployment = {
 		// general
@@ -20,6 +36,9 @@
 		operatorValue: string;
 		forceReauth: boolean;
 		sshServer: boolean;
+		usePreAuthKey: boolean;
+		preAuthKeyUser: string;
+		preAuthKey: string;
 		// accept
 		acceptDns: boolean;
 		acceptRoutes: boolean;
@@ -44,6 +63,9 @@
 			operatorValue: '$USER',
 			forceReauth: false,
 			sshServer: false,
+			usePreAuthKey: false,
+			preAuthKeyUser: '',
+			preAuthKey: '',
 			// accept
 			acceptDns: true,
 			acceptRoutes: true,
@@ -71,6 +93,7 @@
 		d.operator && d.operatorValue != '' && cmd.push('--operator=' + d.operatorValue);
 		d.forceReauth && cmd.push('--force-reauth');
 		d.sshServer && cmd.push('--ssh');
+		d.usePreAuthKey && d.preAuthKey !== '' && cmd.push('--authkey=' + d.preAuthKey);
 
 		// accept
 		d.acceptDns && cmd.push('--accept-dns');
@@ -96,19 +119,28 @@
 
 	onMount(() => {
 		const unsubNodeStore = NodeStore.subscribe((ns) => (nodes = ns));
+		const unsubUserStore = UserStore.subscribe((us) => (users = us));
+		const unsubPreAuthKeyStore = PreAuthKeyStore.subscribe((ps) => (preAuthKeys = ps));
 		return () => {
 			unsubNodeStore();
+			unsubUserStore();
+			unsubPreAuthKeyStore();
 		};
 	});
 </script>
 
 <Page>
-	<PageHeader title="Deploy" label="Command">
-		<pre
-			class="bg-gray-400/30 dark:bg-gray-700/40 mr-4 pl-4 overflow-auto rounded-lg whitespace-pre-wrap"><code
-				class=" text-green-950 dark:text-success-200 text-lg block py-4"
-				>{craftCommand(deployment)}</code
-			></pre>
+	<PageHeader title="Deploy" label="Command" showButtonArea={true}>
+		<svelte:fragment slot="button">
+			<button
+				class="bg-gray-400/30 dark:bg-gray-800/70 border border-dashed border-slate-200 border-1 mr-4 pl-4 overflow-auto rounded-lg whitespace-pre-wrap justify-start text-justify pr-6"
+				on:click={() =>
+					copyToClipboard(craftCommand(deployment), ToastStore, 'Copied Command to Clipboard!')}
+				><code class=" text-white dark:text-white-200 text-lg block py-4"
+					>{craftCommand(deployment)}</code
+				>
+			</button>
+		</svelte:fragment>
 	</PageHeader>
 
 	<div class="grid grid-cols-12">
@@ -121,6 +153,28 @@
 		</DeployCheck>
 		<DeployCheck bind:checked={deployment.forceReauth} name="Force Reauthentication" />
 		<DeployCheck bind:checked={deployment.sshServer} name="SSH Server" />
+		<DeployCheck bind:checked={deployment.usePreAuthKey} name="PreAuth Key">
+			<div class="flex flex-col gap-2">
+				<select bind:value={deployment.preAuthKeyUser} class="input rounded-md">
+					<option value=""></option>
+					{#each users as user}
+						<option value={user.name}>{user.name}</option>
+					{/each}
+				</select>
+				{#if deployment.preAuthKeyUser}
+					<div transition:slide>
+						<select bind:value={deployment.preAuthKey} class="input rounded-md">
+							<option value=""
+								>{preAuthKeys.filter(createFilter(deployment.preAuthKeyUser)).length} Valid Key(s)</option
+							>
+							{#each preAuthKeys.filter(createFilter(deployment.preAuthKeyUser)) as preAuthKey}
+								<option value={preAuthKey.key}>{preAuthKey.key}</option>
+							{/each}
+						</select>
+					</div>
+				{/if}
+			</div>
+		</DeployCheck>
 
 		<p class="text-xl col-span-12 py-4">Accept:</p>
 		<DeployCheck bind:checked={deployment.acceptDns} name="Accept DNS" />
@@ -129,7 +183,9 @@
 			<label class="label">
 				<select class="select" bind:value={deployment.acceptExitNodeValue}>
 					{#each nodes as node}
-						<option value={node.givenName}>{node.givenName} ({node.name})</option>
+						<option value={node.ipAddresses.filter((s) => /^\d+\.\d+\.\d+\.\d+$/.test(s))[0]}
+							>{node.givenName} ({node.name})</option
+						>
 					{/each}
 				</select>
 			</label>
