@@ -9,7 +9,7 @@
 	let username = '';
 	let loading = false;
 	const toastStore = getToastStore();
-	export let show;
+	export let show: boolean;
 
 	async function newUser() {
 		loading = true;

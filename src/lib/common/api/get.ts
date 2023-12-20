@@ -18,14 +18,19 @@ export async function getUsers(init?: RequestInit): Promise<User[]> {
 	return users;
 }
 
-export async function getPreAuthKeys(init?: RequestInit): Promise<PreAuthKey[]> {
-	const users = await getUsers(init);
+export async function getPreAuthKeys(
+	usernames?: string[],
+	init?: RequestInit,
+): Promise<PreAuthKey[]> {
+	if (usernames == undefined) {
+		usernames = (await getUsers(init)).map((u) => u.name);
+	}
 	const promises: Promise<ApiPreAuthKeys>[] = [];
 	let preAuthKeysAll: PreAuthKey[] = [];
 
-	users.forEach(async (user: User) => {
+	usernames.forEach(async (username: string) => {
 		promises.push(
-			apiGet<ApiPreAuthKeys>(get(ApiEndpointsStore).PreAuthKey + '?user=' + user.name, init),
+			apiGet<ApiPreAuthKeys>(get(ApiEndpointsStore).PreAuthKey + '?user=' + username, init),
 		);
 	});
 

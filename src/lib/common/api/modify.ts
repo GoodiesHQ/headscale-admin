@@ -1,6 +1,14 @@
 import { ApiEndpointsStore } from '$lib/Stores';
 import { getApiDeviceNode } from '$lib/common/types';
-import type { ApiUser, ApiRoute, User, Node, ApiDevice, Route } from '$lib/common/types';
+import type {
+	ApiDevice,
+	ApiRoute,
+	ApiUser,
+	Node,
+	PreAuthKey,
+	Route,
+	User,
+} from '$lib/common/types';
 import { get } from 'svelte/store';
 import { debug } from '../debug';
 import { apiPost } from './base';
@@ -24,6 +32,12 @@ export async function changeNodeOwner(n: Node, newUser: string): Promise<Node> {
 	const device = await apiPost<ApiDevice>(path, undefined);
 	debug('Re-assigned Node from "' + n.user.name + '" to "' + newUser + '"');
 	return getApiDeviceNode(device);
+}
+
+export async function expirePreAuthKey(pak: PreAuthKey) {
+	const path = `${get(ApiEndpointsStore).PreAuthKey}/expire`;
+	const data = { user: pak.user, key: pak.key };
+	await apiPost(path, data);
 }
 
 export async function expireNode(n: Node): Promise<Node> {
