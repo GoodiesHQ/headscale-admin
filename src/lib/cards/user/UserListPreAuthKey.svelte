@@ -5,7 +5,7 @@
 	import { copyToClipboard } from '$lib/common/funcs';
 	import Delete from '$lib/parts/Delete.svelte';
 	import { expirePreAuthKey, getPreAuthKeys } from '$lib/common/api';
-	import { populatePreAuthKeyStore, PreAuthKeyStore, updateStoreItem } from '$lib/Stores';
+	import { PreAuthKeyStore, updateStoreItem } from '$lib/Stores';
 
 	const toastStore = getToastStore();
 	export let preAuthKey: PreAuthKey;
@@ -38,7 +38,7 @@
 			/>
 		</span>
 	</div>
-	<div class="flex flex-col gap-2">
+	<div class="flex flex-col lg:flex-row gap-2">
 		<div class="items-center flex flex-row gap-1 lg:gap-2">
 			<span
 				class="badge badge-glass {preAuthKey.used
