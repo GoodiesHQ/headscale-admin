@@ -12,7 +12,12 @@
 	import { API_URL_MACHINE, API_URL_NODE } from '$lib/common/api';
 	import { debug } from '$lib/common/debug';
 	import { createPopulateErrorHandler } from '$lib/common/errors';
-	import { getExpirationMessage, toastSuccess } from '$lib/common/funcs';
+	import {
+		getTime,
+		getTimeDifference,
+		getTimeDifferenceColor,
+		toastSuccess,
+	} from '$lib/common/funcs';
 	import type { ExpirationMessage } from '$lib/common/types';
 	import Page from '$lib/page/Page.svelte';
 	import PageHeader from '$lib/page/PageHeader.svelte';
@@ -83,7 +88,11 @@
 		const unsubApiKeyInfoStore = ApiKeyInfoStore.subscribe((apiKeyInfoNew) => {
 			apiKeyInfo = apiKeyInfoNew;
 			if (apiKeyInfo.expires !== '') {
-				apiKeyExpirationMessage = getExpirationMessage(apiKeyInfo.expires);
+				const td = getTimeDifference(getTime(apiKeyInfo.expires));
+				apiKeyExpirationMessage = {
+					message: td.message,
+					color: getTimeDifferenceColor(td),
+				};
 			} else {
 				apiKeyExpirationMessage = { message: '', color: '' };
 			}
