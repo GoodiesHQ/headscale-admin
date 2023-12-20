@@ -212,3 +212,5 @@ export type ApiKeyInfo = {
 	informedUnauthorized: boolean; // whether or not the user has been informed that the key is unauthorized
 	informedExpiringSoon: boolean; // whether or not the user has been informed that the key is expiring soon
 };
+
+export type Direction = 'up' | 'down';

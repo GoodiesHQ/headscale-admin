@@ -1,6 +1,5 @@
 import type { DrawerStore, ToastStore } from '@skeletonlabs/skeleton';
 import type { DrawerSettings } from '@skeletonlabs/skeleton';
-import type { ExpirationMessage } from './types';
 import IPAddr from 'ipaddr.js';
 import { debug } from './debug';
 
@@ -45,9 +44,7 @@ export function getTime(
 
 export function getTimeDifferenceMessage(time1: number): string {
 	const difference = getTimeDifference(time1, new Date().getTime());
-	return difference.finite
-		? difference.message + ` ${difference.future ? 'from now' : 'ago'}`
-		: 'Does Not Expire';
+	return difference.finite ? difference.message : 'Does Not Expire';
 }
 
 export function getTimeDifferenceColor(td: TimeDifference): string {
@@ -98,41 +95,6 @@ export function getTimeDifference(time1: number, time2?: number): TimeDifference
 		future: isFuture,
 		finite: true,
 		message: message + ` ${isFuture ? 'from now' : 'ago'}`,
-	};
-}
-
-export function getExpirationMessage3(expiry: string): ExpirationMessage {
-	const date = new Date(expiry ?? DurationInfiniteString);
-	if (date.getTime() == DurationInfinite.getTime()) {
-		return {
-			message: 'Does Not Expire',
-			color: ExpirationColorFuture,
-		};
-	}
-
-	const now = new Date();
-	let difference = date.getTime() - now.getTime();
-	const isFuture = difference > 0;
-
-	difference = Math.abs(difference);
-	const seconds = Math.floor(difference / 1000);
-	const minutes = Math.floor(seconds / 60);
-	const hours = Math.floor(minutes / 60);
-	const days = Math.floor(hours / 24);
-
-	let message: string;
-	if (days > 0) {
-		message = `${days} day${days == 1 ? '' : 's'}`;
-	} else if (hours > 0) {
-		message = `${hours} hour${hours == 1 ? '' : 's'}`;
-	} else if (minutes > 0) {
-		message = `${minutes} minute${minutes == 1 ? '' : 's'}`;
-	} else {
-		message = `${seconds} second${seconds == 1 ? '' : 's'}`;
-	}
-	return {
-		message: message + ` ${isFuture && seconds + minutes + hours + days > 0 ? 'from now' : 'ago'}`,
-		color: isFuture ? ExpirationColorFuture : ExpirationColorPast,
 	};
 }
 
