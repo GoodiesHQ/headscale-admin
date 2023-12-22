@@ -18,15 +18,15 @@
 <div class="flex flex-row items-start">
 	<div class="flex flex-col px-2 gap-2">
 		<button
-			class="font-mono flex items-center border-2 border-dashed w-auto py-1.5 mr-3 border-slate-300 dark:border-slate-700"
+			class="font-mono flex items-center border-2 border-dashed w-auto py-1.5 px-2 mr-3 border-slate-300 dark:border-slate-700"
 			on:click={() => copyToClipboard(preAuthKey.key, toastStore)}
 		>
 			<span class="mr-2">
 				<RawMdiClipboard />
 			</span>
-			{preAuthKey.key.substring(0, 8) + '...'}
+			{preAuthKey.key.substring(0, 8)}
 		</button>
-		<span class="mr-2 {isExpired(preAuthKey) && 'invisible'}">
+		<span class="mr-2 {isExpired(preAuthKey) && 'hidden'}">
 			<Delete
 				func={async () => {
 					await expirePreAuthKey(preAuthKey);
