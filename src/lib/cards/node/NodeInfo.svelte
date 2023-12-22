@@ -12,6 +12,7 @@
 	import NodeExpiresAt from './NodeExpiresAt.svelte';
 	import ItemDelete from '../common/ItemDelete.svelte';
 	import NodeOwner from './NodeOwner.svelte';
+	import NodeLastSeen from './NodeLastSeen.svelte';
 
 	export let node: Node;
 </script>
@@ -20,6 +21,8 @@
 	<ItemListName item={node} />
 	<CardSeparator />
 	<ItemCreatedAt item={node} />
+	<CardSeparator />
+	<NodeLastSeen {node} />
 	<CardSeparator />
 	<NodeOwner {node} />
 	<CardSeparator />
