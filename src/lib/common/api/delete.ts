@@ -1,8 +1,24 @@
-import { apiDelete } from './base';
+import { apiDelete, apiPost } from './base';
 import type { User, Node, Route } from '$lib/common/types';
 import { UserStore, NodeStore, RouteStore, ApiEndpointsStore } from '$lib/Stores';
 import { get } from 'svelte/store';
 import { debug } from '../debug';
+
+export async function expireApiKey(apiKey: string) {
+	if (apiKey.indexOf('.') > -1) {
+		apiKey = apiKey.split('.').at(0) || '';
+	}
+	if (!apiKey) {
+		debug('Invalid API Key/Prefix');
+		return;
+	}
+	try {
+		await apiPost(`${get(ApiEndpointsStore).ApiKey}/expire`, { prefix: apiKey });
+		debug('Expired API Key with Prefix ' + apiKey);
+	} catch (error) {
+		debug(error);
+	}
+}
 
 export async function deleteUser(user: User): Promise<boolean> {
 	try {

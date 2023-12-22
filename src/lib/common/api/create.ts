@@ -6,10 +6,21 @@ import {
 	type Node,
 	type ApiDevice,
 	getApiDeviceNode,
+	type ApiApiKey,
 } from '$lib/common/types';
 import { ApiEndpointsStore } from '$lib/Stores';
 import { debug } from '../debug';
 import { get } from 'svelte/store';
+
+export async function createApiKey() {
+	// create 90-day API Key
+	const date = new Date();
+	date.setDate(date.getDate() + 90);
+	const data = { expiration: date.toISOString() };
+	const { apiKey } = await apiPost<ApiApiKey>(get(ApiEndpointsStore).ApiKey, data);
+	console.log(apiKey);
+	return apiKey;
+}
 
 export async function createUser(username: string): Promise<User> {
 	const data = { name: username };

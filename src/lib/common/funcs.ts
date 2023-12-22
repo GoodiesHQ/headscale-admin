@@ -2,6 +2,11 @@ import type { DrawerStore, ToastStore } from '@skeletonlabs/skeleton';
 import type { DrawerSettings } from '@skeletonlabs/skeleton';
 import IPAddr from 'ipaddr.js';
 import { debug } from './debug';
+import { createApiKey, expireApiKey } from './api';
+import { get } from 'svelte/store';
+import { ApiKeyStore } from '$lib/Stores';
+// import { createApiKey } from './api';
+// import { ApiKeyStore } from '$lib/Stores';
 
 export function focus(el: HTMLElement | null) {
 	if (el !== null) {
@@ -78,7 +83,7 @@ export function getTimeDifference(time1: number, time2?: number): TimeDifference
 	const months = Math.floor(weeks / 4);
 
 	if (months > 0) {
-		message = `${months} week${months == 1 ? '' : 's'}`;
+		message = `${months} month${months == 1 ? '' : 's'}`;
 	} else if (weeks > 0) {
 		message = `${weeks} week${weeks == 1 ? '' : 's'}`;
 	} else if (days > 0) {
@@ -138,6 +143,13 @@ export function toastError(message: string, toastStore: ToastStore, error?: Erro
 		message,
 		background: 'variant-filled-error',
 	});
+}
+
+export async function refreshApiKey() {
+	const apiKeyNew = await createApiKey();
+	const apiKeyOld = get(ApiKeyStore);
+	await expireApiKey(apiKeyOld);
+	ApiKeyStore.set(apiKeyNew);
 }
 
 export function copyToClipboard(

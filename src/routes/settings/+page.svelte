@@ -9,13 +9,14 @@
 		populateApiKeyInfoStore,
 		populateStores,
 	} from '$lib/Stores';
-	import { API_URL_MACHINE, API_URL_NODE } from '$lib/common/api';
+	import { API_URL_MACHINE, API_URL_NODE, defaultApiEndpoints } from '$lib/common/api';
 	import { debug } from '$lib/common/debug';
 	import { createPopulateErrorHandler } from '$lib/common/errors';
 	import {
 		getTime,
 		getTimeDifference,
 		getTimeDifferenceColor,
+		refreshApiKey,
 		toastSuccess,
 	} from '$lib/common/funcs';
 	import type { ExpirationMessage } from '$lib/common/types';
@@ -65,7 +66,7 @@
 				informedExpiringSoon: false,
 			});
 
-			const oldApiEndpoint = get(ApiEndpointsStore);
+			const oldApiEndpoint = defaultApiEndpoints();
 			oldApiEndpoint.Node = settings.legacyApi ? API_URL_MACHINE : API_URL_NODE;
 			ApiEndpointsStore.set(oldApiEndpoint);
 
@@ -136,8 +137,16 @@
 						type="button"
 						disabled={loading}
 						class="btn btn-icon variant-ghost ml-2"
-						on:click={() => {
-							toastSuccess('This does nothing (for now)', ToastStore);
+						on:click={async () => {
+							// toastSuccess('This does nothing (for now)', ToastStore);
+							loading = true;
+							try {
+								await refreshApiKey();
+								settings.apiKey = get(ApiKeyStore);
+								saveSettings();
+							} finally {
+								loading = false;
+							}
 						}}
 					>
 						<RawOrbit />
@@ -158,7 +167,7 @@
 				</div>
 				<div class="col-span-8">
 					{#if apiKeyExpirationMessage !== undefined}
-						{apiKeyExpirationMessage.message}
+						Expiration: {apiKeyExpirationMessage.message}
 					{/if}
 				</div>
 			</div>

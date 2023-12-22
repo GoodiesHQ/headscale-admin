@@ -20,7 +20,7 @@ export function defaultApiEndpoints(): ApiEndpoints {
 		User: API_URL_USER,
 		Node: API_URL_MACHINE,
 		Routes: API_URL_ROUTES,
-		ApiKey: API_URL_ROUTES,
+		ApiKey: API_URL_APIKEY,
 		PreAuthKey: API_URL_PREAUTHKEY,
 		Debug: API_URL_DEBUG,
 	};
