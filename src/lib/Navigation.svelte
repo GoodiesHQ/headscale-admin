@@ -21,10 +21,10 @@
 		href === newPath || href === $page.url.pathname ? 'bg-primary-300 dark:bg-primary-700' : '';
 
 	let newPath = '';
-	let oldPath = '';
+	// let oldPath = '';
 
 	function setActivePath(path: string) {
-		oldPath = newPath;
+		// oldPath = newPath;
 		newPath = path;
 	}
 
