@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { NodeStore, RouteStore, UserStore } from '$lib/Stores';
+	import { NodeStore, PreAuthKeyStore, RouteStore, UserStore } from '$lib/Stores';
 	import CardTilePage from '$lib/cards/CardTilePage.svelte';
 	import PageHeader from '$lib/page/PageHeader.svelte';
 	import { get } from 'svelte/store';
@@ -9,6 +9,8 @@
 	import { onMount } from 'svelte';
 	import CardTileContainer from '$lib/cards/CardTileContainer.svelte';
 	import Page from '$lib/page/Page.svelte';
+	import { isExpired } from '$lib/common/funcs';
+	import type { Node, User } from '$lib/common/types';
 
 	type Summary = {
 		title: string;
@@ -19,23 +21,42 @@
 
 	$: summaries = [] as Summary[];
 
+	$: nodes = [] as Node[];
+	$: users = [] as User[];
+
 	function setSummaries() {
 		summaries = [
 			{
 				title: 'Total Users',
-				border: 'border-primary-400 dark:border-primary-600',
+				border: 'border-primary-700 dark:border-primary-600',
 				icon: RawMdiUser,
 				value: get(UserStore).length,
 			},
 			{
+				title: 'Online Users',
+				border: 'border-primary-500 dark:border-primary-400',
+				icon: RawMdiUser,
+				value: get(UserStore).filter((user) =>
+					nodes.filter((node) => node.online).some((node) => node.user.id === user.id),
+				).length,
+			},
+			{
+				title: 'Valid PreAuth Keys',
+				border: 'border-slate-700 dark:border-slate-500',
+				icon: RawMdiDevices,
+				value: get(PreAuthKeyStore).filter(
+					(pak) => !isExpired(pak.expiration) && !(pak.used && !pak.reusable),
+				).length,
+			},
+			{
 				title: 'Total Nodes',
-				border: 'border-secondary-400 dark:border-secondary-600',
+				border: 'border-secondary-700 dark:border-secondary-600',
 				icon: RawMdiDevices,
 				value: get(NodeStore).length,
 			},
 			{
 				title: 'Online Nodes',
-				border: 'border-success-700 dark:border-success-500',
+				border: 'border-secondary-400 dark:border-secondary-400',
 				icon: RawMdiDevices,
 				value: get(NodeStore).filter((m) => m.online).length,
 			},
@@ -49,12 +70,22 @@
 	}
 
 	onMount(() => {
-		const unsubUserStore = UserStore.subscribe((_) => setSummaries());
-		const unsubNodeStore = NodeStore.subscribe((_) => setSummaries());
+		const unsubUserStore = UserStore.subscribe((us) => {
+			users = us;
+			setSummaries();
+		});
+		const unsubNodeStore = NodeStore.subscribe((ns) => {
+			nodes = ns;
+			setSummaries();
+		});
+		const unsubRouteStore = RouteStore.subscribe((_) => setSummaries());
+		const unsubPreAuthKeyStore = PreAuthKeyStore.subscribe((_) => setSummaries());
 
 		return () => {
 			unsubUserStore();
 			unsubNodeStore();
+			unsubRouteStore();
+			unsubPreAuthKeyStore();
 		};
 	});
 </script>

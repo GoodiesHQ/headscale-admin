@@ -44,6 +44,7 @@
 	import PageDrawer from '$lib/page/PageDrawer.svelte';
 	import { fade } from 'svelte/transition';
 	import { createPopulateErrorHandler } from '$lib/common/errors';
+	import { version } from '$lib/common/debug';
 
 	$: ToastStore = getToastStore();
 
@@ -82,6 +83,7 @@
 						</span>
 					</button>
 					<strong class="text-xl uppercase">Headscale-Admin</strong>
+					<span class="text-sm lowercase">{version}</span>
 				</div>
 			</svelte:fragment>
 
