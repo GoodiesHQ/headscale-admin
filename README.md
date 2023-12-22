@@ -1,22 +1,24 @@
 # headscale-admin
 
-Headscale-Admin is a Web Interface for [juanfont/headscale](https://github.com/juanfont/).
+Headscale-Admin is meant to be a simple, modern web interface for [juanfont/headscale](https://github.com/juanfont/headscale) - "An open source, self-hosted implementation of the Tailscale control server."
 
 ### IN ACTIVE DEVELOPMENT
 
-Headscale-Admin should **not** be considered a production-ready application. It is very much still in active development and should be treated as such. I am not a professional developer and therefore my production is not as streamlined as it otherwise could be.
+Headscale-Admin should be considered a beta application. It is very much still in active development and should not be treated as a final product.
+
+[![Star History Chart](https://api.star-history.com/svg?repos=goodieshq/headscale-admin&type=Timeline&size=mobile)](https://star-history.com/#goodieshq/headscale-admin&Timeline)
 
 ### Known Issues
 
 - No API key rotation yet
-- No selection of PreAuthKey in deployment yet
-- PreAuthKeys in general are ugly looking
+- Sorting by "Last Seen" can be jumpy as devices may be sorted periodically as they check in. A workaround is to set your refresh interval to the roughly the frequency of checkin.
 
 ### Building
 
 Headscale-Admin was built using [skeleton](https://github.com/skeletonlabs/skeleton) framework on top of SvelteKit + TailwindCSS. It uses svelte/adapter-static to produce only static files when built. They can be hosted on nearly any server or environment.
 
-**Note:** If you are building Headscale-Admin from source and want to host it on an endpoint other than the base of the domain, e.g. "myheadscale.com/admin" then you must set the `ENDPOINT` environment variable when building. Otherwise, it will default to expecting to be hosted on the root path "myheadscale.com/" and redirects and resource loading will not work correctly if you place them in a child folder. Once built, it is recommended to rename the `build` directory to the same name as your `$ENDPOINT` variable so the requests can follow the folder structure and not have to be stripped or rewritten by a front end proxy.
+#### Endpoint
+**Note:** If you are building Headscale-Admin from source and want to host it on an endpoint other than the base of the domain, e.g. "myheadscale.com/admin" then you must set the `ENDPOINT` environment variable when building. Otherwise, it will default to expecting to be hosted on the root path "myheadscale.com/" and redirects and resource loading will not work correctly if you place them in a child folder. Once built, it is recommended to rename the `build` directory to the same name as your `$ENDPOINT` variable so the requests can follow the folder structure and not have to be stripped or rewritten by a front end proxy. The provided Dockerfile shows this in practice.
 
 ##### Clone the repository
 
@@ -26,7 +28,7 @@ Clone a specific version without code history
 git clone --depth 1 --branch <version> https://github.com/GoodiesHQ/headscale-admin
 ```
 
-Alternatively, you can just clone the main branch for the latest release
+Alternatively, you can just clone the main branch for the latest release or `git checkout <version>` for a specific version.
 
 ```
 git clone https://github.com/GoodiesHQ/headscale-admin
@@ -56,11 +58,12 @@ $env:ENDPOINT=/admin
 
 #### Build
 
-All that is left is to build the static release files.
+You can create the production build by running:
 
 ```
 npm run build
 ```
+This will create a `build` directory.
 
 #### Host Files
 
@@ -146,14 +149,14 @@ services:
       traefik.http.routers.headscale.entrypoints: websecure
       traefik.http.routers.headscale.tls.certresolver: myresolver
       traefik.http.routers.headscale.service: headscale
-      # configure CORS middleware if needed
+      # Configure CORS middleware if needed
       traefik.http.middlewares.headscale-cors.headers.accesscontrolallowmethods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
       traefik.http.middlewares.headscale-cors.headers.accesscontrolallowheaders: "*"
       traefik.http.middlewares.headscale-cors.headers.accesscontrolalloworiginlist: ""  # Add other origins if needed
       traefik.http.middlewares.headscale-cors.headers.accesscontrolmaxage: 100
       traefik.http.middlewares.headscale-cors.headers.addvaryheader: true
       traefik.http.routers.headscale.middlewares: headscale-cors
-      # UDP ports for DERP and Wireguard tunnel
+      # UDP ports for DERP, etc
       traefik.udp.services.headscale-udp-41641.loadbalancer.server.port: 41641
       traefik.udp.services.headscale-udp-3478.loadbalancer.server.port: 3478
 
@@ -188,12 +191,20 @@ Create an external network called `proxy`. Anything on this network, even if it 
 docker network create proxy
 ```
 
-You may need to play with your settings to get the right domain and SSL support working for you. This example uses cloudflare API and requires a `./env/cloudflare.env` file to contain something like:
+You may need to play with your settings to get the right domain and SSL support working for you. This example uses cloudflare API and requires a `./env/cloudflare.env` (relative to docker-compose.yml) file to contain something like:
 
 ```
 CF_API_EMAIL=myemail@example.com
 CF_API_KEY=0011223344556677889900aabbccddeeff000
 ```
+
+where the CF_API_KEY is your Global API key from your Cloudflare domain dashboard: 
+
+<img width="355" alt="image" src="https://github.com/GoodiesHQ/headscale-admin/assets/4576046/7e4ff394-57b9-41eb-8084-76e4c4ed4347">
+
+<img width="594" alt="image" src="https://github.com/GoodiesHQ/headscale-admin/assets/4576046/5219a2c9-f201-45aa-a0d5-ab8bc6218ddb">
+
+
 
 The Traefik docker-compose.yml:
 
@@ -266,21 +277,24 @@ docker exec headscale headscale apikey create
 ### Home Page
 
 A brief overview of the HeadScale environment with the number of users, nodes, and routes.
-<img width="1089" alt="image" src="https://github.com/GoodiesHQ/headscale-admin/assets/4576046/75fb74ec-aa31-433e-a51c-812de1c12592">
+<img width="1088" alt="image" src="https://github.com/GoodiesHQ/headscale-admin/assets/4576046/c265475e-ed2b-4fa4-8ef7-1f4683aaca8a">
+
+
 
 ### Users Page
 
 An overview of all headscale Users with a List or Tile layout.
 
-- Create and Delete Users
-- Create and Manage PreAuth Keys
+- Create, Rename, and Delete Users
+- Create, View, and Expire PreAuth Keys
 - List User's Nodes with Online Indicators
 
-<img width="1087" alt="image" src="https://github.com/GoodiesHQ/headscale-admin/assets/4576046/4c30aea5-c394-46ce-b555-a52fcda8d384">
+<img width="1088" alt="image" src="https://github.com/GoodiesHQ/headscale-admin/assets/4576046/47c3dea0-2f5d-4654-b695-acb5900e615c">
 
-<img width="1087" alt="image" src="https://github.com/GoodiesHQ/headscale-admin/assets/4576046/9d0b8a8a-108e-43ea-ba82-9dee4edaf831">
+<img width="1089" alt="image" src="https://github.com/GoodiesHQ/headscale-admin/assets/4576046/0f52191f-6e51-4834-8408-28c2da0efd38">
 
-<img width="632" alt="image" src="https://github.com/GoodiesHQ/headscale-admin/assets/4576046/5a648b9b-e381-45b7-985e-a62989c6487e">
+<img width="777" alt="image" src="https://github.com/GoodiesHQ/headscale-admin/assets/4576046/459d2dd7-6bca-4489-b1e1-2dbdbe9d4239">
+
 
 ### Nodes Page
 
@@ -290,22 +304,23 @@ An overview of all headscale Nodes with a List or Tile layout.
 - Enable/Disable Advertised Routes
 - Expire a Node
 
-<img width="1089" alt="image" src="https://github.com/GoodiesHQ/headscale-admin/assets/4576046/1aa275c9-cc4c-4fea-9580-629cb6bbfe43">
+<img width="776" alt="image" src="https://github.com/GoodiesHQ/headscale-admin/assets/4576046/eae8253e-3aba-4cfa-af90-5012ad940405">
 
-<img width="1094" alt="image" src="https://github.com/GoodiesHQ/headscale-admin/assets/4576046/6f95b076-c429-4d3b-8fd0-8e9bf0129ca8">
+<img width="777" alt="image" src="https://github.com/GoodiesHQ/headscale-admin/assets/4576046/a60739b5-2549-4733-97c0-a75d8554527b">
 
-<img width="626" alt="image" src="https://github.com/GoodiesHQ/headscale-admin/assets/4576046/96a84390-5a0a-42ce-9c96-5809650589b4">
+<img width="775" alt="image" src="https://github.com/GoodiesHQ/headscale-admin/assets/4576046/47d48cd8-feed-4fc3-8b8e-97589934e2ab">
+
 
 ### Deploy Page
 
 A web utility to craft a "tailscale up" command when deploying new nodes.
 
-**NOTE:** currently there is no option yet to select a PreAuth Key. That will be in the next update.
+<img width="947" alt="image" src="https://github.com/GoodiesHQ/headscale-admin/assets/4576046/36194902-6ca4-4597-bc95-2293e8bfdad5">
 
-<img width="1086" alt="image" src="https://github.com/GoodiesHQ/headscale-admin/assets/4576046/7e9a4d03-f839-408b-814c-e7801397b13a">
 
 ### Settings Page
 
-Store API URL and API Key information in the browser's LocalStorage. Set API refresh interval (how frequently users, preauth keys, nodes, and routes are updated). Enable/Disable console debugging (may get noisy).
+Store API URL and API Key information in the browser's LocalStorage. Set API refresh interval (how frequently users, preauth keys, nodes, and routes are updated). Use the legact headscale `/machines` API endpoint instead of `/nodes`. Enable/Disable console debugging (may get noisy).
 
-<img width="1087" alt="image" src="https://github.com/GoodiesHQ/headscale-admin/assets/4576046/6790339c-4a9d-4f8f-8975-e4983f59cad9">
+<img width="949" alt="image" src="https://github.com/GoodiesHQ/headscale-admin/assets/4576046/673e142a-359d-4a40-900b-883ec25debce">
+
