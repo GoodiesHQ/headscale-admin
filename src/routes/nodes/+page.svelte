@@ -51,15 +51,22 @@
 			});
 		} else if (sortMethod === 'last seen') {
 			nodes = nodes.sort((a: Node, b: Node) => {
-				const atime = getTime(a.lastSeen);
-				const btime = getTime(b.lastSeen);
-				if (atime > btime) {
+				const aid = parseInt(a.id);
+				const bid = parseInt(b.id);
+				const atime = Math.round(getTime(a.lastSeen));
+				const btime = Math.round(getTime(b.lastSeen));
+				if (Math.abs(atime - btime) < 300000) {
+					if (aid < bid) {
+						return -1;
+					} else if (aid > bid) {
+						return 1;
+					}
+				} else if (atime > btime) {
 					return -1;
 				} else if (atime < btime) {
 					return 1;
-				} else {
-					return 0;
 				}
+				return 0;
 			});
 		}
 		if (sortDirection === 'down') {
