@@ -146,15 +146,43 @@
 
 	<div class="grid grid-cols-12">
 		<p class="text-xl col-span-12 py-4">General:</p>
-		<DeployCheck bind:checked={deployment.shieldsUp} name="Shields Up" help="Block incoming connections" />
-		<DeployCheck bind:checked={deployment.generateQR} name="Generate QR Code" help="Create a scannable QR code to import into TailScale client"/>
-		<DeployCheck bind:checked={deployment.reset} name="Reset" help="Reset unspecified settings to default values" />
-		<DeployCheck bind:checked={deployment.operator} name="Operator" help="(Unix Only) Run as a different user">
+		<DeployCheck
+			bind:checked={deployment.shieldsUp}
+			name="Shields Up"
+			help="Block incoming connections"
+		/>
+		<DeployCheck
+			bind:checked={deployment.generateQR}
+			name="Generate QR Code"
+			help="Create a scannable QR code to import into TailScale client"
+		/>
+		<DeployCheck
+			bind:checked={deployment.reset}
+			name="Reset"
+			help="Reset unspecified settings to default values"
+		/>
+		<DeployCheck
+			bind:checked={deployment.operator}
+			name="Operator"
+			help="(Unix Only) Run as a different user"
+		>
 			<input type="text" class="input text-sm rounded-md" bind:value={deployment.operatorValue} />
 		</DeployCheck>
-		<DeployCheck bind:checked={deployment.forceReauth} name="Force Reauthentication" help="Force user to re-authenticate to Headscale server" />
-		<DeployCheck bind:checked={deployment.sshServer} name="SSH Server" help="Run a local SSH server accessible by administrators" />
-		<DeployCheck bind:checked={deployment.usePreAuthKey} name="PreAuth Key">
+		<DeployCheck
+			bind:checked={deployment.forceReauth}
+			name="Force Reauthentication"
+			help="Force user to re-authenticate to Headscale server"
+		/>
+		<DeployCheck
+			bind:checked={deployment.sshServer}
+			name="SSH Server"
+			help="Run a local SSH server accessible by administrators"
+		/>
+		<DeployCheck
+			bind:checked={deployment.usePreAuthKey}
+			name="PreAuth Key"
+			help="A generated key to automatically authenticate the node for a given user"
+		>
 			<div class="flex flex-col gap-2">
 				<select bind:value={deployment.preAuthKeyUser} class="input rounded-md">
 					<option value=""></option>
@@ -178,10 +206,18 @@
 		</DeployCheck>
 
 		<p class="text-xl col-span-12 py-4">Advertise:</p>
-		<DeployCheck bind:checked={deployment.advertiseExitNode} name="Advertise Exit Node">
+		<DeployCheck
+			bind:checked={deployment.advertiseExitNode}
+			name="Advertise Exit Node"
+			help="Allow other nodes on the TailNet to use this node as a gateway"
+		>
 			<DeployCheck bind:checked={deployment.advertiseExitNodeLocalAccess} name="Allow LAN Access" />
 		</DeployCheck>
-		<DeployCheck bind:checked={deployment.advertiseTags} name="Advertise Tags">
+		<DeployCheck
+			bind:checked={deployment.advertiseTags}
+			name="Advertise Tags"
+			help="List of advertised tags to apply to a machine on provisioning"
+		>
 			<InputChip
 				name="advertiseRoutesValues"
 				bind:value={deployment.advertiseTagsValues}
@@ -191,7 +227,11 @@
 				}}
 			/>
 		</DeployCheck>
-		<DeployCheck bind:checked={deployment.advertiseRoutes} name="Advertise Routes">
+		<DeployCheck
+			bind:checked={deployment.advertiseRoutes}
+			name="Advertise Routes"
+			help="List of subnets which are reachable via this node"
+		>
 			<InputChip
 				name="advertiseRoutesValues"
 				bind:value={deployment.advertiseRoutesValues}
@@ -203,9 +243,21 @@
 		</DeployCheck>
 
 		<p class="text-xl col-span-12 py-4">Accept:</p>
-		<DeployCheck bind:checked={deployment.acceptDns} name="Accept DNS" />
-		<DeployCheck bind:checked={deployment.acceptRoutes} name="Accept Routes" />
-		<DeployCheck bind:checked={deployment.acceptExitNode} name="Exit Node">
+		<DeployCheck
+			bind:checked={deployment.acceptDns}
+			name="Accept DNS"
+			help="Accept the HeadScale-provided DNS settings"
+		/>
+		<DeployCheck
+			bind:checked={deployment.acceptRoutes}
+			name="Accept Routes"
+			help="Accept other nodes' advertised subnets"
+		/>
+		<DeployCheck
+			bind:checked={deployment.acceptExitNode}
+			name="Exit Node"
+			help="Use this node as a gateway (target node must advertise exit node)"
+		>
 			<label class="label">
 				<select class="select" bind:value={deployment.acceptExitNodeValue}>
 					{#each nodes as node}
@@ -216,6 +268,5 @@
 				</select>
 			</label>
 		</DeployCheck>
-
 	</div>
 </Page>
