@@ -52,7 +52,7 @@ export function hasApi(): boolean {
 }
 
 export function hasValidApi(): boolean {
-	return hasApi() && get(ApiKeyInfoStore).authorized === true;
+	return hasApiKey() && get(ApiKeyInfoStore).authorized === true;
 }
 
 function populateStore<T>(store: Writable<T>, data: T, force = false) {
