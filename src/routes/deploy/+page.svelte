@@ -137,14 +137,14 @@
 				class="bg-gray-400/30 dark:bg-gray-800/70 border border-dashed border-slate-200 border-1 mr-4 pl-4 rounded-lg justify-start text-left pr-6"
 				on:click={() =>
 					copyToClipboard(craftCommand(deployment), ToastStore, 'Copied Command to Clipboard!')}
-				><code class=" text-white dark:text-white-200 text-lg block py-4"
+				><code class="text-black dark:text-white text-lg block py-4"
 					>{craftCommand(deployment)}</code
 				>
 			</button>
 		</svelte:fragment>
 	</PageHeader>
 
-	<div class="grid grid-cols-12">
+	<div class="grid grid-cols-12 pb-10">
 		<p class="text-xl col-span-12 py-4">General:</p>
 		<DeployCheck
 			bind:checked={deployment.shieldsUp}

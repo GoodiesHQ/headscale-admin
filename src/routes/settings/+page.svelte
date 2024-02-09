@@ -118,7 +118,7 @@
 <Page>
 	<PageHeader title="Settings" />
 
-	<form on:submit={saveSettings}>
+	<form on:submit={saveSettings} class="pb-10">
 		<div class="grid grid-cols-12 gap-4">
 			<div class="col-span-12 lg:col-span-8">
 				<div class="text-xl font-mono">API URL</div>

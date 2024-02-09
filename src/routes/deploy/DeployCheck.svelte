@@ -33,9 +33,9 @@
 	}
 </script>
 
-<div class="card p-4 variant-filled-secondary {popupShow ? '' : 'invisible'}" data-popup="popupHover-{popupId}">
+<div class="card p-4 variant-filled-tertiary {popupShow ? '' : 'invisible'}" data-popup="popupHover-{popupId}">
 	<p>{help}</p>
-	<div class="arrow variant-filled-secondary" />
+	<div class="arrow variant-filled-tertiary" />
 </div>
 
 <div class="flex flex-col col-span-12 md:col-span-6 xl:col-span-4 pb-4 mx-4">
