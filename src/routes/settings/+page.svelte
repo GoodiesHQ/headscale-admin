@@ -1,10 +1,13 @@
 <script lang="ts">
+	import { ALL_THEMES, setTheme } from './Themes'
+	import { page } from '$app/stores';
 	import {
 		ApiEndpointsStore,
 		ApiKeyInfoStore,
 		ApiKeyStore,
 		ApiTtlStore,
 		ApiUrlStore,
+		ThemeStore,
 		DebugStore,
 		populateApiKeyInfoStore,
 		populateStores,
@@ -32,6 +35,7 @@
 		apiUrl: string;
 		apiKey: string;
 		apiTtl: number;
+		theme: string;
 		legacyApi: boolean;
 		debug: boolean;
 	};
@@ -41,6 +45,7 @@
 		apiKey: get(ApiKeyStore),
 		apiTtl: get(ApiTtlStore) / 1000,
 		debug: get(DebugStore),
+		theme: get(ThemeStore),
 		legacyApi: get(ApiEndpointsStore).Node === API_URL_MACHINE,
 	} as Settings;
 
@@ -58,6 +63,7 @@
 			ApiKeyStore.set(settings.apiKey);
 			ApiTtlStore.set(settings.apiTtl * 1000);
 			DebugStore.set(settings.debug);
+			ThemeStore.set(settings.theme);
 
 			ApiKeyInfoStore.set({
 				expires: '',
@@ -80,6 +86,9 @@
 			loading = false;
 		}
 	}
+
+	// import { Theme } from '$lib/Stores';
+	// $: {if (browser) {document.body.setAttribute('data-theme', $theme);}}
 
 	onMount(() => {
 		const unsubApiKeyStore = ApiKeyStore.subscribe((apikey) => {
@@ -112,20 +121,20 @@
 	<form on:submit={saveSettings}>
 		<div class="grid grid-cols-12 gap-4">
 			<div class="col-span-12 lg:col-span-8">
-				<div class="text-2xl font-mono">API URL</div>
-				<div class="pt-4 flex">
+				<div class="text-xl font-mono">API URL</div>
+				<div class="pt-2 pb-4 flex">
 					<input
 						class="input rounded-md w-full mr-4 text-sm"
 						type="text"
-						placeholder="API Key"
+						placeholder="{$page.url.origin}"
 						disabled={loading}
 						bind:value={settings.apiUrl}
 					/>
 				</div>
 			</div>
 			<div class="col-span-12 lg:col-span-8">
-				<div class="text-2xl font-mono">API Key</div>
-				<div class="pt-4 flex">
+				<div class="text-xl font-mono">API Key</div>
+				<div class="pt-2 pb-4 flex">
 					<input
 						class="input rounded-md w-full mr-4 text-sm"
 						type="text"
@@ -156,7 +165,11 @@
 			<div class="col-span-12 lg:col-span-8 grid grid-cols-12">
 				<div class="col-span-4">
 					{#if apiKeyInfo.authorized === null}
-						<span class="text-warning-500 dark:text-warning-400">Checking...</span>
+						{#if loading}
+							<span class="text-warning-500 dark:text-warning-400">Checking...</span>
+						{:else}
+							<span class="text-warning-500 dark:text-warning-400"><!-- Waiting --></span>
+						{/if}
 					{/if}
 					{#if apiKeyInfo.authorized === true}
 						<span class="text-success-600 dark:text-success-400">Authorized!</span>
@@ -172,10 +185,10 @@
 				</div>
 			</div>
 			<div class="col-span-12 lg:col-span-8">
-				<div class="text-2xl font-mono">API Refresh Interval</div>
-				<div class="pt-4 grid grid-cols-12">
+				<div class="text-xl font-mono">API Refresh Interval</div>
+				<div class="pt-2 pb-4 grid grid-cols-12">
 					<input
-						class="input rounded-md mr-4 text-sm col-span-6 md:col-span-4 xl:col-span-2"
+						class="input text-sm rounded-md mr-4 text-sm col-span-2 md:col-span-4 xl:col-span-2"
 						type="number"
 						min="1"
 						disabled={loading}
@@ -184,7 +197,7 @@
 				</div>
 			</div>
 			<div class="col-span-12 lg:col-span-8">
-				<div class="pt-4 flex flex-row items-center">
+				<div class="pt-2 pb-4 flex flex-row items-center">
 					<label class="text-lg font-mono">
 						Legacy API (Headscale &lt; 0.23):
 						<input
@@ -197,11 +210,11 @@
 				</div>
 			</div>
 			<div class="col-span-12 lg:col-span-8">
-				<div class="pt-4 flex flex-row items-center">
+				<div class="pt-2 pb-4 flex flex-row items-center">
 					<label class="text-lg font-mono">
 						Console Debugging:
 						<input
-							class="checkbox"
+							class="checkbox variant-filled"
 							type="checkbox"
 							disabled={loading}
 							bind:checked={settings.debug}
@@ -209,10 +222,22 @@
 					</label>
 				</div>
 			</div>
+			<div class="col-span-12 lg:col-span-8">
+				<div class="pt-2 pb-4 flex flex-row items-center">
+					<label class="text-lg font-mono">
+						Theme
+						<select class="input rounded-md w-full mr-4 text-sm" bind:value={settings.theme} on:change={() => setTheme(settings.theme)}>
+							{#each ALL_THEMES as theme}
+								<option value="{theme}">{theme}</option>
+							{/each}
+						</select>
+					</label>
+				</div>
+			</div>
 			<div class="col-span-12 pt-10">
 				<button
 					type="submit"
-					disabled={loading}
+					disabled={loading || !settings.apiKey}
 					class="btn variant-filled-success space-x-2 rounded-md"
 				>
 					<div>

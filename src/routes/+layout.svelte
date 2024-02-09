@@ -15,7 +15,8 @@
 	} from '@skeletonlabs/skeleton';
 
 	import { base } from '$app/paths';
-	import { goto } from '$app/navigation';
+	import { beforeNavigate, goto } from '$app/navigation';
+
 
 	initializeStores();
 
@@ -40,7 +41,7 @@
 	import { onMount } from 'svelte';
 	storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
 
-	import { hasValidApi, populateStores } from '$lib/Stores';
+	import { hasValidApi, populateStores, ThemeStore } from '$lib/Stores';
 	import PageDrawer from '$lib/page/PageDrawer.svelte';
 	import { fade } from 'svelte/transition';
 	import { createPopulateErrorHandler } from '$lib/common/errors';
@@ -49,6 +50,10 @@
 	$: ToastStore = getToastStore();
 
 	onMount(() => {
+		ThemeStore.subscribe((theme) => {
+			document.body.setAttribute('data-theme', theme)
+		})
+
 		populateStores(createPopulateErrorHandler(ToastStore), true);
 
 		if (!hasValidApi()) {

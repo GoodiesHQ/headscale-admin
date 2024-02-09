@@ -8,6 +8,7 @@ import { /*API_URL_APIKEY,*/ apiGet, defaultApiEndpoints, type ApiEndpoints } fr
 import { toastError, toastWarning } from './common/funcs';
 import { debug } from './common/debug';
 
+export const ThemeStore: Writable<string> = localStorageStore('theme', 'skeleton');
 export const RouteStore: Writable<Route[]> = writable([]);
 export const UserStore: Writable<User[]> = writable([]);
 export const NodeStore: Writable<Node[]> = writable([]);
@@ -27,6 +28,7 @@ export const ApiKeyInfoStore: Writable<ApiKeyInfo> = localStorageStore<ApiKeyInf
 	informedExpiringSoon: false,
 } as ApiKeyInfo);
 export const ApiTtlStore: Writable<number> = localStorageStore('apiTTL', 10000);
+export const ApiAclUrlStore: Writable<string> = localStorageStore('apiAclUrl', ''); // headscale-admin-acl
 
 // Layouts
 export type LayoutStyle = 'tile' | 'list';

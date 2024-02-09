@@ -15,6 +15,7 @@
 	import { onMount } from 'svelte';
 	import type { PreAuthKey } from '$lib/common/types';
 	import { slide } from 'svelte/transition';
+	import { page } from '$app/stores';
 
 	const ToastStore = getToastStore();
 	$: users = get(UserStore);
@@ -39,11 +40,6 @@
 		usePreAuthKey: boolean;
 		preAuthKeyUser: string;
 		preAuthKey: string;
-		// accept
-		acceptDns: boolean;
-		acceptRoutes: boolean;
-		acceptExitNode: boolean;
-		acceptExitNodeValue: string;
 		// advertise
 		advertiseExitNode: boolean;
 		advertiseExitNodeLocalAccess: boolean;
@@ -51,6 +47,11 @@
 		advertiseRoutesValues: string[];
 		advertiseTags: boolean;
 		advertiseTagsValues: string[];
+		// accept
+		acceptDns: boolean;
+		acceptRoutes: boolean;
+		acceptExitNode: boolean;
+		acceptExitNodeValue: string;
 	};
 
 	function defaultDeployment(): Deployment {
@@ -66,11 +67,6 @@
 			usePreAuthKey: false,
 			preAuthKeyUser: '',
 			preAuthKey: '',
-			// accept
-			acceptDns: true,
-			acceptRoutes: true,
-			acceptExitNode: false,
-			acceptExitNodeValue: '',
 			// advertise
 			advertiseExitNode: false,
 			advertiseExitNodeLocalAccess: false,
@@ -78,13 +74,18 @@
 			advertiseRoutesValues: [],
 			advertiseTags: false,
 			advertiseTagsValues: [],
+			// accept
+			acceptDns: true,
+			acceptRoutes: true,
+			acceptExitNode: false,
+			acceptExitNodeValue: '',
 		};
 	}
 
 	$: deployment = defaultDeployment();
 
 	$: craftCommand = (d: Deployment) => {
-		const cmd = ['tailscale up --login-server=' + get(ApiUrlStore)];
+		const cmd = ['tailscale up --login-server=' + (get(ApiUrlStore) || $page.url.origin)];
 
 		// general
 		d.shieldsUp && cmd.push('--shields-up');
@@ -94,11 +95,6 @@
 		d.forceReauth && cmd.push('--force-reauth');
 		d.sshServer && cmd.push('--ssh');
 		d.usePreAuthKey && d.preAuthKey !== '' && cmd.push('--authkey=' + d.preAuthKey);
-
-		// accept
-		d.acceptDns && cmd.push('--accept-dns');
-		d.acceptRoutes && cmd.push('--accept-routes');
-		d.acceptExitNode && d.acceptExitNodeValue && cmd.push('--exit-node=' + d.acceptExitNodeValue);
 
 		// advertise
 		d.advertiseExitNode && cmd.push('--advertise-exit-node');
@@ -114,6 +110,11 @@
 				'--advertise-tags=' +
 					d.advertiseTagsValues.map((s) => (s.startsWith('tag:') ? s : 'tag:' + s)).join(','),
 			);
+
+		// accept
+		d.acceptDns && cmd.push('--accept-dns');
+		d.acceptRoutes && cmd.push('--accept-routes');
+		d.acceptExitNode && d.acceptExitNodeValue && cmd.push('--exit-node=' + d.acceptExitNodeValue);
 		return cmd.join(' ');
 	};
 
@@ -145,14 +146,14 @@
 
 	<div class="grid grid-cols-12">
 		<p class="text-xl col-span-12 py-4">General:</p>
-		<DeployCheck bind:checked={deployment.shieldsUp} name="Shields Up (Block Connections)" />
-		<DeployCheck bind:checked={deployment.generateQR} name="Generate QR Code" />
-		<DeployCheck bind:checked={deployment.reset} name="Reset" />
-		<DeployCheck bind:checked={deployment.operator} name="Operator">
+		<DeployCheck bind:checked={deployment.shieldsUp} name="Shields Up" help="Block incoming connections" />
+		<DeployCheck bind:checked={deployment.generateQR} name="Generate QR Code" help="Create a scannable QR code to import into TailScale client"/>
+		<DeployCheck bind:checked={deployment.reset} name="Reset" help="Reset unspecified settings to default values" />
+		<DeployCheck bind:checked={deployment.operator} name="Operator" help="(Unix Only) Run as a different user">
 			<input type="text" class="input text-sm rounded-md" bind:value={deployment.operatorValue} />
 		</DeployCheck>
-		<DeployCheck bind:checked={deployment.forceReauth} name="Force Reauthentication" />
-		<DeployCheck bind:checked={deployment.sshServer} name="SSH Server" />
+		<DeployCheck bind:checked={deployment.forceReauth} name="Force Reauthentication" help="Force user to re-authenticate to Headscale server" />
+		<DeployCheck bind:checked={deployment.sshServer} name="SSH Server" help="Run a local SSH server accessible by administrators" />
 		<DeployCheck bind:checked={deployment.usePreAuthKey} name="PreAuth Key">
 			<div class="flex flex-col gap-2">
 				<select bind:value={deployment.preAuthKeyUser} class="input rounded-md">
@@ -174,21 +175,6 @@
 					</div>
 				{/if}
 			</div>
-		</DeployCheck>
-
-		<p class="text-xl col-span-12 py-4">Accept:</p>
-		<DeployCheck bind:checked={deployment.acceptDns} name="Accept DNS" />
-		<DeployCheck bind:checked={deployment.acceptRoutes} name="Accept Routes" />
-		<DeployCheck bind:checked={deployment.acceptExitNode} name="Exit Node">
-			<label class="label">
-				<select class="select" bind:value={deployment.acceptExitNodeValue}>
-					{#each nodes as node}
-						<option value={node.ipAddresses.filter((s) => /^\d+\.\d+\.\d+\.\d+$/.test(s))[0]}
-							>{node.givenName} ({node.name})</option
-						>
-					{/each}
-				</select>
-			</label>
 		</DeployCheck>
 
 		<p class="text-xl col-span-12 py-4">Advertise:</p>
@@ -215,5 +201,21 @@
 				}}
 			/>
 		</DeployCheck>
+
+		<p class="text-xl col-span-12 py-4">Accept:</p>
+		<DeployCheck bind:checked={deployment.acceptDns} name="Accept DNS" />
+		<DeployCheck bind:checked={deployment.acceptRoutes} name="Accept Routes" />
+		<DeployCheck bind:checked={deployment.acceptExitNode} name="Exit Node">
+			<label class="label">
+				<select class="select" bind:value={deployment.acceptExitNodeValue}>
+					{#each nodes as node}
+						<option value={node.ipAddresses.filter((s) => /^\d+\.\d+\.\d+\.\d+$/.test(s))[0]}
+							>{node.givenName} ({node.name})</option
+						>
+					{/each}
+				</select>
+			</label>
+		</DeployCheck>
+
 	</div>
 </Page>

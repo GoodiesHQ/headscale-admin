@@ -7,7 +7,7 @@
 	import RawMdiDevices from '~icons/mdi/devices';
 	import RawMdiSettings from '~icons/mdi/settings';
 	import RawMdiHomeGroupPlus from '~icons/mdi/home-group-plus';
-	// import RawMdiSecurity from '~icons/mdi/security';
+	import RawMdiSecurity from '~icons/mdi/security';
 
 	import { page } from '$app/stores';
 	import { ApiKeyInfoStore, ApiKeyStore, hasApi, hasValidApi } from './Stores';
@@ -21,10 +21,8 @@
 		href === newPath || href === $page.url.pathname ? 'bg-primary-300 dark:bg-primary-700' : '';
 
 	let newPath = '';
-	// let oldPath = '';
 
 	function setActivePath(path: string) {
-		// oldPath = newPath;
 		newPath = path;
 	}
 
@@ -39,9 +37,9 @@
 		{ path: '/users', name: 'Users', logo: RawMdiPerson },
 		{ path: '/nodes', name: 'Nodes', logo: RawMdiDevices },
 		{ path: '/deploy', name: 'Deploy', logo: RawMdiHomeGroupPlus },
-		// { path: '/acls', name: 'ACLs', logo: RawMdiSecurity },
+		...(false ? [{ path: '/acls', name: 'ACLs', logo: RawMdiSecurity }] : []),
 		{ path: '/settings', name: 'Settings', logo: RawMdiSettings },
-	];
+	].filter(p => p != undefined);
 
 	$: getPages = (): Page[] => {
 		// before rendering, show no elements
