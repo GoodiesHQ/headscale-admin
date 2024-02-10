@@ -2,16 +2,13 @@
 
 Headscale-Admin is meant to be a simple, modern web interface for [juanfont/headscale](https://github.com/juanfont/headscale) - "An open source, self-hosted implementation of the Tailscale control server."
 
-### IN ACTIVE DEVELOPMENT
-
-Headscale-Admin should be considered a beta application. It is very much still in active development and should not be treated as a final product.
+Headscale-Admin should currently be considered a beta application. It is very much still in active development and should not be treated as a final product, but when used properly, it should be safe to run in a production environment.
 
 [![Star History Chart](https://api.star-history.com/svg?repos=goodieshq/headscale-admin&type=Timeline&size=mobile)](https://star-history.com/#goodieshq/headscale-admin&Timeline)
 
 ### Known Issues
 
-- No API key rotation yet
-- Sorting by "Last Seen" can be jumpy as devices may be sorted periodically as they check in. A workaround is to set your refresh interval to the roughly the frequency of checkin.
+- Themes are saved in LocalStorage and may present the default theme momentarily before it loads your saved preferences
 
 ### Building
 
