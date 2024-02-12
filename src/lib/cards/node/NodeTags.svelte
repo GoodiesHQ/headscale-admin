@@ -46,8 +46,6 @@
 		value={tags2}
 		class="w-full mt-2"
 		chips="variant-filled-success"
-		on:add={saveTags}
-		on:remove={saveTags}
 	/>
 	<InputChip
 		name="tags3-node-{node.id}"
@@ -55,7 +53,5 @@
 		value={tags3}
 		class="w-full mt-2"
 		chips="variant-filled-success"
-		on:add={saveTags}
-		on:remove={saveTags}
 	/>
 </CardListEntry>
