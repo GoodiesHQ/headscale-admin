@@ -137,7 +137,7 @@
 				<div class="pt-2 pb-4 flex">
 					<input
 						class="input rounded-md w-full mr-4 text-sm"
-						type="text"
+						type="password"
 						placeholder="API Key"
 						disabled={loading}
 						bind:value={settings.apiKey}
@@ -188,7 +188,7 @@
 				<div class="text-xl font-mono">API Refresh Interval</div>
 				<div class="pt-2 pb-4 grid grid-cols-12">
 					<input
-						class="input text-sm rounded-md mr-4 text-sm col-span-2 md:col-span-4 xl:col-span-2"
+						class="input text-sm rounded-md mr-4 col-span-2 md:col-span-4 xl:col-span-2"
 						type="number"
 						min="1"
 						disabled={loading}
@@ -214,7 +214,7 @@
 					<label class="text-lg font-mono">
 						Console Debugging:
 						<input
-							class="checkbox variant-filled"
+							class="checkbox"
 							type="checkbox"
 							disabled={loading}
 							bind:checked={settings.debug}
