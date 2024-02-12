@@ -1,12 +1,10 @@
 <script lang="ts">
 	import type { Node } from '$lib/common/types';
-	import { onMount } from 'svelte';
 	import CardListEntry from '../CardListEntry.svelte';
 	import { InputChip, getToastStore } from '@skeletonlabs/skeleton';
 	import { NodeStore, updateStoreItem } from '$lib/Stores';
 	import { setNodeTags } from '$lib/common/api';
 	import { toastError } from '$lib/common/funcs';
-	import { invalidate } from '$app/navigation';
 
 	export let node: Node;
 
