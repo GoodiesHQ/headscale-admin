@@ -37,7 +37,7 @@
 		{ path: '/users', name: 'Users', logo: RawMdiPerson },
 		{ path: '/nodes', name: 'Nodes', logo: RawMdiDevices },
 		{ path: '/deploy', name: 'Deploy', logo: RawMdiHomeGroupPlus },
-		{ path: '/acls', name: 'ACL Builder', logo: RawMdiSecurity },
+		{ path: '/acls', name: 'ACLs', logo: RawMdiSecurity },
 		{ path: '/settings', name: 'Settings', logo: RawMdiSettings },
 	].filter(p => p != undefined);
 
