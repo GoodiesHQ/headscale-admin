@@ -9,7 +9,6 @@
 		populateApiKeyInfoStore,
 		populateStores,
 	} from '$lib/Stores';
-	import { API_URL_MACHINE, API_URL_NODE, defaultApiEndpoints } from '$lib/common/api';
 	import { debug } from '$lib/common/debug';
 	import { createPopulateErrorHandler } from '$lib/common/errors';
 	import {
@@ -22,16 +21,64 @@
 	import type { ExpirationMessage } from '$lib/common/types';
 	import Page from '$lib/page/Page.svelte';
 	import PageHeader from '$lib/page/PageHeader.svelte';
-	import { getToastStore } from '@skeletonlabs/skeleton';
+	import { Tab, TabGroup, getToastStore } from '@skeletonlabs/skeleton';
 	import { onMount } from 'svelte';
-	import { get } from 'svelte/store';
-	import RawMdiContentSaveOutline from '~icons/mdi/content-save-outline';
+	import RawMdiGroups from '~icons/mdi/account-group';
+	import RawMdiTag from '~icons/mdi/tag';
+	import RawMdiDevices from '~icons/mdi/devices';
+	import RawMdiCodeJSON from '~icons/mdi/code-json';
+	import RawMdiSecurity from '~icons/mdi/security';
 	import RawOrbit from '~icons/mdi/orbit-variant';
+	import Groups from './Groups.svelte';
+	import { GetEmptyACL } from "./acl";
 
+	let acl = GetEmptyACL()
+	let tabSet: number = 0;
+	const tabs = [
+		{name: "groups", title: "Groups", logo: RawMdiGroups},
+		{name: "hosts", title: "Networks", logo: RawMdiDevices},
+		{name: "tag-owners", title: "Tag Owners", logo: RawMdiTag},
+		{name: "acl-policies", title: "Policies", logo: RawMdiSecurity},
+		{name: "json", title: "Config", logo: RawMdiCodeJSON},
+	]
+
+	onMount(()=>{
+		return () => {
+		}
+	})
 </script>
 
 
 <Page>
-	<PageHeader title="Access Lists" />
-	Coming Soon.
+	<PageHeader title="ACL Builder" />
+	<TabGroup 
+		justify="justify-left"
+		active="variant-filled-primary"
+		hover="hover:variant-soft-primary"
+		flex="flex-1 lg:flex-none"
+		rounded="rounded-md"
+		border=""
+		class="bg-surface-100-800-token w-full px-2"
+	>
+	<!--TabGroup justify="justify-left"-->
+	<div class="flex text-center">
+		{#each tabs as tab, i}
+			<Tab bind:group={tabSet} name={tab.name} value={i}>
+				<svelte:fragment slot="lead">
+					<span class="flex flex-row items-center text-xs sm:text-sm lg:text-md justify-center">
+						<svelte:component this={tab.logo} class="mr-2" />
+					</span>
+				</svelte:fragment>
+				{tab.title}
+			</Tab>
+		{/each}
+	</div>
+		<svelte:fragment slot="panel">
+			{#if tabs[tabSet].name == "groups"}
+				<Groups {acl} />
+			{:else}
+				Ok
+			{/if}
+		</svelte:fragment>
+	</TabGroup>
 </Page>

@@ -10,6 +10,8 @@
 	export let node: Node;
 
 	$: tags = node.forcedTags.map((tag) => tag.replace('tag:', ''));
+	$: tags2 = node.validTags.map((tag) => tag.replace('tag:', ''));
+	$: tags3 = node.invalidTags.map((tag) => tag.replace('tag:', ''));
 	$: disabled = false;
 
 	const ToastStore = getToastStore();
@@ -34,6 +36,24 @@
 		{disabled}
 		value={tags}
 		class="w-full"
+		chips="variant-filled-success"
+		on:add={saveTags}
+		on:remove={saveTags}
+	/>
+	<InputChip
+		name="tags2-node-{node.id}"
+		disabled
+		value={tags2}
+		class="w-full mt-2"
+		chips="variant-filled-success"
+		on:add={saveTags}
+		on:remove={saveTags}
+	/>
+	<InputChip
+		name="tags3-node-{node.id}"
+		disabled
+		value={tags3}
+		class="w-full mt-2"
 		chips="variant-filled-success"
 		on:add={saveTags}
 		on:remove={saveTags}
