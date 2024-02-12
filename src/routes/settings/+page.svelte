@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ALL_THEMES, setTheme } from './Themes'
+	import { ALL_THEMES, setTheme } from './Themes';
 	import { page } from '$app/stores';
 	import {
 		ApiEndpointsStore,
@@ -29,7 +29,9 @@
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
 	import RawMdiContentSaveOutline from '~icons/mdi/content-save-outline';
-	import RawOrbit from '~icons/mdi/orbit-variant';
+	import RawMdiOrbit from '~icons/mdi/orbit-variant';
+	import RawMdiEye from '~icons/mdi/eye-outline';
+	import RawMdiEyeOff from '~icons/mdi/eye-off-outline';
 
 	type Settings = {
 		apiUrl: string;
@@ -50,6 +52,8 @@
 	} as Settings;
 
 	$: apiKeyInfo = get(ApiKeyInfoStore);
+	$: apiKeyShow = false;
+
 	let apiKeyExpirationMessage: ExpirationMessage = { message: '', color: '' };
 
 	$: loading = false;
@@ -126,7 +130,7 @@
 					<input
 						class="input rounded-md w-full mr-4 text-sm"
 						type="text"
-						placeholder="{$page.url.origin}"
+						placeholder={$page.url.origin}
 						disabled={loading}
 						bind:value={settings.apiUrl}
 					/>
@@ -135,13 +139,33 @@
 			<div class="col-span-12 lg:col-span-8">
 				<div class="text-xl font-mono">API Key</div>
 				<div class="pt-2 pb-4 flex">
-					<input
-						class="input rounded-md w-full mr-4 text-sm"
-						type="password"
-						placeholder="API Key"
+					{#if apiKeyShow}
+						<input
+							class="input rounded-md w-full mr-4 text-sm"
+							type="text"
+							placeholder="API Key"
+							disabled={loading}
+							bind:value={settings.apiKey}
+						/>
+					{:else}
+						<input
+							class="input rounded-md w-full mr-4 text-sm"
+							type="password"
+							placeholder="API Key"
+							disabled={loading}
+							bind:value={settings.apiKey}
+						/>
+					{/if}
+					<button
+						type="button"
 						disabled={loading}
-						bind:value={settings.apiKey}
-					/>
+						class="btn btn-icon variant-ghost ml-2"
+						on:click={async () => {
+							apiKeyShow = !apiKeyShow;
+						}}
+					>
+						<svelte:component this={apiKeyShow ? RawMdiEyeOff : RawMdiEye} />
+					</button>
 					<button
 						type="button"
 						disabled={loading}
@@ -158,7 +182,7 @@
 							}
 						}}
 					>
-						<RawOrbit />
+						<RawMdiOrbit />
 					</button>
 				</div>
 			</div>
@@ -226,9 +250,13 @@
 				<div class="pt-2 pb-4 flex flex-row items-center">
 					<label class="text-lg font-mono">
 						Theme
-						<select class="input rounded-md w-full mr-4 text-sm" bind:value={settings.theme} on:change={() => setTheme(settings.theme)}>
+						<select
+							class="input rounded-md w-full mr-4 text-sm"
+							bind:value={settings.theme}
+							on:change={() => setTheme(settings.theme)}
+						>
 							{#each ALL_THEMES as theme}
-								<option value="{theme}">{theme}</option>
+								<option value={theme}>{theme}</option>
 							{/each}
 						</select>
 					</label>
