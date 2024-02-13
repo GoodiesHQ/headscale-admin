@@ -18,7 +18,7 @@ export async function createApiKey() {
 	date.setDate(date.getDate() + 90);
 	const data = { expiration: date.toISOString() };
 	const { apiKey } = await apiPost<ApiApiKey>(get(ApiEndpointsStore).ApiKey, data);
-	console.log(apiKey);
+	debug('Created API Key "...' + apiKey.slice(-10) + '"')
 	return apiKey;
 }
 
