@@ -203,7 +203,7 @@
 					{/if}
 				</div>
 				<div class="col-span-8">
-					{#if apiKeyExpirationMessage !== undefined}
+					{#if apiKeyInfo.authorized && apiKeyExpirationMessage !== undefined}
 						Expiration: {apiKeyExpirationMessage.message}
 					{/if}
 				</div>
