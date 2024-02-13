@@ -22,7 +22,6 @@
 
 	function handleMouseEnter() {
 		timerInfo = setTimeout(() => {
-			console.log('ok');
 			popupShow = true
 		}, 333);
 	}
