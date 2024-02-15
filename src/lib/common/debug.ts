@@ -1,7 +1,7 @@
 import { DebugStore } from '$lib/Stores';
 import { get } from 'svelte/store';
 
-export const version = '0.1.9b';
+export const version = '0.1.10b';
 
 export function debug(...data: unknown[]) {
 	// output if console debugging is enabled
