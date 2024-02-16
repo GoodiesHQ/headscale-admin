@@ -82,7 +82,7 @@
 	</CardListEntry>
 	<CardListEntry top>
 		<span slot="title" class="flex flex-row items-center">
-			Assigned Tags:
+			Advertised Tags:
 			{#if tagsInvalid.length > 0}
 				<button
 					class="btn ml-2 btn-icon w-6 h-6 [&>*]:pointer-events-none"
