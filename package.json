@@ -48,6 +48,7 @@
     "highlight.js": "11.9.0",
     "ipaddr.js": "^2.1.0",
     "js-xxhash": "^3.0.1",
+    "svelte-multiselect": "^10.2.0",
     "unplugin-icons": "^0.18.5"
   }
 }

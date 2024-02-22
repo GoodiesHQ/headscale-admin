@@ -30,28 +30,35 @@
 	import RawMdiSecurity from '~icons/mdi/security';
 	import RawOrbit from '~icons/mdi/orbit-variant';
 	import Groups from './Groups.svelte';
-	import { GetEmptyACL } from "./acl";
+	import { GetEmptyACL } from './acl';
 
-	let acl = GetEmptyACL()
+	let acl = GetEmptyACL();
 	let tabSet: number = 0;
 	const tabs = [
-		{name: "groups", title: "Groups", logo: RawMdiGroups},
-		{name: "hosts", title: "Networks", logo: RawMdiDevices},
-		{name: "tag-owners", title: "Tag Owners", logo: RawMdiTag},
-		{name: "acl-policies", title: "Policies", logo: RawMdiSecurity},
-		{name: "json", title: "Config", logo: RawMdiCodeJSON},
-	]
+		{ name: 'groups', title: 'Groups', logo: RawMdiGroups },
+		{ name: 'hosts', title: 'Networks', logo: RawMdiDevices },
+		{ name: 'tag-owners', title: 'Tag Owners', logo: RawMdiTag },
+		{ name: 'acl-policies', title: 'Policies', logo: RawMdiSecurity },
+		{ name: 'json', title: 'Config', logo: RawMdiCodeJSON },
+	];
 
-	onMount(()=>{
-		return () => {
+	onMount(() => {
+		acl.groups = {
+			"alpha": ["aarcher", "cloud"],
+			"bravo": ["aarcher", "cloud"],
+			"charlie": ["aarcher", "cloud"],
+			"delta": ["aarcher", "cloud"],
+			"echo": ["aarcher", "cloud"],
+			"foxtrot": ["aarcher", "cloud"],
+			"golf": ["aarcher", "cloud"],
 		}
-	})
+		return () => {};
+	});
 </script>
-
 
 <Page>
 	<PageHeader title="ACL Builder" />
-	<TabGroup 
+	<TabGroup
 		justify="justify-left"
 		active="variant-filled-primary"
 		hover="hover:variant-soft-primary"
@@ -60,21 +67,26 @@
 		border=""
 		class="bg-surface-100-800-token w-full px-2"
 	>
-	<!--TabGroup justify="justify-left"-->
-	<div class="flex text-center">
-		{#each tabs as tab, i}
-			<Tab bind:group={tabSet} name={tab.name} value={i}>
-				<svelte:fragment slot="lead">
-					<span class="flex flex-row items-center text-xs sm:text-sm lg:text-md justify-center">
-						<svelte:component this={tab.logo} class="mr-2" />
-					</span>
-				</svelte:fragment>
-				{tab.title}
-			</Tab>
-		{/each}
-	</div>
+		<!--TabGroup justify="justify-left"-->
+		<div class="flex text-center">
+			{#each tabs as tab, i}
+				<Tab
+					bind:group={tabSet}
+					name={tab.name}
+					value={i}
+					padding="px-2 py-2 md:px-4 md:pt-4 lg:px-6 xl:px-8"
+				>
+					<svelte:fragment slot="lead">
+						<span class="flex flex-row items-center text-xs sm:text-sm lg:text-md justify-center">
+							<svelte:component this={tab.logo} class="mr-2" />
+						</span>
+					</svelte:fragment>
+					{tab.title}
+				</Tab>
+			{/each}
+		</div>
 		<svelte:fragment slot="panel">
-			{#if tabs[tabSet].name == "groups"}
+			{#if tabs[tabSet].name == 'groups'}
 				<Groups {acl} />
 			{:else}
 				Ok
