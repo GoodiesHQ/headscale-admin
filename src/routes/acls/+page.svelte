@@ -44,14 +44,14 @@
 
 	onMount(() => {
 		acl.groups = {
-			"alpha": ["aarcher", "cloud"],
-			"bravo": ["aarcher", "cloud"],
-			"charlie": ["aarcher", "cloud"],
-			"delta": ["aarcher", "cloud"],
-			"echo": ["aarcher", "cloud"],
-			"foxtrot": ["aarcher", "cloud"],
-			"golf": ["aarcher", "cloud"],
-		}
+			alpha: ['aarcher', 'cloud'],
+			bravo: ['user.two', 'cloud'],
+			charlie: ['user.one', 'cloud'],
+			delta: ['cloud'],
+			echo: ['user.three', 'cloud'],
+			foxtrot: ['aarcher', 'user.four'],
+			golf: ['user.five', 'cloud'],
+		};
 		return () => {};
 	});
 </script>
@@ -60,14 +60,13 @@
 	<PageHeader title="ACL Builder" />
 	<TabGroup
 		justify="justify-left"
-		active="variant-filled-primary"
-		hover="hover:variant-soft-primary"
+		active="variant-filled-secondary"
+		hover="hover:variant-soft-secondary"
 		flex="flex-1 lg:flex-none"
 		rounded="rounded-md"
 		border=""
 		class="bg-surface-100-800-token w-full px-2"
 	>
-		<!--TabGroup justify="justify-left"-->
 		<div class="flex text-center">
 			{#each tabs as tab, i}
 				<Tab
