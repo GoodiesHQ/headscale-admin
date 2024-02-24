@@ -73,77 +73,71 @@
 	});
 </script>
 
-<div class="grid grid-cols-12 space-x-2">
-	<div class="col-span-12 lg:col-span-6 w-full">
-		<div class="container h-screen w-full">
-			<button
-				class="font-mono"
-				on:click={() => {
-					selectedGroup = '';
-				}}>Groups:</button
-			>
-			<button
-				class="btn-sm rounded-sm variant-filled-primary"
-				on:click={() => {
-					showCreateGroup = !showCreateGroup;
-				}}
-			>
-				{#if showCreateGroup}
-					Cancel
-				{:else}
-					Create
-				{/if}
-			</button>
-			{#if showCreateGroup}
-				<form transition:slide on:submit={newGroup} class="w-full my-2 items-center">
-					<input
-						class="input rounded-md w-full md:w-1/2 lg:w-1/3"
-						type="text"
-						placeholder="New Group Name..."
-						disabled={loading}
-						bind:value={newGroupName}
-						use:focus
-					/>
-					<button type="submit" class="btn btn-icon" disabled={loading}>
-						<RawMdiCheckCircleOutline />
-					</button>
-				</form>
-			{/if}
-			<div class="flex items-center pb-4 mt-4">
+<div class="grid grid-cols-12 space-x-4">
+	<div class="col-span-6">
+		<button
+			class="font-mono"
+			on:click={() => {
+				selectedGroup = '';
+			}}>Groups:</button
+		>
+		<button
+			class="btn-sm rounded-sm variant-filled-success ml-4"
+			on:click={() => {
+				showCreateGroup = !showCreateGroup;
+			}}
+		>
+			Create
+		</button>
+		{#if showCreateGroup}
+			<form transition:slide on:submit={newGroup} class="w-full my-2 items-center">
 				<input
+					class="input rounded-md w-full md:w-1/2 lg:w-1/3"
 					type="text"
-					class="input rounded-md text-sm mb-0"
-					placeholder="Filter Groups..."
-					bind:value={groupsFilter}
+					placeholder="New Group Name..."
+					disabled={loading}
+					bind:value={newGroupName}
+					use:focus
 				/>
-			</div>
-			<div class="text-sm">
-				<ListBox rounded="rounded-md" active="variant-filled-primary">
-					{#each filteredGroups as group}
-						<div class="bg-surface-200 dark:bg-surface-700">
-							<ListBoxItem
-								bind:group={selectedGroup}
-								name="group"
-								value={group}
-								on:change={() => {
-									selectedUsers =
-										selectedGroup && acl.groups[selectedGroup] !== undefined
-											? [...acl.groups[selectedGroup]]
-											: [];
-								}}>{group}</ListBoxItem
-							>
-						</div>
-					{/each}
-				</ListBox>
-			</div>
+				<button type="submit" class="btn btn-icon" disabled={loading}>
+					<RawMdiCheckCircleOutline />
+				</button>
+			</form>
+		{/if}
+		<div class="flex items-center pb-4 mt-4">
+			<input
+				type="text"
+				class="input rounded-md text-sm mb-0"
+				placeholder="Filter Groups..."
+				bind:value={groupsFilter}
+			/>
+		</div>
+		<div class="text-sm">
+			<ListBox rounded="rounded-md" active="variant-filled-primary">
+				{#each filteredGroups as group}
+					<div class="bg-surface-200 dark:bg-surface-700">
+						<ListBoxItem
+							bind:group={selectedGroup}
+							name="group"
+							value={group}
+							on:change={() => {
+								selectedUsers =
+									selectedGroup && acl.groups[selectedGroup] !== undefined
+										? [...acl.groups[selectedGroup]]
+										: [];
+							}}>{group}</ListBoxItem
+						>
+					</div>
+				{/each}
+			</ListBox>
 		</div>
 	</div>
-	<div class="col-span-6">
+	<div class="col-span-12 lg:col-span-6">
 		{#if selectedGroup}
-			<h3 class="font-mono mb-4">Members:</h3>
+			<h3 class="font-mono mb-4">Members of <span class="text-primary-500 dark:text-primary-300">{selectedGroup}</span>:</h3>
 			<MultiSelect
 				bind:selected={selectedUsers}
-				inputClass="input w-full"
+				inputClass="input"
 				liOptionClass="input rounded-none"
 				ulOptionsClass="input rounded-none"
 				maxOptions={0}

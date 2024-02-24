@@ -65,7 +65,7 @@
 		flex="flex-1 lg:flex-none"
 		rounded="rounded-md"
 		border=""
-		class="bg-surface-100-800-token w-full px-2"
+		class="bg-surface-100-800-token w-full px-2 py-2"
 	>
 		<div class="flex text-center">
 			{#each tabs as tab, i}
