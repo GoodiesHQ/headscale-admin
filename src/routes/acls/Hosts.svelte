@@ -7,7 +7,7 @@
 	import type { User } from '$lib/common/types';
 	import { debug } from '$lib/common/debug';
 	import { MultiSelect } from 'svelte-multiselect';
-	import { focus, toastError, toastSuccess } from '$lib/common/funcs';
+	import { focus, isValidCIDR, toastError, toastSuccess } from '$lib/common/funcs';
 	import Delete from '$lib/parts/Delete.svelte'
 
 	import RawMdiRename from '~icons/mdi/rename-outline';
@@ -22,26 +22,24 @@
 
 	$: loading = false;
 
-	$: selectedGroup = '';
-	$: selectedUsers = [] as string[];
+	$: selectedHost = '';
+	$: selectedCIDR = '';
 
-	$: showCreateGroup = false;
-	$: showDeleteGroup = false;
-	$: showRenameGroup = false;
-	$: newGroupName = '';
+	$: showCreateHost = false;
+	$: showRenameHost = false;
+	$: newHostName = '';
+	$: newHostCIDR = ''
 
-	$: users = get(UserStore) as User[];
-	$: usersNames = users.map((u: User) => u.name);
+	let hostsFilter = '';
 
-	let groupsFilter = '';
-
-	function newGroup() {
+	function newHost() {
 		loading = true;
 		try {
-			acl = acl.createGroup(newGroupName);
-			toastSuccess(`Group '${newGroupName}' created`, ToastStore);
-			newGroupName = '';
-			showCreateGroup = false;
+			acl = acl.createHost(newHostName, newHostCIDR);
+			toastSuccess(`Host '${newHostName}' (${newHostCIDR}) created`, ToastStore);
+			newHostName = '';
+			newHostCIDR = '';
+			showCreateHost = false;
 		} catch (e) {
 			if (e instanceof Error) {
 				toastError('', ToastStore, e);
@@ -51,11 +49,11 @@
 		}
 	}
 
-	function saveGroup() {
+	function saveHost() {
 		loading = true;
 		try {
-			acl = acl.setGroupMembers(selectedGroup, selectedUsers);
-			toastSuccess(`Group '${selectedGroup}' saved`, ToastStore);
+			acl = acl.setHost(selectedHost, selectedCIDR);
+			toastSuccess(`Host '${selectedHost}' (${selectedCIDR}) saved`, ToastStore);
 		} catch (e) {
 			if (e instanceof Error) {
 				toastError('', ToastStore, e);
@@ -65,14 +63,14 @@
 		}
 	}
 
-	function renameGroup() {
+	function renameHost() {
 		try {
-			if (selectedGroup !== newGroupName) {
-				acl = acl.renameGroup(selectedGroup, newGroupName);
-				toastSuccess(`Group renamed from '${selectedGroup}' to '${newGroupName}'`, ToastStore);
-				selectedGroup = newGroupName;
+			if (selectedHost !== newHostName) {
+				acl = acl.renameGroup(selectedHost, newHostName);
+				toastSuccess(`Group renamed from '${selectedHost}' to '${newHostName}'`, ToastStore);
+				selectedHost = newHostName;
 			}
-			showRenameGroup = false;
+			showRenameHost = false;
 		} catch (e) {
 			if (e instanceof Error) {
 				toastError('', ToastStore, e);
@@ -80,11 +78,11 @@
 		}
 	}
 
-	function deleteGroup() {
+	function deleteHost() {
 		try {
-			acl = acl.deleteGroup(selectedGroup);
-			toastSuccess(`Group '${selectedGroup}' deleted`, ToastStore);
-			selectedGroup = '';
+			acl = acl.deleteHost(selectedHost);
+			toastSuccess(`Group '${selectedHost}' deleted`, ToastStore);
+			selectedHost = '';
 		} catch (e) {
 			if (e instanceof Error) {
 				toastError('', ToastStore, e);
@@ -92,59 +90,57 @@
 		}
 	}
 
-	function selectGroup() {
+	function selectHost() {
+		showRenameHost = false;
+		newHostName = '';
+		selectedCIDR = acl.getHostCIDR(selectedHost);
+	}
+	/*function selectHost() {
 		showRenameGroup = false;
 		newGroupName = '';
 		selectedUsers =
 			selectedGroup && acl.groupExists(selectedGroup)
 				? [...acl.getGroupMembers(selectedGroup)]
 				: [];
-	}
+	}*/
 
-	function filterGroups(groups: string[], filter: string) {
+	function filterHosts(hosts: string[], filter: string) {
 		try {
 			const r = RegExp(filter);
-			return groups.filter((g) => r.test(g));
+			return hosts.filter((g) => r.test(g));
 		} catch {
-			debug(`Group Regex "${filter}" is invalid`);
-			return groups;
+			debug(`Host Regex "${filter}" is invalid`);
+			return hosts;
 		}
 	}
 
-	$: filteredGroups = filterGroups(acl.getGroupNames(), groupsFilter);
+	$: filteredGroups = filterHosts(acl.getHostNames(), hostsFilter);
 
-	function resetSelectedGroup() {
-		selectedGroup = '';
+	function resetSelectedHost() {
+		selectedHost = '';
+		selectedCIDR = '';
 	}
 
-	function toggleShowCreateGroup() {
-		showCreateGroup = !showCreateGroup;
+	function toggleShowCreateHost() {
+		showCreateHost = !showCreateHost;
 	}
 
-	onMount(() => {
-		const unsubUserStore = UserStore.subscribe((us) => {
-			users = us;
-			usersNames = us.map((u: User) => u.name);
-		});
-		return () => {
-			unsubUserStore();
-		};
-	});
 </script>
 
 <Container>
 	<div slot="left">
-		<button class="font-mono" on:click={resetSelectedGroup}>User Groups:</button>
-		<button class="btn-sm rounded-md variant-filled-success ml-4" on:click={toggleShowCreateGroup}>
+		<button class="font-mono" on:click={resetSelectedHost}>Hosts and Networks:</button>
+		<button class="btn-sm rounded-md variant-filled-success ml-4" on:click={toggleShowCreateHost}>
 			Create
 		</button>
 
-		{#if showCreateGroup}
+		{#if showCreateHost}
 			<NewItem
-				title="Group"
+				title="Host"
 				disabled={loading}
-				bind:name={newGroupName}
-				submit={(s) => (acl = acl.createGroup(s))}
+				bind:name={newHostName}
+				bind:value={newHostCIDR}
+				submit={(n, v) => (acl = acl.createHost(n, v ?? ''))}
 			/>
 		{/if}
 
@@ -153,7 +149,7 @@
 				type="text"
 				class="input rounded-md text-sm mb-0"
 				placeholder="Filter Groups..."
-				bind:value={groupsFilter}
+				bind:value={hostsFilter}
 			/>
 		</div>
 		<div class="text-sm">
@@ -161,10 +157,10 @@
 				{#each filteredGroups.sort((a, b) => a.localeCompare(b)) as group}
 					<div class="bg-surface-200 dark:bg-surface-700">
 						<ListBoxItem
-							bind:group={selectedGroup}
+							bind:group={selectedHost}
 							name="group"
 							value={group}
-							on:change={selectGroup}
+							on:change={selectHost}
 						>
 							{group}
 						</ListBoxItem>
@@ -174,34 +170,34 @@
 		</div>
 	</div>
 	<div slot="right">
-		{#if selectedGroup}
+		{#if selectedHost}
 			<h3 class="font-mono mb-4 flex flex-row items-center">
-				<span>Members of</span>
-				{#if !showRenameGroup}
+				<span>CIDR Value of Host</span>
+				{#if !showRenameHost}
 					<button
 						class="flex flex-row ml-2 items-center"
 						on:click={() => {
-							newGroupName = selectedGroup;
-							showRenameGroup = true;
+							newHostName = selectedHost;
+							showRenameHost = true;
 						}}
 					>
-						<span class="text-primary-500 dark:text-primary-300">{selectedGroup}</span>
+						<span class="text-primary-500 dark:text-primary-300">{selectedHost}</span>
 						<span class="text-xs ml-1"><RawMdiRename /></span>
 					</button>
 				{:else}
-					<form on:submit={renameGroup}>
+					<form on:submit={renameHost}>
 						<input
 							use:focus
 							type="text"
 							class="input p-0 m-0 text-xs ml-2 w-32"
-							bind:value={newGroupName}
+							bind:value={newHostName}
 						/>
 					</form>
 				{/if}
 			</h3>
-			<form on:submit={saveGroup}>
-				<MultiSelect
-					bind:selected={selectedUsers}
+			<form on:submit={saveHost}>
+				<!--MultiSelect
+					bind:selected={selectedC}
 					inputClass="input"
 					liOptionClass="input rounded-none"
 					ulOptionsClass="input rounded-none"
@@ -210,7 +206,7 @@
 					autoScroll={false}
 					options={[...usersNames]}
 					duplicates={false}
-				/>
+				/-->
 				<button
 					class="btn-sm rounded-md variant-filled-success mt-4"
 					disabled={loading}
@@ -221,17 +217,14 @@
 					</div>
 				</button>
 				{#if (() => {
-					const selectedUsersSet = new Set(selectedUsers);
-					const originalUsersSet = new Set(acl.getGroupMembers(selectedGroup));
-					return ![...selectedUsersSet].every((user) => originalUsersSet.has(user))
-				  	  || ![...originalUsersSet].every((user) => selectedUsersSet.has(user));
+					return selectedHost !== newHostName
 				})()}
 					<button
 						class="btn-sm rounded-md variant-filled-warning mt-4"
 						disabled={loading}
 						type="reset"
 						on:click={() => {
-							selectedUsers = acl.getGroupMembers(selectedGroup);
+							selectedCIDR = acl.getHostCIDR(selectedHost)
 						}}
 					>
 						<div class="flex flex-row items-center">
@@ -240,7 +233,7 @@
 					</button>
 				{/if}
 			</form>
-			<Delete func={deleteGroup} />
+			<Delete func={deleteHost} />
 		{/if}
 	</div>
 </Container>

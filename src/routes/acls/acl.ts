@@ -1,4 +1,4 @@
-import { toastError } from "$lib/common/funcs";
+import { isValidCIDR, toastError } from "$lib/common/funcs";
 import type { ToastStore } from "@skeletonlabs/skeleton";
 
 export type AclGroups = { [key: string]: string[] }
@@ -27,8 +27,9 @@ const Prefixes: Record<PrefixType, string> = {
     "tag": "tag:",
 }
 
-const GroupNameRegex = /^[a-z0-9-\.]+$/
-const TagNameRegex = /^\S+$/
+const RegexGroupName = /^[a-z0-9-\.]+$/
+const RegexTagName = /^[^\s:]+$/
+const RegexHostName = /^[a-z0-9-\.]+$/
 
 export class ACLBuilder implements ACL {
     constructor(
@@ -78,7 +79,7 @@ export class ACLBuilder implements ACL {
         if (name.toLowerCase() !== name) {
             throw new Error("Group name must be lowercase")
         }
-        if (!GroupNameRegex.test(name)) {
+        if (!RegexGroupName.test(name)) {
             throw new Error("Group name is limited to: lowercase alphabet, digits, dashes, and periods")
         }
         return name
@@ -87,10 +88,26 @@ export class ACLBuilder implements ACL {
     // tag names can contain anything but spaces
     static validateTagName(name: string): string {
         name = this.stripPrefix(name)
-        if (!TagNameRegex.test(name)) {
+        if (!RegexTagName.test(name)) {
             throw new Error("Tag name must contain no spaces")
         }
         return name
+    }
+
+    // host names can contain anything but spaces
+    static validateHostName(name: string): string {
+        name = name.toLowerCase()
+        if(!RegexHostName.test(name)) {
+            throw new Error("Host name is limited to: lowercase alphabet, digits, dashes, and periods")
+        }
+        return name
+    }
+
+    static validateHostCIDR(cidr: string): string {
+        if(isValidCIDR(cidr)){
+            return cidr;
+        }
+        throw new Error("Invalid IP CIDR Notation")
     }
 
     // deep clone of current ACL
@@ -110,12 +127,53 @@ export class ACLBuilder implements ACL {
         return this
     }
 
+    createHost(name: string, cidr: string): ACLBuilder {
+        return this.setHost(name, cidr)
+    }
+
+    getHostCIDR(name: string): string {
+        return this.hosts[name]
+    }
+
+    setHost(name: string, cidr: string): ACLBuilder {
+        name = ACLBuilder.validateHostName(name);
+        cidr = ACLBuilder.validateHostCIDR(cidr);
+        this.hosts[name] = cidr
+        return this
+    }
+
+    renameHost(nameOld: string, nameNew: string): ACLBuilder {
+        nameOld = ACLBuilder.validateHostName(nameOld);
+        nameNew = ACLBuilder.validateHostName(nameNew);
+        if(this.hosts[nameOld] === undefined) {
+            throw new Error(`Group '${nameOld}' does not exist`)
+        }
+        if(this.hosts[nameNew] !== undefined) {
+            throw new Error(`Group '${nameNew}' already exists`)
+        }
+        this.hosts[nameNew] = this.hosts[nameOld]
+        delete this.hosts[nameNew]
+        return this
+    }
+
+    getHostNames(): string[] {
+        return Object.keys(this.hosts);
+    }
+
+    deleteHost(name: string): ACLBuilder {
+        if(this.hosts[name] !== undefined){
+            delete this.hosts[name];
+        }
+        return this
+    }
+
     createTagOwners(name: string): ACLBuilder {
         name = ACLBuilder.validateTagName(name);
         const { prefixed } = ACLBuilder.normalizePrefix(name, 'tag')
         this.tagOwners[prefixed] = [];
         return this
     }
+
 
     renameGroup(nameOld: string, nameNew: string): ACLBuilder {
         nameNew = ACLBuilder.validateGroupName(nameNew);
@@ -199,18 +257,32 @@ export class ACLBuilder implements ACL {
     }
 
     setGroupMembers(name: string, members: string[]): ACLBuilder {
-        const {stripped, prefixed} = ACLBuilder.normalizePrefix(name, 'tag')
+        const {stripped, prefixed} = ACLBuilder.normalizePrefix(name, 'group')
 
-        if (this.groups[prefixed] === undefined) {
+        /*if (this.groups[prefixed] === undefined) {
             throw new Error(`Group '${stripped}' doesn't exist`);
-        }
+        }*/
 
         this.groups[prefixed] = [...members];
         return this
     }
 
+    getGroupNames(): string[] {
+        const names = []
+        for(const name of Object.keys(this.groups)){
+            const { stripped } = ACLBuilder.normalizePrefix(name, 'group')
+            names.push(stripped)
+        }
+        return names
+    }
+
+    groupExists(name: string): boolean {
+        const {prefixed} = ACLBuilder.normalizePrefix(name, 'group')
+        return this.groups[prefixed] !== undefined
+    }
+
     getGroupMembers(name: string): string[] {
-        const {stripped, prefixed} = ACLBuilder.normalizePrefix(name, 'tag')
+        const {stripped, prefixed} = ACLBuilder.normalizePrefix(name, 'group')
 
         if (this.groups[prefixed] === undefined) {
             throw new Error(`Group '${stripped}' doesn't exist`);
