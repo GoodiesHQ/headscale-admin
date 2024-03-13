@@ -20,13 +20,6 @@ const DurationInfinite = new Date(DurationInfiniteString);
 const ExpirationColorFuture = 'text-success-800 dark:text-success-400';
 const ExpirationColorPast = 'text-error-600 dark:text-error-400';
 
-export function getExpiry(node?: Node): string {
-	if(node === undefined){
-		return DurationInfiniteString;
-	}
-	return node.expiry ?? DurationInfiniteString
-}
-
 export function isExpired(expiry: string): boolean {
 	const date = new Date(expiry ?? DurationInfiniteString);
 	const now = new Date();

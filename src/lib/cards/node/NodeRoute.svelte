@@ -6,7 +6,7 @@
 	import RawMdiToggleSwitchOff from '~icons/mdi/toggle-switch-off';
 	import Delete from '$lib/parts/Delete.svelte';
 	import { RouteStore, updateStoreItem } from '$lib/Stores';
-	import { isExpired, getExpiry } from '$lib/common/funcs';
+	import { isExpired } from '$lib/common/funcs';
 	import { debug } from '$lib/common/debug';
 
 	export let route: Route;
@@ -19,7 +19,7 @@
 	$: disabled =
 		loading ||
 		!route.advertised || // route is not advertised
-		isExpired(getExpiry(route.node ?? route.machine)) || // node is expired
+		isExpired((route.node ?? route.machine)?.expiry || '') || // node is expired
 		!(route.node ?? route.machine).online; // node is not online
 </script>
 
