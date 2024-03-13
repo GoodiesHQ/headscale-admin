@@ -1,14 +1,10 @@
 <script lang="ts">
 	import { AccordionItem } from '@skeletonlabs/skeleton';
-	import RawMdiUser from '~icons/mdi/user';
 
 	import type { User } from '$lib/common/types';
 
 	import CardListEntry from '../CardListEntry.svelte';
 	import UserInfo from './UserInfo.svelte';
-	import { onMount } from 'svelte';
-	import { NodeStore } from '$lib/Stores';
-	import { get } from 'svelte/store';
 	import OnlineUserIndicator from '$lib/parts/OnlineUserIndicator.svelte';
 
 	export let user: User;

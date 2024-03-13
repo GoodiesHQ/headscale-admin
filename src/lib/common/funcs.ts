@@ -5,6 +5,7 @@ import { debug } from './debug';
 import { createApiKey, expireApiKey } from './api';
 import { get } from 'svelte/store';
 import { ApiKeyStore } from '$lib/Stores';
+import type { Node } from './types';
 // import { createApiKey } from './api';
 // import { ApiKeyStore } from '$lib/Stores';
 

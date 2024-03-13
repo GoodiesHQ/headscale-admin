@@ -1,15 +1,10 @@
 <script lang="ts">
 	import { deleteRoute, disableRoute, enableRoute } from '$lib/common/api';
 	import type { Route } from '$lib/common/types';
-	import { SlideToggle } from '@skeletonlabs/skeleton';
 
-	import RawMdiDelete from '~icons/mdi/delete';
 	import RawMdiToggleSwitchOn from '~icons/mdi/toggle-switch';
 	import RawMdiToggleSwitchOff from '~icons/mdi/toggle-switch-off';
-	import RawMdiCheckCircleOutline from '~icons/mdi/check-circle-outline';
-	import RawMdiCloseCircleOutline from '~icons/mdi/close-circle-outline';
 	import Delete from '$lib/parts/Delete.svelte';
-	import { onMount } from 'svelte';
 	import { RouteStore, updateStoreItem } from '$lib/Stores';
 	import { isExpired } from '$lib/common/funcs';
 	import { debug } from '$lib/common/debug';
@@ -24,7 +19,7 @@
 	$: disabled =
 		loading ||
 		!route.advertised || // route is not advertised
-		isExpired(route.node ?? route.machine) || // node is expired
+		isExpired((route.node ?? route.machine)?.expiry || '') || // node is expired
 		!(route.node ?? route.machine).online; // node is not online
 </script>
 

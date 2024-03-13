@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { NodeStore, UserStore, appendStoreItem } from '$lib/Stores';
-	import { createNode, createUser } from '$lib/common/api';
+	import { createNode } from '$lib/common/api';
 	import { debug } from '$lib/common/debug';
 	import { toastError, toastSuccess, focus } from '$lib/common/funcs';
 	import { getToastStore } from '@skeletonlabs/skeleton';
