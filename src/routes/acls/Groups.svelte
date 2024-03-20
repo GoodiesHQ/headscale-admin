@@ -1,20 +1,16 @@
 <script lang="ts">
-	import { ListBox, ListBoxItem, getToastStore } from '@skeletonlabs/skeleton';
-	import type { ACLBuilder } from './acl';
+	import { getToastStore } from '@skeletonlabs/skeleton';
+	import type { ACLBuilder } from '$lib/common/acl';
 	import { get } from 'svelte/store';
 	import { UserStore } from '$lib/Stores';
 	import { onMount } from 'svelte';
 	import type { User } from '$lib/common/types';
 	import { debug } from '$lib/common/debug';
-	import { MultiSelect } from 'svelte-multiselect';
-	import { focus, toastError, toastSuccess } from '$lib/common/funcs';
-	import Delete from '$lib/parts/Delete.svelte'
+	import { toastError, toastSuccess } from '$lib/common/funcs';
+    import CardListPage from '$lib/cards/CardListPage.svelte';
+    import GroupListCard from '$lib/cards/acl/GroupListCard.svelte';
 
-	import RawMdiRename from '~icons/mdi/rename-outline';
-	import RawMdiUndo from '~icons/mdi/undo-variant';
-	import RawMdiContentSave from '~icons/mdi/content-save-outline';
 	import NewItem from './NewItem.svelte';
-	import Container from './container.svelte';
 
 	export let acl: ACLBuilder;
 
@@ -22,12 +18,7 @@
 
 	$: loading = false;
 
-	$: selectedGroup = '';
-	$: selectedUsers = [] as string[];
-
 	$: showCreateGroup = false;
-	$: showDeleteGroup = false;
-	$: showRenameGroup = false;
 	$: newGroupName = '';
 
 	$: users = get(UserStore) as User[];
@@ -51,56 +42,6 @@
 		}
 	}
 
-	function saveGroup() {
-		loading = true;
-		try {
-			acl = acl.setGroupMembers(selectedGroup, selectedUsers);
-			toastSuccess(`Group '${selectedGroup}' saved`, ToastStore);
-		} catch (e) {
-			if (e instanceof Error) {
-				toastError('', ToastStore, e);
-			}
-		} finally {
-			loading = false;
-		}
-	}
-
-	function renameGroup() {
-		try {
-			if (selectedGroup !== newGroupName) {
-				acl = acl.renameGroup(selectedGroup, newGroupName);
-				toastSuccess(`Group renamed from '${selectedGroup}' to '${newGroupName}'`, ToastStore);
-				selectedGroup = newGroupName;
-			}
-			showRenameGroup = false;
-		} catch (e) {
-			if (e instanceof Error) {
-				toastError('', ToastStore, e);
-			}
-		}
-	}
-
-	function deleteGroup() {
-		try {
-			acl = acl.deleteGroup(selectedGroup);
-			toastSuccess(`Group '${selectedGroup}' deleted`, ToastStore);
-			selectedGroup = '';
-		} catch (e) {
-			if (e instanceof Error) {
-				toastError('', ToastStore, e);
-			}
-		}
-	}
-
-	function selectGroup() {
-		showRenameGroup = false;
-		newGroupName = '';
-		selectedUsers =
-			selectedGroup && acl.groupExists(selectedGroup)
-				? [...acl.getGroupMembers(selectedGroup)]
-				: [];
-	}
-
 	function filterGroups(groups: string[], filter: string) {
 		try {
 			const r = RegExp(filter);
@@ -112,10 +53,6 @@
 	}
 
 	$: filteredGroups = filterGroups(acl.getGroupNames(), groupsFilter);
-
-	function resetSelectedGroup() {
-		selectedGroup = '';
-	}
 
 	function toggleShowCreateGroup() {
 		showCreateGroup = !showCreateGroup;
@@ -132,115 +69,31 @@
 	});
 </script>
 
-<Container>
-	<div slot="left">
-		<button class="font-mono" on:click={resetSelectedGroup}>User Groups:</button>
-		<button class="btn-sm rounded-md variant-filled-success ml-4" on:click={toggleShowCreateGroup}>
-			Create
-		</button>
+<CardListPage>
+    <div class="my-4">
+    <button class="btn-sm rounded-md variant-filled-success" on:click={toggleShowCreateGroup}>
+        Create
+    </button>
+    {#if showCreateGroup}
+        <NewItem
+            title="Group"
+            disabled={loading}
+            bind:name={newGroupName}
+            submit={() => {newGroup()}}
+        />
+    {/if}
+    </div>
+    
 
-		{#if showCreateGroup}
-			<NewItem
-				title="Group"
-				disabled={loading}
-				bind:name={newGroupName}
-				submit={(s) => (acl = acl.createGroup(s))}
-			/>
-		{/if}
-
-		<div class="flex items-center pb-4 mt-4">
-			<input
-				type="text"
-				class="input rounded-md text-sm mb-0"
-				placeholder="Filter Groups..."
-				bind:value={groupsFilter}
-			/>
-		</div>
-		<div class="text-sm">
-			<ListBox rounded="rounded-md" active="variant-filled-primary">
-				{#each filteredGroups.sort((a, b) => a.localeCompare(b)) as group}
-					<div class="bg-surface-200 dark:bg-surface-700">
-						<ListBoxItem
-							bind:group={selectedGroup}
-							name="group"
-							value={group}
-							on:change={selectGroup}
-						>
-							{group}
-						</ListBoxItem>
-					</div>
-				{/each}
-			</ListBox>
-		</div>
-	</div>
-	<div slot="right">
-		{#if selectedGroup}
-			<h3 class="font-mono mb-4 flex flex-row items-center">
-				<span>Members of</span>
-				{#if !showRenameGroup}
-					<button
-						class="flex flex-row ml-2 items-center"
-						on:click={() => {
-							newGroupName = selectedGroup;
-							showRenameGroup = true;
-						}}
-					>
-						<span class="text-primary-500 dark:text-primary-300">{selectedGroup}</span>
-						<span class="text-xs ml-1"><RawMdiRename /></span>
-					</button>
-				{:else}
-					<form on:submit={renameGroup}>
-						<input
-							use:focus
-							type="text"
-							class="input p-0 m-0 text-xs ml-2 w-32"
-							bind:value={newGroupName}
-						/>
-					</form>
-				{/if}
-			</h3>
-			<form on:submit={saveGroup}>
-				<MultiSelect
-					bind:selected={selectedUsers}
-					inputClass="input"
-					liOptionClass="input rounded-none"
-					ulOptionsClass="input rounded-none"
-					maxOptions={0}
-					closeDropdownOnSelect={false}
-					autoScroll={false}
-					options={[...usersNames]}
-					duplicates={false}
-				/>
-				<button
-					class="btn-sm rounded-md variant-filled-success mt-4"
-					disabled={loading}
-					type="submit"
-				>
-					<div class="flex flex-row items-center">
-						<RawMdiContentSave /> Save
-					</div>
-				</button>
-				{#if (() => {
-					const selectedUsersSet = new Set(selectedUsers);
-					const originalUsersSet = new Set(acl.getGroupMembers(selectedGroup));
-					return ![...selectedUsersSet].every((user) => originalUsersSet.has(user))
-				  	  || ![...originalUsersSet].every((user) => selectedUsersSet.has(user));
-				})()}
-					<button
-						class="btn-sm rounded-md variant-filled-warning mt-4"
-						disabled={loading}
-						type="reset"
-						on:click={() => {
-							selectedUsers = acl.getGroupMembers(selectedGroup);
-						}}
-					>
-						<div class="flex flex-row items-center">
-							<RawMdiUndo /> Discard
-						</div>
-					</button>
-				{/if}
-			</form>
-			<Delete func={deleteGroup} />
-		{/if}
-	</div>
-</Container>
+    <div class="flex items-center pb-4 mt-4">
+        <input
+            type="text"
+            class="input rounded-md text-sm mb-0"
+            placeholder="Filter Groups..."
+            bind:value={groupsFilter}
+        />
+    </div>
+    {#each filteredGroups.sort((a, b) => a.localeCompare(b)) as group}
+        <GroupListCard {acl} {group} {users} />
+    {/each}
+</CardListPage>

@@ -1,25 +1,5 @@
 <script lang="ts">
-	import {
-		ApiEndpointsStore,
-		ApiKeyInfoStore,
-		ApiKeyStore,
-		ApiTtlStore,
-		ApiUrlStore,
-		DebugStore,
-		populateApiKeyInfoStore,
-		populateStores,
-	} from '$lib/Stores';
 	import { debug } from '$lib/common/debug';
-	import { createPopulateErrorHandler } from '$lib/common/errors';
-	import {
-		getTime,
-		getTimeDifference,
-		getTimeDifferenceColor,
-		refreshApiKey,
-		toastSuccess,
-		toastError,
-	} from '$lib/common/funcs';
-	import type { ExpirationMessage } from '$lib/common/types';
 	import Page from '$lib/page/Page.svelte';
 	import PageHeader from '$lib/page/PageHeader.svelte';
 	import { Tab, TabGroup, getToastStore } from '@skeletonlabs/skeleton';
@@ -29,8 +9,9 @@
 	import RawMdiDevices from '~icons/mdi/devices';
 	import RawMdiCodeJSON from '~icons/mdi/code-json';
 	import RawMdiSecurity from '~icons/mdi/security';
+
+	import { ACLBuilder } from '$lib/common/acl';
 	import Groups from './Groups.svelte';
-	import { ACLBuilder } from './acl';
 	import Hosts from './Hosts.svelte';
 
 	let acl = ACLBuilder.emptyACL();
@@ -50,8 +31,6 @@
 		acl = acl.setGroupMembers("bravo", ["user.two", "aarcher"])
 		acl = acl.setGroupMembers("charlie", ["user.three", "aarcher"])
 		acl = acl.setGroupMembers("delta", ["user.four", "user.five"])
-
-		return () => {};
 	});
 </script>
 
@@ -76,7 +55,7 @@
 				>
 					<svelte:fragment slot="lead">
 						<span class="flex flex-row items-center text-xs sm:text-sm lg:text-md justify-center">
-							<svelte:component this={tab.logo} class="mr-2" />
+							<svelte:component this={tab.logo} />
 						</span>
 					</svelte:fragment>
 					{tab.title}

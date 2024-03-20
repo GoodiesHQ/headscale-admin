@@ -1,5 +1,4 @@
-import { isValidCIDR, toastError } from "$lib/common/funcs";
-import type { ToastStore } from "@skeletonlabs/skeleton";
+import { isValidCIDR } from "$lib/common/funcs";
 
 export type AclGroups = { [key: string]: string[] }
 export type AclTagOwners = { [key: string]: string[] }

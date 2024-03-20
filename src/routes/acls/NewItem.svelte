@@ -31,7 +31,7 @@
 	class="flex flex-row w-full my-2 items-center space-x-2"
 >
 	<input
-		class="input rounded-md"
+		class="input rounded-md text-sm"
 		type="text"
 		placeholder="New {title} Name..."
 		{disabled}
