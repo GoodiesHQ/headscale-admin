@@ -1,6 +1,7 @@
 # Deployment folder I created
 TRAEFIK
 .history
+*.old.svelte
 
 # VSCode
 .vscode
