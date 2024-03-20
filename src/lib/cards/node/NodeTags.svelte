@@ -90,9 +90,9 @@
 					on:mouseenter={handleMouseEnter}
 					on:mouseleave={handleMouseLeave}
 				>
-				<span class="text-warning-500">
-					<RawMdiWarning />
-				</span>
+					<span class="text-warning-500">
+						<RawMdiWarning />
+					</span>
 				</button>
 			{/if}
 		</span>

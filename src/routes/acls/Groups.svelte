@@ -7,8 +7,8 @@
 	import type { User } from '$lib/common/types';
 	import { debug } from '$lib/common/debug';
 	import { toastError, toastSuccess } from '$lib/common/funcs';
-    import CardListPage from '$lib/cards/CardListPage.svelte';
-    import GroupListCard from '$lib/cards/acl/GroupListCard.svelte';
+	import CardListPage from '$lib/cards/CardListPage.svelte';
+	import GroupListCard from '$lib/cards/acl/GroupListCard.svelte';
 
 	import NewItem from './NewItem.svelte';
 
@@ -70,30 +70,31 @@
 </script>
 
 <CardListPage>
-    <div class="my-4">
-    <button class="btn-sm rounded-md variant-filled-success" on:click={toggleShowCreateGroup}>
-        Create
-    </button>
-    {#if showCreateGroup}
-        <NewItem
-            title="Group"
-            disabled={loading}
-            bind:name={newGroupName}
-            submit={() => {newGroup()}}
-        />
-    {/if}
-    </div>
-    
+	<div class="my-4">
+		<button class="btn-sm rounded-md variant-filled-success" on:click={toggleShowCreateGroup}>
+			Create
+		</button>
+		{#if showCreateGroup}
+			<NewItem
+				title="Group"
+				disabled={loading}
+				bind:name={newGroupName}
+				submit={() => {
+					newGroup();
+				}}
+			/>
+		{/if}
+	</div>
 
-    <div class="flex items-center pb-4 mt-4">
-        <input
-            type="text"
-            class="input rounded-md text-sm mb-0"
-            placeholder="Filter Groups..."
-            bind:value={groupsFilter}
-        />
-    </div>
-    {#each filteredGroups.sort((a, b) => a.localeCompare(b)) as group}
-        <GroupListCard bind:acl {group} {users} />
-    {/each}
+	<div class="flex items-center pb-4 mt-4">
+		<input
+			type="text"
+			class="input rounded-md text-sm mb-0"
+			placeholder="Filter Groups..."
+			bind:value={groupsFilter}
+		/>
+	</div>
+	{#each filteredGroups.sort((a, b) => a.localeCompare(b)) as group}
+		<GroupListCard bind:acl {group} {users} />
+	{/each}
 </CardListPage>

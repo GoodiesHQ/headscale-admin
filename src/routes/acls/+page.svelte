@@ -27,10 +27,10 @@
 	];
 
 	onMount(() => {
-		acl = acl.setGroupMembers("alpha", ["user.one", "cloud"])
-		acl = acl.setGroupMembers("bravo", ["user.two", "aarcher"])
-		acl = acl.setGroupMembers("charlie", ["user.three", "aarcher"])
-		acl = acl.setGroupMembers("delta", ["user.four", "user.five"])
+		acl = acl.setGroupMembers('alpha', ['user.one', 'cloud']);
+		acl = acl.setGroupMembers('bravo', ['user.two', 'aarcher']);
+		acl = acl.setGroupMembers('charlie', ['user.three', 'aarcher']);
+		acl = acl.setGroupMembers('delta', ['user.four', 'user.five']);
 	});
 </script>
 

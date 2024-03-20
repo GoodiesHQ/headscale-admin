@@ -17,7 +17,6 @@
 	import { base } from '$app/paths';
 	import { beforeNavigate, goto } from '$app/navigation';
 
-
 	initializeStores();
 
 	const DrawerStore = getDrawerStore();
@@ -51,8 +50,8 @@
 
 	onMount(() => {
 		ThemeStore.subscribe((theme) => {
-			document.body.setAttribute('data-theme', theme)
-		})
+			document.body.setAttribute('data-theme', theme);
+		});
 
 		populateStores(createPopulateErrorHandler(ToastStore), true);
 

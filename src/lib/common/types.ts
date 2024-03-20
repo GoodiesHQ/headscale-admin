@@ -74,14 +74,14 @@ export class PreAuthKey {
 		public expiration: string,
 		public createdAt: string,
 		public aclTags: string[],
-	) {}
+	) { }
 	isExpired: () => boolean = () => {
 		return new Date() > new Date(this.expiration);
 	};
 }
 
 export class PreAuthKeys {
-	constructor(public preAuthKeys: PreAuthKey[]) {}
+	constructor(public preAuthKeys: PreAuthKey[]) { }
 }
 
 type RouteMachine = {
@@ -132,10 +132,10 @@ export type Node = {
 	preAuthKey: string | null;
 	createdAt: string;
 	registerMethod:
-		| 'REGISTER_METHOD_UNSPECIFIED'
-		| 'REGISTER_METHOD_AUTH_KEY'
-		| 'REGISTER_METHOD_CLI'
-		| 'REGISTER_METHOD_OIDC';
+	| 'REGISTER_METHOD_UNSPECIFIED'
+	| 'REGISTER_METHOD_AUTH_KEY'
+	| 'REGISTER_METHOD_CLI'
+	| 'REGISTER_METHOD_OIDC';
 	forcedTags: string[];
 	invalidTags: string[];
 	validTags: string[];

@@ -10,16 +10,15 @@
 
 	import RawMdiRename from '~icons/mdi/rename-outline';
 	import RawMdiGroup from '~icons/mdi/account-group-outline';
-	import { onMount } from 'svelte';
 
 	const ToastStore = getToastStore();
 
-	export let users: User[];
 	export let acl: ACLBuilder;
+	export let users: User[];
 	export let group: string;
 	export let open: boolean = false;
 
-	$: groupMembers = acl.getGroupMembers(group)
+	$: groupMembers = acl.getGroupMembers(group);
 	$: showRenameGroup = false;
 	$: groupNewName = '';
 	$: loading = false;
@@ -113,16 +112,9 @@
 					</form>
 				{/if}
 			</h3>
-			<!--
-				liOptionClass="input rounded-none"
-				liActiveOptionClass="input"
-				ulOptionsClass="input rounded-none"
-				ulSelectedClass="input"
-				activeOption="input"
-			-->
 			<div class="h-40">
 				<MultiSelect
-					id="{group}"
+					id={group}
 					bind:selected={groupMembers}
 					on:change={saveGroup}
 					on:removeAll={clearGroup}

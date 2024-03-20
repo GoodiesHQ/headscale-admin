@@ -39,7 +39,7 @@
 		{ path: '/deploy', name: 'Deploy', logo: RawMdiHomeGroupPlus },
 		{ path: '/acls', name: 'ACLs', logo: RawMdiSecurity },
 		{ path: '/settings', name: 'Settings', logo: RawMdiSettings },
-	].filter(p => p != undefined);
+	].filter((p) => p != undefined);
 
 	$: getPages = (): Page[] => {
 		// before rendering, show no elements

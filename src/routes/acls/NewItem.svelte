@@ -6,27 +6,27 @@
 
 	export let title: string;
 	export let name: string;
-    export let value: string | undefined = undefined;
+	export let value: string | undefined = undefined;
 	export let disabled: boolean = false;
 	export let submit: (newItemName: string, newItemValue?: string) => void;
 
-    const ToastStore = getToastStore()
+	const ToastStore = getToastStore();
 </script>
 
 <form
 	transition:slide
 	on:submit={() => {
-        try{
-            if(value === undefined){
-                submit(name);
-            } else {
-                submit(name, value);
-            }
-        } catch (e) {
-            if (e instanceof Error) {
-                toastError('', ToastStore, e);
-            }
-        }
+		try {
+			if (value === undefined) {
+				submit(name);
+			} else {
+				submit(name, value);
+			}
+		} catch (e) {
+			if (e instanceof Error) {
+				toastError('', ToastStore, e);
+			}
+		}
 	}}
 	class="flex flex-row w-full my-2 items-center space-x-2"
 >
@@ -38,16 +38,20 @@
 		bind:value={name}
 		use:focus
 	/>
-    {#if value !== undefined}
-	<input
-		class="input rounded-md"
-		type="text"
-		placeholder="{title} Value..."
-		{disabled}
-		bind:value={value}
-	/>
-    {/if}
-	<button type="submit" class="btn btn-icon" disabled={disabled || !name || (value !== undefined && !value)}>
+	{#if value !== undefined}
+		<input
+			class="input rounded-md"
+			type="text"
+			placeholder="{title} Value..."
+			{disabled}
+			bind:value
+		/>
+	{/if}
+	<button
+		type="submit"
+		class="btn btn-icon"
+		disabled={disabled || !name || (value !== undefined && !value)}
+	>
 		<RawMdiCheckCircleOutline />
 	</button>
 </form>

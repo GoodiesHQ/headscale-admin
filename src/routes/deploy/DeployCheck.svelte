@@ -22,17 +22,20 @@
 
 	function handleMouseEnter() {
 		timerInfo = setTimeout(() => {
-			popupShow = true
+			popupShow = true;
 		}, 333);
 	}
 
 	function handleMouseLeave() {
-		popupShow = false
+		popupShow = false;
 		clearTimeout(timerInfo);
 	}
 </script>
 
-<div class="card p-4 variant-filled-tertiary {popupShow ? '' : 'invisible'}" data-popup="popupHover-{popupId}">
+<div
+	class="card p-4 variant-filled-tertiary {popupShow ? '' : 'invisible'}"
+	data-popup="popupHover-{popupId}"
+>
 	<p>{help}</p>
 	<div class="arrow variant-filled-tertiary" />
 </div>

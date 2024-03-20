@@ -57,25 +57,25 @@
 		{/if}
 	</div>
 	{#if $$slots.button}
-	<!--div class="flex justify-start pt-4 space-x-5 {$$slots.button ? '' : 'invisible'}"-->
-	<div class="flex justify-start pt-4 space-x-5">
-		<button
-			type="button"
-			class="btn btn-sm variant-filled-success rounded-sm"
-			on:click={(_) => (showButtonArea = !showButtonArea)}
-		>
-			{buttonText}
-		</button>
-		{#if $$props.filterString !== undefined}
-			<input
-				type="text"
-				class="input rounded-md text-sm w-64 md:w-96 {regexIsValid ? '' : 'input-error'}"
-				bind:value={filterString}
-				use:focus
-				placeholder="Search..."
-			/>
-		{/if}
-	</div>
+		<!--div class="flex justify-start pt-4 space-x-5 {$$slots.button ? '' : 'invisible'}"-->
+		<div class="flex justify-start pt-4 space-x-5">
+			<button
+				type="button"
+				class="btn btn-sm variant-filled-success rounded-sm"
+				on:click={(_) => (showButtonArea = !showButtonArea)}
+			>
+				{buttonText}
+			</button>
+			{#if $$props.filterString !== undefined}
+				<input
+					type="text"
+					class="input rounded-md text-sm w-64 md:w-96 {regexIsValid ? '' : 'input-error'}"
+					bind:value={filterString}
+					use:focus
+					placeholder="Search..."
+				/>
+			{/if}
+		</div>
 	{/if}
 </div>
 {#if $$slots.button && showButtonArea}
