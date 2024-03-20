@@ -64,7 +64,7 @@
 		</div>
 		<svelte:fragment slot="panel">
 			{#if tabs[tabSet].name == 'groups'}
-				<Groups {acl} />
+				<Groups bind:acl />
 			{:else if tabs[tabSet].name == 'hosts'}
 				<Hosts {acl} />
 			{:else if tabs[tabSet].name == 'config'}

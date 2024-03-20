@@ -19,7 +19,7 @@
 	export let group: string;
 	export let open: boolean = false;
 
-	$: groupMembers = acl.getGroupMembers(group);
+	$: groupMembers = acl.getGroupMembers(group)
 	$: showRenameGroup = false;
 	$: groupNewName = '';
 	$: loading = false;
@@ -54,7 +54,7 @@
 		loading = true;
 		try {
 			debug(`Saving group '${group}' with ${groupMembers}`);
-			acl = acl.setGroupMembers(group, groupMembers);
+			acl = acl.setGroupMembers(group, groupMembers ?? []);
 		} catch (e) {
 			if (e instanceof Error) {
 				toastError('', ToastStore, e);

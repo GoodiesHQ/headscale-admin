@@ -94,6 +94,6 @@
         />
     </div>
     {#each filteredGroups.sort((a, b) => a.localeCompare(b)) as group}
-        <GroupListCard {acl} {group} {users} />
+        <GroupListCard bind:acl {group} {users} />
     {/each}
 </CardListPage>

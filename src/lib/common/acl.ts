@@ -188,7 +188,7 @@ export class ACLBuilder implements ACL {
             throw new Error(`Group '${strippedOld}' doesn't exist`);
         }
         this.createGroup(prefixedNew)
-        this.setGroupMembers(prefixedNew, this.getGroupMembers(strippedOld))
+        this.setGroupMembers(prefixedNew, this.getGroupMembers(strippedOld) ?? [])
         this.deleteGroup(strippedOld)
 
         //TODO: change all references from old group to new group
@@ -280,13 +280,8 @@ export class ACLBuilder implements ACL {
         return this.groups[prefixed] !== undefined
     }
 
-    getGroupMembers(name: string): string[] {
-        const {stripped, prefixed} = ACLBuilder.normalizePrefix(name, 'group')
-
-        if (this.groups[prefixed] === undefined) {
-            throw new Error(`Group '${stripped}' doesn't exist`);
-        }
-
-        return this.groups[prefixed];
+    getGroupMembers(name: string): string[] | undefined {
+        const {prefixed} = ACLBuilder.normalizePrefix(name, 'group')
+        return this.groups[prefixed]
     }
 }
