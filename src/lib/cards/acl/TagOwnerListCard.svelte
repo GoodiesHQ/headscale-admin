@@ -1,3 +1,4 @@
+<!--
 <script lang="ts">
 	import { AccordionItem, getToastStore } from '@skeletonlabs/skeleton';
 	import type { ACLBuilder } from '$lib/common/acl';
@@ -15,10 +16,10 @@
 
 	export let acl: ACLBuilder;
 	export let users: User[];
-	export let group: string;
+	export let tag: string;
 	export let open: boolean = false;
 
-	$: groupMembers = acl.getGroupMembers(group);
+	$: tagOwners = acl.getTagOwners(tag);
 	$: groupNewName = '';
 	$: loading = false;
 
@@ -121,3 +122,4 @@
 		</CardListContainer>
 	</svelte:fragment>
 </AccordionItem>
+-->

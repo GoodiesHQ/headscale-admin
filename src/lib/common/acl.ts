@@ -150,13 +150,21 @@ export class ACLBuilder implements ACL {
         if (this.hosts[nameNew] !== undefined) {
             throw new Error(`Group '${nameNew}' already exists`)
         }
-        this.hosts[nameNew] = this.hosts[nameOld]
-        delete this.hosts[nameNew]
+
+        const hosts: AclHosts = {}
+        Object.entries(this.hosts).forEach(([name, value])=>{
+            hosts[name === nameOld ? nameNew : name] = value;
+        })
+        this.hosts = hosts;
         return this
     }
 
     getHostNames(): string[] {
         return Object.keys(this.hosts);
+    }
+
+    getHosts(): [string, string][] {
+        return Object.entries(this.hosts);
     }
 
     deleteHost(name: string): ACLBuilder {
@@ -187,9 +195,12 @@ export class ACLBuilder implements ACL {
         if (this.groups[prefixedOld] === undefined) {
             throw new Error(`Group '${strippedOld}' doesn't exist`);
         }
-        this.createGroup(prefixedNew)
-        this.setGroupMembers(prefixedNew, this.getGroupMembers(strippedOld) ?? [])
-        this.deleteGroup(strippedOld)
+
+        const groups: AclGroups = {}
+        Object.entries(this.groups).forEach(([name, members]) => {
+            groups[name === prefixedOld ? prefixedNew : name] = members;
+        })
+        this.groups = groups
 
         //TODO: change all references from old group to new group
 
@@ -266,11 +277,11 @@ export class ACLBuilder implements ACL {
         return this
     }
 
-    getGroupNames(): string[] {
+    getGroupNames(withPrefix: boolean = false): string[] {
         const names = []
         for (const name of Object.keys(this.groups)) {
-            const { stripped } = ACLBuilder.normalizePrefix(name, 'group')
-            names.push(stripped)
+            const { stripped, prefixed } = ACLBuilder.normalizePrefix(name, 'group')
+            names.push(withPrefix ? prefixed : stripped)
         }
         return names
     }

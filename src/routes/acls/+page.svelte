@@ -31,6 +31,9 @@
 		acl = acl.setGroupMembers('bravo', ['user.two', 'aarcher']);
 		acl = acl.setGroupMembers('charlie', ['user.three', 'aarcher']);
 		acl = acl.setGroupMembers('delta', ['user.four', 'user.five']);
+
+		acl = acl.setHost("test1", "1.1.1.1/32")
+		acl = acl.setHost("test2", "1.0.0.1/32")
 	});
 </script>
 
@@ -66,7 +69,7 @@
 			{#if tabs[tabSet].name == 'groups'}
 				<Groups bind:acl />
 			{:else if tabs[tabSet].name == 'hosts'}
-				<Hosts {acl} />
+				<Hosts bind:acl />
 			{:else if tabs[tabSet].name == 'config'}
 				<pre>{JSON.stringify(acl, null, 2)}</pre>
 			{:else}

@@ -20,7 +20,6 @@
 
 	$: showCreateGroup = false;
 	$: newGroupName = '';
-
 	$: users = get(UserStore) as User[];
 	$: usersNames = users.map((u: User) => u.name);
 
@@ -70,7 +69,7 @@
 </script>
 
 <CardListPage>
-	<div class="my-4">
+	<div class="mb-2">
 		<button class="btn-sm rounded-md variant-filled-success" on:click={toggleShowCreateGroup}>
 			Create
 		</button>
@@ -94,7 +93,8 @@
 			bind:value={groupsFilter}
 		/>
 	</div>
-	{#each filteredGroups.sort((a, b) => a.localeCompare(b)) as group}
+	<!--{#each filteredGroups.sort((a, b) => a.localeCompare(b)) as group}-->
+	{#each filteredGroups as group}
 		<GroupListCard bind:acl {group} {users} />
 	{/each}
 </CardListPage>

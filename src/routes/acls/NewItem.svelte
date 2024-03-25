@@ -40,7 +40,7 @@
 	/>
 	{#if value !== undefined}
 		<input
-			class="input rounded-md"
+			class="input rounded-md text-sm"
 			type="text"
 			placeholder="{title} Value..."
 			{disabled}
