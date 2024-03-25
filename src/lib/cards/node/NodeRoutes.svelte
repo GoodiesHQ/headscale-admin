@@ -28,7 +28,7 @@
 	<svelte:fragment slot="bottom">
 		{#each routes as route}
 			<div class="grid grid-cols-12 col-span-12">
-				<NodeRoute bind:route />
+				<NodeRoute bind:route {node} />
 			</div>
 		{/each}
 	</svelte:fragment>
