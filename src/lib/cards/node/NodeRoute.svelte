@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { deleteRoute, disableRoute, enableRoute } from '$lib/common/api';
-	import type { Route } from '$lib/common/types';
+	import type { Node, Route } from '$lib/common/types';
 
 	import RawMdiToggleSwitchOn from '~icons/mdi/toggle-switch';
 	import RawMdiToggleSwitchOff from '~icons/mdi/toggle-switch-off';
@@ -10,6 +10,7 @@
 	import { debug } from '$lib/common/debug';
 
 	export let route: Route;
+	export let node: Node;
 
 	$: enabled = route.enabled;
 
@@ -17,10 +18,11 @@
 
 	// component is disabled
 	$: disabled =
-		loading ||
+		loading || // route status is actively being changed
 		!route.advertised || // route is not advertised
-		isExpired((route.node ?? route.machine)?.expiry || '') || // node is expired
-		!(route.node ?? route.machine).online; // node is not online
+		isExpired(node.expiry || '') || // node is expired
+		!node.online; // node is not online
+	
 </script>
 
 <div class="col-span-6 text-start items-center">
