@@ -45,7 +45,7 @@
 	};
 
 	$: isExpiredOrUsed = (p: PreAuthKey): boolean => {
-		return new Date() > new Date(p.expiration) || p.used;
+		return new Date() > new Date(p.expiration) || (p.used && !p.reusable);
 	};
 
 	$: filter = (p: PreAuthKey[]): PreAuthKey[] => {
