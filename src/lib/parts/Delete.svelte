@@ -10,7 +10,7 @@
 	export let disabled = false;
 </script>
 
-<div class="flex flex-row items-center justify-end py-0 my-0 pl-2">
+<div class="flex flex-row items-center justify-end py-0 my-0 pl-0 ml-4">
 	{#if show}
 		<span transition:slide={{ delay: 50, axis: 'x' }} class="text-right flex space-x-2">
 			<button
