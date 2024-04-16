@@ -11,6 +11,7 @@
 
 	export let route: Route;
 	export let node: Node;
+	export let showDelete: boolean = true;
 
 	$: enabled = route.enabled;
 
@@ -22,7 +23,6 @@
 		!route.advertised || // route is not advertised
 		isExpired(node.expiry || '') || // node is expired
 		!node.online; // node is not online
-	
 </script>
 
 <div class="col-span-6 text-start items-center">
@@ -37,7 +37,7 @@
 		{disabled}
 		class="btn {enabled
 			? 'text-success-700 dark:text-success-400'
-			: 'text-error-600 dark:text-error-400'} my-0 py-0 text-start text-xl"
+			: 'text-error-600 dark:text-error-400'} my-0 py-0 mx-0 px-0 text-start text-xl"
 		on:click={async () => {
 			loading = true;
 			try {
@@ -63,11 +63,13 @@
 			<RawMdiToggleSwitchOff />
 		{/if}
 	</button>
-	<Delete
-		func={async () => {
-			await deleteRoute(route);
-		}}
-	/>
+	{#if showDelete}
+		<Delete
+			func={async () => {
+				await deleteRoute(route);
+			}}
+		/>
+	{/if}
 	<!--
 	{#if confirmDelete}
 		<button
