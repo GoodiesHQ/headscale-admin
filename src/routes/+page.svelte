@@ -97,7 +97,7 @@
 		{#each summaries as summary}
 			<CardTileContainer classes="border-solid border-[3px] border-l-[18px] {summary.border}">
 				<div class="flex justify-around items-center mb-4 mt-2">
-					<div class="flex items-center">
+					<div class="flex pr-2">
 						<span class="ml-2 text-5xl font-semibold">{summary.value}</span>
 					</div>
 				</div>
