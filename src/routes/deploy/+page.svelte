@@ -1,11 +1,12 @@
 <script lang="ts">
-	import { ApiUrlStore, NodeStore, PreAuthKeyStore, UserStore } from '$lib/Stores';
+	import { ApiUrlStore, DeploymentDefaultStore, GetDefaultDeployment, NodeStore, PreAuthKeyStore, SaveDeploymentDefaultStore, UserStore } from '$lib/Stores';
 	import {
 		copyToClipboard,
 		isExpired,
 		isValidCIDR,
 		isValidTag,
 		toastError,
+		toastSuccess,
 	} from '$lib/common/funcs';
 	import Page from '$lib/page/Page.svelte';
 	import PageHeader from '$lib/page/PageHeader.svelte';
@@ -13,7 +14,7 @@
 	import { get } from 'svelte/store';
 	import DeployCheck from './DeployCheck.svelte';
 	import { onMount } from 'svelte';
-	import type { PreAuthKey } from '$lib/common/types';
+	import type { Deployment, PreAuthKey } from '$lib/common/types';
 	import { slide } from 'svelte/transition';
 	import { page } from '$app/stores';
 
@@ -28,61 +29,8 @@
 		};
 	}
 
-	type Deployment = {
-		// general
-		shieldsUp: boolean;
-		generateQR: boolean;
-		reset: boolean;
-		operator: boolean;
-		operatorValue: string;
-		forceReauth: boolean;
-		sshServer: boolean;
-		usePreAuthKey: boolean;
-		preAuthKeyUser: string;
-		preAuthKey: string;
-		// advertise
-		advertiseExitNode: boolean;
-		advertiseExitNodeLocalAccess: boolean;
-		advertiseRoutes: boolean;
-		advertiseRoutesValues: string[];
-		advertiseTags: boolean;
-		advertiseTagsValues: string[];
-		// accept
-		acceptDns: boolean;
-		acceptRoutes: boolean;
-		acceptExitNode: boolean;
-		acceptExitNodeValue: string;
-	};
-
-	function defaultDeployment(): Deployment {
-		return {
-			// general
-			shieldsUp: false,
-			generateQR: false,
-			reset: true,
-			operator: false,
-			operatorValue: '$USER',
-			forceReauth: false,
-			sshServer: false,
-			usePreAuthKey: false,
-			preAuthKeyUser: '',
-			preAuthKey: '',
-			// advertise
-			advertiseExitNode: false,
-			advertiseExitNodeLocalAccess: false,
-			advertiseRoutes: false,
-			advertiseRoutesValues: [],
-			advertiseTags: false,
-			advertiseTagsValues: [],
-			// accept
-			acceptDns: true,
-			acceptRoutes: true,
-			acceptExitNode: false,
-			acceptExitNodeValue: '',
-		};
-	}
-
-	$: deployment = defaultDeployment();
+	// $: deployment = defaultDeployment();
+	let deployment: Deployment = GetDefaultDeployment();
 
 	$: craftCommand = (d: Deployment) => {
 		const cmd = ['tailscale up --login-server=' + (get(ApiUrlStore) || $page.url.origin)];
@@ -144,8 +92,8 @@
 		</svelte:fragment>
 	</PageHeader>
 
-	<div class="grid grid-cols-12 pb-10">
-		<p class="text-xl col-span-12 py-4">General:</p>
+	<div class="grid grid-cols-12">
+		<p class="text-xl col-span-12">General:</p>
 		<DeployCheck
 			bind:checked={deployment.shieldsUp}
 			name="Shields Up"
@@ -269,4 +217,10 @@
 			</label>
 		</DeployCheck>
 	</div>
+		<button class="btn rounded-md variant-filled-secondary mt-4" on:click={() => {
+			SaveDeploymentDefaultStore(deployment)
+			toastSuccess('Saved Deployment Defaults', ToastStore)
+		}}>
+			Save Defaults
+		</button>
 </Page>

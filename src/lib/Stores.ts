@@ -1,7 +1,7 @@
 import { get, writable, type Writable } from 'svelte/store';
 import { Mutex } from 'async-mutex';
 
-import type { User, Node, PreAuthKey, Route, ApiKeyInfo, ApiApiKeys } from '$lib/common/types';
+import type { User, Node, PreAuthKey, Route, ApiKeyInfo, ApiApiKeys, Deployment } from '$lib/common/types';
 import { getUsers, getPreAuthKeys, getNodes, getRoutes } from '$lib/common/api/get';
 import { localStorageStore, type ToastStore } from '@skeletonlabs/skeleton';
 import { /*API_URL_APIKEY,*/ apiGet, defaultApiEndpoints, type ApiEndpoints } from './common/api';
@@ -34,6 +34,44 @@ export const ApiAclUrlStore: Writable<string> = localStorageStore('apiAclUrl', '
 export type LayoutStyle = 'tile' | 'list';
 export const LayoutUserStore: Writable<LayoutStyle> = localStorageStore('layoutUser', 'list');
 export const LayoutNodeStore: Writable<LayoutStyle> = localStorageStore('layoutNode', 'list');
+
+// Deployment defaults
+export const DeploymentDefaultStore: Writable<Deployment> = localStorageStore('deploymentDefaults', {
+	// general
+	shieldsUp: false,
+	generateQR: false,
+	reset: false,
+	operator: false,
+	operatorValue: '$USER',
+	forceReauth: false,
+	sshServer: false,
+	usePreAuthKey: false,
+	preAuthKeyUser: '',
+	preAuthKey: '',
+	// advertise
+	advertiseExitNode: false,
+	advertiseExitNodeLocalAccess: false,
+	advertiseRoutes: false,
+	advertiseRoutesValues: [],
+	advertiseTags: false,
+	advertiseTagsValues: [],
+	// accept
+	acceptDns: false,
+	acceptRoutes: false,
+	acceptExitNode: false,
+	acceptExitNodeValue: '',
+})
+
+export function SaveDeploymentDefaultStore(deployment: Deployment) {
+	const d = JSON.parse(JSON.stringify(deployment)) as Deployment
+	d.preAuthKeyUser = ''
+	d.preAuthKey = ''
+	DeploymentDefaultStore.set(d)
+}
+
+export function GetDefaultDeployment(): Deployment {
+	return JSON.parse(JSON.stringify(get(DeploymentDefaultStore))) as Deployment
+}
 
 export function isInitialized(): boolean {
 	return typeof window !== 'undefined';
