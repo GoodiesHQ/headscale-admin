@@ -11,7 +11,7 @@
 	import RawMdiSettings from '~icons/mdi/settings';
 
 	import { page } from '$app/stores';
-	import { ApiKeyInfoStore, ApiKeyStore, hasApi, hasValidApi } from './Stores';
+	import { ApiKeyInfoStore, ApiKeyStore, hasValidApi } from './Stores';
 	import { onMount } from 'svelte';
 
 	export let labels = true;
@@ -19,7 +19,7 @@
 	const DrawerStore = getDrawerStore();
 
 	$: classesActive = (href: string) =>
-		href === newPath || href === $page.url.pathname ? 'bg-primary-300 dark:bg-primary-700' : '';
+		href === $page.route.id ? 'bg-primary-300 dark:bg-primary-700' : '';
 
 	let newPath = '';
 

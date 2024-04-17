@@ -11,12 +11,14 @@
 	import Page from '$lib/page/Page.svelte';
 	import { isExpired } from '$lib/common/funcs';
 	import type { Node, User } from '$lib/common/types';
+	import { goto } from '$app/navigation';
 
 	type Summary = {
 		title: string;
 		border: string;
 		value: any;
 		icon: any;
+		path: string;
 	};
 
 	$: summaries = [] as Summary[];
@@ -31,6 +33,7 @@
 				border: 'border-primary-700 dark:border-primary-600',
 				icon: RawMdiUser,
 				value: get(UserStore).length,
+				path: '/users',
 			},
 			{
 				title: 'Online Users',
@@ -39,6 +42,7 @@
 				value: get(UserStore).filter((user) =>
 					nodes.filter((node) => node.online).some((node) => node.user.id === user.id),
 				).length,
+				path: '/users',
 			},
 			{
 				title: 'Valid PreAuth Keys',
@@ -47,24 +51,28 @@
 				value: get(PreAuthKeyStore).filter(
 					(pak) => !isExpired(pak.expiration) && !(pak.used && !pak.reusable),
 				).length,
+				path: '/users',
 			},
 			{
 				title: 'Total Nodes',
 				border: 'border-secondary-700 dark:border-secondary-600',
 				icon: RawMdiDevices,
 				value: get(NodeStore).length,
+				path: '/nodes',
 			},
 			{
 				title: 'Online Nodes',
 				border: 'border-secondary-400 dark:border-secondary-400',
 				icon: RawMdiDevices,
 				value: get(NodeStore).filter((m) => m.online).length,
+				path: '/nodes',
 			},
 			{
 				title: 'Total Routes',
 				border: 'border-warning-600 dark:border-warning-600',
 				icon: RawMdiRouter,
 				value: get(RouteStore).length,
+				path: '/routes',
 			},
 		];
 	}
@@ -95,7 +103,7 @@
 
 	<CardTilePage>
 		{#each summaries as summary}
-			<CardTileContainer classes="border-solid border-[3px] border-l-[18px] {summary.border}">
+			<CardTileContainer classes="border-solid border-[3px] border-l-[18px] {summary.border}" onclick={() => {goto(summary.path)}}>
 				<div class="flex justify-around items-center mb-4 mt-2">
 					<div class="flex pr-2">
 						<span class="ml-2 text-5xl font-semibold">{summary.value}</span>
