@@ -24,7 +24,7 @@
 
 	function createFilter(username: string) {
 		return (pak: PreAuthKey) => {
-			return pak.user === username && pak.used === false && !isExpired(pak.expiration);
+			return pak.user === username && !(pak.used && !pak.reusable) && !isExpired(pak.expiration);
 		};
 	}
 
@@ -112,7 +112,7 @@
 			);
 
 		// accept
-		d.acceptDns && cmd.push('--accept-dns');
+		d.acceptDns ? cmd.push('--accept-dns') : cmd.push('--accept-dns=false');
 		d.acceptRoutes && cmd.push('--accept-routes');
 		d.acceptExitNode && d.acceptExitNodeValue && cmd.push('--exit-node=' + d.acceptExitNodeValue);
 		return cmd.join(' ');
