@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { NodeStore, PreAuthKeyStore, RouteStore, UserStore } from '$lib/Stores';
 	import CardTilePage from '$lib/cards/CardTilePage.svelte';
 	import PageHeader from '$lib/page/PageHeader.svelte';
@@ -103,7 +104,12 @@
 
 	<CardTilePage>
 		{#each summaries as summary}
-			<CardTileContainer classes="border-solid border-[3px] border-l-[18px] {summary.border}" onclick={() => {goto(summary.path)}}>
+			<CardTileContainer
+				classes="border-solid border-[3px] border-l-[18px] {summary.border}"
+				onclick={() => {
+					goto(base + summary.path);
+				}}
+			>
 				<div class="flex justify-around items-center mb-4 mt-2">
 					<div class="flex pr-2">
 						<span class="ml-2 text-5xl font-semibold">{summary.value}</span>
