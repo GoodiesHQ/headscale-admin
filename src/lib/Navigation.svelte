@@ -2,15 +2,16 @@
 	import { base } from '$app/paths';
 	import { getDrawerStore } from '@skeletonlabs/skeleton';
 
-	import RawMdiHome from '~icons/mdi/home';
-	import RawMdiPerson from '~icons/mdi/person';
 	import RawMdiDevices from '~icons/mdi/devices';
-	import RawMdiSettings from '~icons/mdi/settings';
+	import RawMdiHome from '~icons/mdi/home';
 	import RawMdiHomeGroupPlus from '~icons/mdi/home-group-plus';
+	import RawMdiPerson from '~icons/mdi/person';
+	import RawMdiRouter from '~icons/mdi/router';
 	import RawMdiSecurity from '~icons/mdi/security';
+	import RawMdiSettings from '~icons/mdi/settings';
 
 	import { page } from '$app/stores';
-	import { ApiKeyInfoStore, ApiKeyStore, hasApi, hasValidApi } from './Stores';
+	import { ApiKeyInfoStore, ApiKeyStore, hasValidApi } from './Stores';
 	import { onMount } from 'svelte';
 
 	export let labels = true;
@@ -18,7 +19,7 @@
 	const DrawerStore = getDrawerStore();
 
 	$: classesActive = (href: string) =>
-		href === newPath || href === $page.url.pathname ? 'bg-primary-300 dark:bg-primary-700' : '';
+		href === $page.route.id ? 'bg-primary-300 dark:bg-primary-700' : '';
 
 	let newPath = '';
 
@@ -37,6 +38,8 @@
 		{ path: '/users', name: 'Users', logo: RawMdiPerson },
 		{ path: '/nodes', name: 'Nodes', logo: RawMdiDevices },
 		{ path: '/deploy', name: 'Deploy', logo: RawMdiHomeGroupPlus },
+		{ path: '/routes', name: 'Routes', logo: RawMdiRouter },
+		...(false ? [{ path: '/acls', name: 'ACLs', logo: RawMdiSecurity }] : []),
 		{ path: '/acls', name: 'ACLs', logo: RawMdiSecurity },
 		{ path: '/settings', name: 'Settings', logo: RawMdiSettings },
 	].filter((p) => p != undefined);
