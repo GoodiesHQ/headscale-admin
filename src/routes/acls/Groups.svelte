@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getToastStore } from '@skeletonlabs/skeleton';
+	import { Accordion, getToastStore } from '@skeletonlabs/skeleton';
 	import type { ACLBuilder } from '$lib/common/acl';
 	import { get } from 'svelte/store';
 	import { UserStore } from '$lib/Stores';
@@ -93,8 +93,10 @@
 			bind:value={groupsFilter}
 		/>
 	</div>
+	<Accordion autocollapse={false}>
 	<!--{#each filteredGroups.sort((a, b) => a.localeCompare(b)) as group}-->
 	{#each filteredGroups as group}
 		<GroupListCard bind:acl {group} {users} />
 	{/each}
+	</Accordion>
 </CardListPage>

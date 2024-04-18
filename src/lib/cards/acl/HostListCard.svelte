@@ -9,7 +9,6 @@
 	const ToastStore = getToastStore();
 
 	export let acl: ACLBuilder;
-	export let open: boolean = false;
 
 	export let host: string;
 	export let cidr: string;
@@ -19,6 +18,7 @@
 	$: loading = false;
 
 	function renameHost() {
+		loading = true;
 		try {
 			if (host !== hostNewName) {
 				acl = acl.renameHost(host, hostNewName);
@@ -26,27 +26,32 @@
 				host = hostNewName;
 				debug(acl.hosts);
 			}
-			return true
+			return true;
 		} catch (e) {
 			debug(e);
 			if (e instanceof Error) {
 				toastError('', ToastStore, e);
 			}
+		} finally {
+			loading = false;
 		}
 	}
 
 	function recidrHost() {
+		loading = true;
 		try {
 			if (cidr !== hostNewCIDR) {
 				acl = acl.setHost(host, hostNewCIDR);
 				cidr = hostNewCIDR;
 			}
-			return true
+			return true;
 		} catch (e) {
 			debug(e);
 			if (e instanceof Error) {
 				toastError('', ToastStore, e);
 			}
+		} finally {
+			loading = false;
 		}
 	}
 
@@ -85,7 +90,7 @@
 		/>
 	</div>
 	<div class="col-span-3 text-right">
-		<Delete func={deleteHost} />
+		<Delete func={deleteHost} disabled={loading} />
 	</div>
 </div>
 <!--AccordionItem

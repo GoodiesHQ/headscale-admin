@@ -82,10 +82,10 @@
 	<PageHeader title="Deploy" label="Command" showButtonArea={true}>
 		<svelte:fragment slot="button">
 			<button
-				class="bg-gray-400/30 dark:bg-gray-800/70 border border-dashed border-slate-200 border-1 mr-4 pl-4 rounded-lg justify-start text-left pr-6"
+				class="bg-gray-400/30 dark:bg-gray-800/70 border border-dashed border-slate-200 border-1 pr-0 pl-4 rounded-lg justify-start text-left w-[90%]"
 				on:click={() =>
 					copyToClipboard(craftCommand(deployment), ToastStore, 'Copied Command to Clipboard!')}
-				><code class="text-black dark:text-white text-lg block py-4"
+				><code class="text-black dark:text-white text-sm block py-4 w-full"
 					>{craftCommand(deployment)}</code
 				>
 			</button>
