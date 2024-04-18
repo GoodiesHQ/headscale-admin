@@ -22,18 +22,21 @@
 
 	async function deleteItem() {
 		show = false;
+		const name = item.name;
+		const id = item.id;
+
 		if (isUser(item)) {
 			if (await deleteUser(item)) {
-				toastSuccess(`Deleted User "${item.name}" (${item.id})`, toastStore);
+				toastSuccess(`Deleted User "${name}" (ID: ${id})`, toastStore);
 			} else {
-				toastError(`Failed to Delete User "${item.name}" (${item.id})`, toastStore);
+				toastError(`Failed to Delete User "${name}" (${id})`, toastStore);
 			}
 		}
 		if (isNode(item)) {
 			if (await deleteNode(item)) {
-				toastSuccess(`Deleted machine "${item.name}" (${item.id})`, toastStore);
+				toastSuccess(`Deleted machine "${name}" (${id})`, toastStore);
 			} else {
-				toastError(`Failed to Delete machine "${item.name}" (${item.id})`, toastStore);
+				toastError(`Failed to Delete machine "${name}" (${id})`, toastStore);
 			}
 		}
 	}

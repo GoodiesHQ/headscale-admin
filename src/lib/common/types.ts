@@ -214,3 +214,29 @@ export type ApiKeyInfo = {
 };
 
 export type Direction = 'up' | 'down';
+
+export type Deployment = {
+	// general
+	shieldsUp: boolean;
+	generateQR: boolean;
+	reset: boolean;
+	operator: boolean;
+	operatorValue: string;
+	forceReauth: boolean;
+	sshServer: boolean;
+	usePreAuthKey: boolean;
+	preAuthKeyUser: string;
+	preAuthKey: string;
+	// advertise
+	advertiseExitNode: boolean;
+	advertiseExitNodeLocalAccess: boolean;
+	advertiseRoutes: boolean;
+	advertiseRoutesValues: string[];
+	advertiseTags: boolean;
+	advertiseTagsValues: string[];
+	// accept
+	acceptDns: boolean;
+	acceptRoutes: boolean;
+	acceptExitNode: boolean;
+	acceptExitNodeValue: string;
+};
