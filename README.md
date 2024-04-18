@@ -8,7 +8,7 @@ Headscale-Admin should currently be considered a beta application. It is very mu
 
 ### Known Issues
 
-- None as of now!
+- In headscale 0.23.0-alpha5, tags cannot be fully removed. [This is a bug #1849 in headscale](https://github.com/juanfont/headscale/issues/1849).
 
 ### Building
 

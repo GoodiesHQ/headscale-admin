@@ -13,7 +13,7 @@
 	export let layout: Writable<LayoutStyle> | undefined = undefined;
 	export let showButtonArea = false;
 
-	export let buttonText: string = 'Create';
+	export let buttonText: string | null = 'Create';
 	$: layoutCurrent = layout ? get(layout) : null;
 	$: regexIsValid = validRegex(filterString);
 
@@ -59,13 +59,15 @@
 	{#if $$slots.button}
 	<!--div class="flex justify-start pt-4 space-x-5 {$$slots.button ? '' : 'invisible'}"-->
 	<div class="flex justify-start pt-4 space-x-5">
-		<button
-			type="button"
-			class="btn btn-sm variant-filled-success rounded-sm"
-			on:click={(_) => (showButtonArea = !showButtonArea)}
-		>
-			{buttonText}
-		</button>
+		{#if buttonText}
+			<button
+				type="button"
+				class="btn btn-sm variant-filled-success rounded-sm"
+				on:click={(_) => (showButtonArea = !showButtonArea)}
+			>
+				{buttonText}
+			</button>
+		{/if}
 		{#if $$props.filterString !== undefined}
 			<input
 				type="text"
