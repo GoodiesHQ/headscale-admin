@@ -76,7 +76,7 @@
 			bind:value={host}
 			bind:valueNew={hostNewName}
 			submit={renameHost}
-			class="font-extralight"
+			class="font-extralight rounded-md"
 			showRenameIcon={false}
 		/>
 	</div>
@@ -85,7 +85,7 @@
 			bind:value={cidr}
 			bind:valueNew={hostNewCIDR}
 			submit={recidrHost}
-			class="text-sm font-mono text-primary-500 dark:text-primary-300"
+			class="text-sm font-mono rounded-md text-primary-500 dark:text-primary-300"
 			showRenameIcon={false}
 		/>
 	</div>

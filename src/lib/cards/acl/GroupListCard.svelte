@@ -21,6 +21,7 @@
 	$: groupMembers = acl.getGroupMembers(group);
 	$: groupNewName = '';
 	$: loading = false;
+	$: deleting = false;
 
 	function renameGroup() {
 		try {
@@ -29,15 +30,17 @@
 				toastSuccess(`Group renamed from '${group}' to '${groupNewName}'`, ToastStore);
 				group = groupNewName;
 			}
-			return true
+			return true;
 		} catch (e) {
 			if (e instanceof Error) {
 				toastError('', ToastStore, e);
 			}
+			debug(e)
 		}
 	}
 
 	function deleteGroup() {
+		deleting = true;
 		try {
 			acl = acl.deleteGroup(group);
 			toastSuccess(`Group '${group}' deleted`, ToastStore);
@@ -45,6 +48,9 @@
 			if (e instanceof Error) {
 				toastError('', ToastStore, e);
 			}
+			debug(e)
+		} finally {
+			deleting = false;
 		}
 	}
 
@@ -98,22 +104,24 @@
 				/>
 			</h3>
 			<div class="h-40">
-				<MultiSelect
-					id={group}
-					bind:selected={groupMembers}
-					on:change={saveGroup}
-					on:removeAll={clearGroup}
-					--sms-options-max-height="18vh"
-					inputClass="input"
-					liOptionClass="input rounded-none"
-					liActiveOptionClass="text-black"
-					ulOptionsClass="input rounded-none"
-					maxOptions={0}
-					closeDropdownOnSelect={false}
-					autoScroll={true}
-					options={users.map((u) => u.name)}
-					duplicates={false}
-				/>
+				{#if groupMembers !== undefined}
+					<MultiSelect
+						id={group}
+						bind:selected={groupMembers}
+						on:change={saveGroup}
+						on:removeAll={clearGroup}
+						--sms-options-max-height="18vh"
+						inputClass="input"
+						liOptionClass="input rounded-none"
+						liActiveOptionClass="text-black"
+						ulOptionsClass="input rounded-none"
+						maxOptions={0}
+						closeDropdownOnSelect={false}
+						autoScroll={true}
+						options={users === undefined ? [] : users.map((u) => u.name)}
+						duplicates={false}
+					/>
+				{/if}
 				<div class="pt-4">
 					<Delete func={deleteGroup} />
 				</div>

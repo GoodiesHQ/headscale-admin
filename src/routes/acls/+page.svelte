@@ -13,6 +13,7 @@
 	import { ACLBuilder } from '$lib/common/acl';
 	import Groups from './Groups.svelte';
 	import Hosts from './Hosts.svelte';
+	import TagOwners from './TagOwners.svelte'
 
 	let acl = ACLBuilder.emptyACL();
 
@@ -70,6 +71,8 @@
 				<Groups bind:acl />
 			{:else if tabs[tabSet].name == 'hosts'}
 				<Hosts bind:acl />
+			{:else if tabs[tabSet].name == 'tag-owners'}
+				<TagOwners bind:acl />
 			{:else if tabs[tabSet].name == 'config'}
 				<pre>{JSON.stringify(acl, null, 2)}</pre>
 			{:else}

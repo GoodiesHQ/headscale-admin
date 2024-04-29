@@ -11,6 +11,7 @@
 	import GroupListCard from '$lib/cards/acl/GroupListCard.svelte';
 
 	import NewItem from './NewItem.svelte';
+	import TagOwnerListCard from '$lib/cards/acl/TagOwnerListCard.svelte';
 
 	export let acl: ACLBuilder;
 
@@ -18,20 +19,20 @@
 
 	$: loading = false;
 
-	$: showCreateGroup = false;
-	$: newGroupName = '';
+	$: showCreateTag = false;
+	$: newTagName = '';
 	$: users = get(UserStore) as User[];
 	$: usersNames = users.map((u: User) => u.name);
 
-	let groupsFilter = '';
+	let tagsFilter = '';
 
-	function newGroup() {
+	function newTag() {
 		loading = true;
 		try {
-			acl = acl.createGroup(newGroupName);
-			toastSuccess(`Group '${newGroupName}' created`, ToastStore);
-			newGroupName = '';
-			showCreateGroup = false;
+			acl = acl.createTag(newTagName);
+			toastSuccess(`Tag Ownership of '${newTagName}' created`, ToastStore);
+			newTagName = '';
+			showCreateTag = false;
 		} catch (e) {
 			if (e instanceof Error) {
 				toastError('', ToastStore, e);
@@ -41,18 +42,18 @@
 		}
 	}
 
-	function filterGroups(groups: string[], filter: string) {
+	function filterTags(tags: string[], filter: string) {
 		try {
 			const r = RegExp(filter);
-			return groups.filter((g) => r.test(g));
+			return tags.filter((g) => r.test(g));
 		} catch {
-			debug(`Group Regex "${filter}" is invalid`);
-			return groups;
+			debug(`Tag Regex "${filter}" is invalid`);
+			return tags;
 		}
 	}
 
-	function toggleShowCreateGroup() {
-		showCreateGroup = !showCreateGroup;
+	function toggleShowCreateTag() {
+		showCreateTag = !showCreateTag;
 	}
 
 	onMount(() => {
@@ -68,16 +69,16 @@
 
 <CardListPage>
 	<div class="mb-2">
-		<button class="btn-sm rounded-md variant-filled-success" on:click={toggleShowCreateGroup}>
+		<button class="btn-sm rounded-md variant-filled-success" on:click={toggleShowCreateTag}>
 			Create
 		</button>
-		{#if showCreateGroup}
+		{#if showCreateTag}
 			<NewItem
-				title="Group"
+				title="Tag"
 				disabled={loading}
-				bind:name={newGroupName}
+				bind:name={newTagName}
 				submit={() => {
-					newGroup();
+					newTag();
 				}}
 			/>
 		{/if}
@@ -87,14 +88,13 @@
 		<input
 			type="text"
 			class="input rounded-md text-sm mb-0"
-			placeholder="Filter Groups..."
-			bind:value={groupsFilter}
+			placeholder="Filter Tags..."
+			bind:value={tagsFilter}
 		/>
 	</div>
 	<Accordion autocollapse={false}>
-	<!--{#each filteredGroups.sort((a, b) => a.localeCompare(b)) as group}-->
-	{#each filterGroups(acl.getGroupNames(), groupsFilter) as group}
-		<GroupListCard bind:acl bind:group {users} />
+	{#each filterTags(acl.getTagNames(), tagsFilter) as tag}
+		<TagOwnerListCard bind:acl bind:tag {users} />
 	{/each}
 	</Accordion>
 </CardListPage>
