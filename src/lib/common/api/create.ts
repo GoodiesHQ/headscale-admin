@@ -8,7 +8,7 @@ import {
 	getApiDeviceNode,
 	type ApiApiKey,
 } from '$lib/common/types';
-import { ApiEndpointsStore } from '$lib/Stores';
+import { ApiEndpointsStore, ApiLegacyStore } from '$lib/Stores';
 import { debug } from '../debug';
 import { get } from 'svelte/store';
 
@@ -30,9 +30,16 @@ export async function createUser(username: string): Promise<User> {
 }
 
 export async function createNode(key: string, username: string): Promise<Node> {
-	if (!key.startsWith('nodekey:')) {
-		key = 'nodekey:' + key;
+	if(get(ApiLegacyStore)){
+		if (!key.startsWith('nodekey:')) {
+			key = 'nodekey:' + key;
+		}
+	} else {
+		if (!key.startsWith('mkey:')) {
+			key = 'mkey:' + key;
+		}
 	}
+
 	const data = '?user=' + username + '&key=' + key;
 	const device = getApiDeviceNode(
 		await apiPost<ApiDevice>(get(ApiEndpointsStore).Node + '/register' + data),

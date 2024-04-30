@@ -15,6 +15,7 @@ export const NodeStore: Writable<Node[]> = writable([]);
 export const PreAuthKeyStore: Writable<PreAuthKey[]> = writable([]);
 export const DebugStore: Writable<boolean> = localStorageStore('debug', false);
 export const ApiValid: Writable<boolean> = writable(false);
+export const ApiLegacyStore: Writable<boolean> = writable(false);
 export const ApiEndpointsStore: Writable<ApiEndpoints> = localStorageStore(
 	'apiEndpoints',
 	defaultApiEndpoints(),
