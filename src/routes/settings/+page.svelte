@@ -11,6 +11,7 @@
 		DebugStore,
 		populateApiKeyInfoStore,
 		populateStores,
+		ApiLegacyStore,
 	} from '$lib/Stores';
 	import { API_URL_MACHINE, API_URL_NODE, defaultApiEndpoints } from '$lib/common/api';
 	import { debug } from '$lib/common/debug';
@@ -48,7 +49,8 @@
 		apiTtl: get(ApiTtlStore) / 1000,
 		debug: get(DebugStore),
 		theme: get(ThemeStore),
-		legacyApi: get(ApiEndpointsStore).Node === API_URL_MACHINE,
+		legacyApi: get(ApiLegacyStore),
+		// legacyApi: get(ApiEndpointsStore).Node === API_URL_MACHINE,
 	} as Settings;
 
 	$: apiKeyInfo = get(ApiKeyInfoStore);
@@ -68,6 +70,7 @@
 			ApiTtlStore.set(settings.apiTtl * 1000);
 			DebugStore.set(settings.debug);
 			ThemeStore.set(settings.theme);
+			ApiLegacyStore.set(settings.legacyApi);
 
 			ApiKeyInfoStore.set({
 				expires: '',
