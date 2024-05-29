@@ -32,6 +32,8 @@
 		acl = acl.setGroupMembers('bravo', ['user.two', 'aarcher']);
 		acl = acl.setGroupMembers('charlie', ['user.three', 'aarcher']);
 		acl = acl.setGroupMembers('delta', ['user.four', 'user.five']);
+		acl = acl.setGroupMembers('testgroup', ['aarcher'])
+		acl = acl.setTagOwners("test1", ["aarcher", "group:testgroup"])
 
 		acl = acl.setHost("test1", "1.1.1.1/32")
 		acl = acl.setHost("test2", "1.0.0.1/32")
