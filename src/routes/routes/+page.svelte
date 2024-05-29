@@ -2,13 +2,13 @@
 	import CardListPage from '$lib/cards/CardListPage.svelte';
 	import CardTilePage from '$lib/cards/CardTilePage.svelte';
 	import PageHeader from '$lib/page/PageHeader.svelte';
-	import { LayoutNodeStore, NodeStore } from '$lib/Stores';
+	import { LayoutNodeStore, NodeStore, RouteStore } from '$lib/Stores';
 	import { get } from 'svelte/store';
 	import { onMount } from 'svelte';
 	import RouteListCard from '$lib/cards/route/RouteListCard.svelte';
 	import RouteTileCard from '$lib/cards/route/RouteTileCard.svelte';
 	import Page from '$lib/page/Page.svelte';
-	import type { Direction, Node } from '$lib/common/types';
+	import type { Direction, Node, Route } from '$lib/common/types';
 	import SortBtn from '$lib/parts/SortBtn.svelte';
 
 	$: layout = get(LayoutNodeStore);
@@ -63,6 +63,10 @@
 	}
 
 	function filter(node: Node, filterString: string): boolean {
+		const routes = get(RouteStore).filter((r) => (r.node ?? r.machine).id == node.id)
+		if (routes.length == 0) {
+			return false
+		}
 		if (filterString === '') {
 			return true;
 		}
