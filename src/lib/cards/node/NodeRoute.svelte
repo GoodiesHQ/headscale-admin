@@ -21,8 +21,8 @@
 	$: disabled =
 		loading || // route status is actively being changed
 		!route.advertised || // route is not advertised
-		isExpired(node.expiry || '') || // node is expired
-		!node.online; // node is not online
+		isExpired(node.expiry || '') /* || // node is expired
+		!node.online; // node is not online */
 </script>
 
 <div class="col-span-6 text-start items-center">
