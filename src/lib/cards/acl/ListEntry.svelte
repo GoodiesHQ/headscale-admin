@@ -18,7 +18,7 @@
 >
 	<svelte:fragment slot="lead">
 		<span class="{logoClasses}">
-            <svelte:component this={logo}/>;
+            <svelte:component this={logo}/>
 		</span>
 	</svelte:fragment>
 	<svelte:fragment slot="summary">

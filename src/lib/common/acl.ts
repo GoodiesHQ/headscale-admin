@@ -1,7 +1,10 @@
 import { isValidCIDR } from "$lib/common/funcs";
 
+export type TagOwners = string[];
+export type TagOwnersTyped = { users: string[], groups: string[] }
+
 export type AclGroups = { [key: string]: string[] }
-export type AclTagOwners = { [key: string]: string[] }
+export type AclTagOwners = { [key: string]: TagOwners }
 export type AclHosts = { [key: string]: string }
 export type AclAcls = {
     action: 'accept',
@@ -9,9 +12,6 @@ export type AclAcls = {
     src: string[],
     dst: string[],
 }[]
-
-export type TagOwners = string[];
-export type TagOwnersTyped = { users: string[], groups: string[] }
 
 export type ACL = {
     groups: AclGroups, // keys must start with "group:"
@@ -111,15 +111,29 @@ export class ACLBuilder implements ACL {
     }
 
     // deep clone of current ACL
-    private clone(): ACLBuilder {
-        return JSON.parse(JSON.stringify(this))
+    clone(): ACLBuilder {
+        return JSON.parse(JSON.stringify(this)) as ACLBuilder
     }
+
+    /*
+     * Host:
+     * --------------------------------
+     * createHost(name, cidr)
+     * getHostCIDR(name)
+     * setHost(name, cidr)
+     * renameHost(nameOld, nameNew)
+     * getHostNames() string[]
+     * getHosts(name) [string, string][]
+     * hostExists(name)
+     * deleteHost(name)
+     */
+
 
     createHost(name: string, cidr: string): ACLBuilder {
         return this.setHost(name, cidr)
     }
 
-    getHostCIDR(name: string): string {
+    getHostCIDR(name: string): string | undefined {
         return this.hosts[name]
     }
 
@@ -147,19 +161,6 @@ export class ACLBuilder implements ACL {
         this.hosts = hosts;
         return this
     }
-
-    /*
-     * Host:
-     * --------------------------------
-     * createTag(name)
-     * renameTag(nameOld, nameNew)
-     * setTagOwners(name, members[])
-     * getTagNames() string[]
-     * getHostNames() string[]
-     * getHosts(name) [string, string][]
-     * hostExists(name)
-     * deleteHost(name)
-     */
 
     getHostNames(): string[] {
         return Object.keys(this.hosts);
@@ -224,7 +225,7 @@ export class ACLBuilder implements ACL {
 
     setTagOwners(name: string, owners: TagOwners): ACLBuilder {
         const { prefixed } = ACLBuilder.normalizePrefix(name, 'tag')
-        const ownersAll = {...owners}
+        const ownersAll = [...owners]
         this.tagOwners[prefixed] = ownersAll
         return this
     }
@@ -245,18 +246,11 @@ export class ACLBuilder implements ACL {
         return owners
     }
 
-    getTagOwnersTyped(name: string): TagOwnersTyped {
-        const { stripped, prefixed } = ACLBuilder.normalizePrefix(name, 'tag')
-
-        const owners = this.tagOwners[prefixed]
+    static TagOwnersByType(owners: TagOwners): TagOwnersTyped {
         const ownersTyped: TagOwnersTyped = {
             users: [],
             groups: [],
         };
-
-        if (owners === undefined) {
-            throw new Error(`Tag ${stripped} does not exist`);
-        }
 
         for (const owner of owners) {
             const prefix = ACLBuilder.getPrefix(owner)
@@ -268,6 +262,15 @@ export class ACLBuilder implements ACL {
         }
 
         return ownersTyped
+    }
+
+    getTagOwnersTyped(name: string): TagOwnersTyped {
+        const { stripped, prefixed } = ACLBuilder.normalizePrefix(name, 'tag')
+        const owners = this.tagOwners[prefixed]
+        if (owners === undefined) {
+            throw new Error(`Tag ${stripped} does not exist`);
+        }
+        return ACLBuilder.TagOwnersByType(owners)
     }
 
     tagExists(name: string): boolean {
@@ -337,10 +340,6 @@ export class ACLBuilder implements ACL {
 
     setGroupMembers(name: string, members: string[]): ACLBuilder {
         const { stripped, prefixed } = ACLBuilder.normalizePrefix(name, 'group')
-
-        /*if (this.groups[prefixed] === undefined) {
-            throw new Error(`Group '${stripped}' doesn't exist`);
-        }*/
 
         this.groups[prefixed] = [...members];
         return this

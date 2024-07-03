@@ -21,8 +21,8 @@
 	let tabSet: number = 0;
 	const tabs = [
 		{ name: 'groups', title: 'Groups', logo: RawMdiGroups },
-		{ name: 'hosts', title: 'Hosts', logo: RawMdiDevices },
 		{ name: 'tag-owners', title: 'Tag Owners', logo: RawMdiTag },
+		{ name: 'hosts', title: 'Hosts', logo: RawMdiDevices },
 		{ name: 'acl-policies', title: 'Policies', logo: RawMdiSecurity },
 		{ name: 'config', title: 'Config', logo: RawMdiCodeJSON },
 	];
@@ -32,11 +32,13 @@
 		acl = acl.setGroupMembers('bravo', ['user.two', 'aarcher']);
 		acl = acl.setGroupMembers('charlie', ['user.three', 'aarcher']);
 		acl = acl.setGroupMembers('delta', ['user.four', 'user.five']);
-		acl = acl.setGroupMembers('testgroup', ['aarcher'])
+
 		acl = acl.setTagOwners("test1", ["aarcher", "group:testgroup"])
 
 		acl = acl.setHost("test1", "1.1.1.1/32")
 		acl = acl.setHost("test2", "1.0.0.1/32")
+
+		console.log(acl)
 	});
 </script>
 

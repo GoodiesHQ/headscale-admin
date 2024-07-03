@@ -1,10 +1,6 @@
 <script lang="ts">
 	import { Accordion, getToastStore } from '@skeletonlabs/skeleton';
 	import type { ACLBuilder } from '$lib/common/acl';
-	import { get } from 'svelte/store';
-	import { UserStore } from '$lib/Stores';
-	import { onMount } from 'svelte';
-	import type { User } from '$lib/common/types';
 	import { debug } from '$lib/common/debug';
 	import { toastError, toastSuccess } from '$lib/common/funcs';
 	import CardListPage from '$lib/cards/CardListPage.svelte';
@@ -20,9 +16,6 @@
 
 	$: showCreateGroup = false;
 	$: newGroupName = '';
-	$: users = get(UserStore) as User[];
-	$: usersNames = users.map((u: User) => u.name);
-
 	let groupsFilter = '';
 
 	function newGroup() {
@@ -55,15 +48,6 @@
 		showCreateGroup = !showCreateGroup;
 	}
 
-	onMount(() => {
-		const unsubUserStore = UserStore.subscribe((us) => {
-			users = us;
-			usersNames = us.map((u: User) => u.name);
-		});
-		return () => {
-			unsubUserStore();
-		};
-	});
 </script>
 
 <CardListPage>
@@ -76,9 +60,7 @@
 				title="Group"
 				disabled={loading}
 				bind:name={newGroupName}
-				submit={() => {
-					newGroup();
-				}}
+				submit={newGroup}
 			/>
 		{/if}
 	</div>
@@ -92,9 +74,8 @@
 		/>
 	</div>
 	<Accordion autocollapse={false}>
-	<!--{#each filteredGroups.sort((a, b) => a.localeCompare(b)) as group}-->
 	{#each filterGroups(acl.getGroupNames(), groupsFilter) as group}
-		<GroupListCard bind:acl bind:group {users} />
+		<GroupListCard bind:acl bind:group />
 	{/each}
 	</Accordion>
 </CardListPage>

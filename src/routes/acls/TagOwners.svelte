@@ -1,17 +1,12 @@
 <script lang="ts">
 	import { Accordion, getToastStore } from '@skeletonlabs/skeleton';
 	import type { ACLBuilder } from '$lib/common/acl';
-	import { get } from 'svelte/store';
-	import { UserStore } from '$lib/Stores';
-	import { onMount } from 'svelte';
-	import type { User } from '$lib/common/types';
 	import { debug } from '$lib/common/debug';
 	import { toastError, toastSuccess } from '$lib/common/funcs';
 	import CardListPage from '$lib/cards/CardListPage.svelte';
-	import GroupListCard from '$lib/cards/acl/GroupListCard.svelte';
+	import TagOwnerListCard from '$lib/cards/acl/TagOwnerListCard.svelte';
 
 	import NewItem from './NewItem.svelte';
-	import TagOwnerListCard from '$lib/cards/acl/TagOwnerListCard.svelte';
 
 	export let acl: ACLBuilder;
 
@@ -21,8 +16,6 @@
 
 	$: showCreateTag = false;
 	$: newTagName = '';
-	$: users = get(UserStore) as User[];
-	$: usersNames = users.map((u: User) => u.name);
 
 	let tagsFilter = '';
 
@@ -53,18 +46,10 @@
 	}
 
 	function toggleShowCreateTag() {
+		console.log(acl)
 		showCreateTag = !showCreateTag;
 	}
 
-	onMount(() => {
-		const unsubUserStore = UserStore.subscribe((us) => {
-			users = us;
-			usersNames = us.map((u: User) => u.name);
-		});
-		return () => {
-			unsubUserStore();
-		};
-	});
 </script>
 
 <CardListPage>
@@ -94,7 +79,7 @@
 	</div>
 	<Accordion autocollapse={false}>
 	{#each filterTags(acl.getTagNames(), tagsFilter) as tag}
-		<TagOwnerListCard bind:acl bind:tag {users} />
+		<TagOwnerListCard bind:acl bind:tag />
 	{/each}
 	</Accordion>
 </CardListPage>
