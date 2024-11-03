@@ -30,7 +30,7 @@ export async function createUser(username: string): Promise<User> {
 }
 
 export async function createNode(key: string, username: string): Promise<Node> {
-	if (!key.startsWith('nodekey:')) {
+	if (!key.startsWith('nodekey:') && !key.startsWith('mkey:')) {
 		key = 'nodekey:' + key;
 	}
 	const data = '?user=' + username + '&key=' + key;
