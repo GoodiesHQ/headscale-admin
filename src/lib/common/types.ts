@@ -118,6 +118,11 @@ export type ApiRoutes = {
 	routes: Route[];
 };
 
+export type ApiPolicy = {
+	policy: string;
+	updatedAt: string;
+}
+
 export type Node = {
 	id: string;
 	machineKey: string;

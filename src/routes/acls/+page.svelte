@@ -4,18 +4,21 @@
 	import PageHeader from '$lib/page/PageHeader.svelte';
 	import { Tab, TabGroup, getToastStore } from '@skeletonlabs/skeleton';
 	import { onMount } from 'svelte';
+	import JWCC from 'json5'
 	import RawMdiGroups from '~icons/mdi/account-group';
 	import RawMdiTag from '~icons/mdi/tag';
 	import RawMdiDevices from '~icons/mdi/devices';
 	import RawMdiCodeJSON from '~icons/mdi/code-json';
 	import RawMdiSecurity from '~icons/mdi/security';
 
+	import type { ACL } from '$lib/common/acl';
 	import { ACLBuilder } from '$lib/common/acl';
 	import Groups from './Groups.svelte';
 	import Hosts from './Hosts.svelte';
 	import TagOwners from './TagOwners.svelte'
+	import { apiGet, getPolicy } from '$lib/common/api';
 
-	let acl = ACLBuilder.emptyACL();
+	$: acl = ACLBuilder.emptyACL();
 
 	// Navigation tabs
 	let tabSet: number = 0;
@@ -28,6 +31,18 @@
 	];
 
 	onMount(() => {
+
+		getPolicy().then(policy => {
+			console.log(policy)
+			let x = JWCC.parse<ACL>(policy)
+			acl = ACLBuilder.fromPolicy(x)
+			console.log(x)
+			console.log(JWCC.stringify(x))
+			// let x = parse(policy)
+			// console.log(x)
+		})
+
+		/*
 		acl = acl.setGroupMembers('alpha', ['user.one', 'cloud']);
 		acl = acl.setGroupMembers('bravo', ['user.two', 'aarcher']);
 		acl = acl.setGroupMembers('charlie', ['user.three', 'aarcher']);
@@ -39,6 +54,7 @@
 		acl = acl.setHost("test2", "1.0.0.1/32")
 
 		console.log(acl)
+		*/
 	});
 </script>
 

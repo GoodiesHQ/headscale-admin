@@ -43,6 +43,15 @@ export class ACLBuilder implements ACL {
         return new ACLBuilder({}, {}, {}, []);
     }
 
+    static fromPolicy(acl: ACL): ACLBuilder {
+        return new ACLBuilder(
+            {...acl.groups},
+            {...acl.tagOwners},
+            {...acl.hosts},
+            [...acl.acls],
+        )
+    }
+
     private static getPrefix(name: string): PrefixType | null {
         for (const [prefixType, prefix] of Object.entries(Prefixes)) {
             if (name.startsWith(prefix)) {

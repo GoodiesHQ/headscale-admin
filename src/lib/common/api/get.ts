@@ -10,6 +10,7 @@ import type {
 	User,
 	PreAuthKey,
 	Route,
+	ApiPolicy,
 } from '$lib/common/types';
 import { get } from 'svelte/store';
 
@@ -59,4 +60,9 @@ export async function getNodes(): Promise<Node[]> {
 export async function getRoutes(): Promise<Route[]> {
 	const { routes } = await apiGet<ApiRoutes>(get(ApiEndpointsStore).Routes);
 	return routes;
+}
+
+export async function getPolicy(): Promise<string> {
+	const { policy } = await apiGet<ApiPolicy>(get(ApiEndpointsStore).Policy)
+	return policy
 }
