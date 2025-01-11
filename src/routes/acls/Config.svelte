@@ -3,7 +3,7 @@
 	import { ACLBuilder, type ACL } from "$lib/common/acl.svelte";
 	import { setPolicy } from "$lib/common/api";
 	import { debug } from "$lib/common/debug";
-	import { toastError } from "$lib/common/funcs";
+	import { toastError, toastSuccess } from "$lib/common/funcs";
 	import { CodeBlock, getModalStore, getToastStore, type ModalSettings } from "@skeletonlabs/skeleton";
 	import LoaderModal from "./LoaderModal.svelte";
     import JWCC from 'json5'
@@ -38,6 +38,7 @@
         loading = true
         try {
             await setPolicy(acl)
+            toastSuccess('Saved ACL Configuration', ToastStore)
         } catch(err) {
             if (err instanceof Error){
                 toastError('', ToastStore, err)
