@@ -7,7 +7,7 @@ if "%VERSION%" == "" if [%VERSION%] == [] goto fail
 set VERSIONPATH="%CD%\build\v%VERSION%"
 
 REM build and run the container
-docker build --build-arg ENDPOINT=/admin -t goodieshq/headscale-admin:%VERSION%
+docker build --build-arg ENDPOINT=/admin -t goodieshq/headscale-admin:%VERSION% .
 docker run -d -v %VERSIONPATH%:/mnt --name headscale-tmp -it goodieshq/headscale-admin:%VERSION%
 
 REM copy the build directory
