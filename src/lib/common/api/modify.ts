@@ -4,6 +4,7 @@ import type {
 	ApiDevice,
 	ApiRoute,
 	ApiUser,
+	ApiPolicy,
 	Node,
 	PreAuthKey,
 	Route,
@@ -11,7 +12,8 @@ import type {
 } from '$lib/common/types';
 import { get } from 'svelte/store';
 import { debug } from '../debug';
-import { apiPost } from './base';
+import { apiPost, apiPut } from './base';
+import type { ACLBuilder } from '../acl.svelte';
 
 export async function renameUser(u: User, nameNew: string): Promise<User> {
 	const path = `${get(ApiEndpointsStore).User}/${u.name}/rename/${nameNew}`;
@@ -67,4 +69,9 @@ export async function disableRoute(r: Route): Promise<Route> {
 	const { route } = await apiPost<ApiRoute>(path);
 	debug('Disabled Route "' + r.prefix + '"');
 	return route;
+}
+
+export async function setPolicy(acl: ACLBuilder) {
+	const path = `${get(ApiEndpointsStore).Policy}`
+	await apiPut<ApiPolicy>(path, {"policy": acl.JSON()})
 }

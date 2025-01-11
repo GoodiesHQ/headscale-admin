@@ -120,7 +120,7 @@ export type ApiRoutes = {
 
 export type ApiPolicy = {
 	policy: string;
-	updatedAt: string;
+	updatedAt?: string;
 }
 
 export type Node = {

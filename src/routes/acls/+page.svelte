@@ -19,11 +19,11 @@
 	import { toastError } from '$lib/common/funcs';
 	import Policies from './Policies.svelte';
 	import Tabbed from '$lib/parts/Tabbed.svelte';
+	import Config from './Config.svelte';
 
 	const ToastStore = getToastStore()
 
 	let acl = $state(ACLBuilder.emptyACL());
-	let aclJSON = $derived(acl.JSON(4))
 	let loading = $state(false)
 
 	// Navigation tabs
@@ -70,9 +70,7 @@
 			{:else if tabs[tabSet].name == 'policies'}
 				<Policies bind:loading bind:acl />
 			{:else if tabs[tabSet].name == 'config'}
-				<pre>{aclJSON}</pre>
-			{:else}
-				Ok
+				<Config bind:loading bind:acl />
 			{/if}
 		</svelte:fragment>
 	</TabGroup>

@@ -23,6 +23,18 @@ async function toApiResponse<T>(response: Response): Promise<T> {
 			throw new ApiAuthErrorUnauthorized();
 		}
 
+		try{
+			const data = JSON.parse(text)
+			if (isApiError(data)) {
+				throw new Error(data.message);
+			}
+		} catch(e) {
+			if (!(e instanceof SyntaxError)) {
+				throw e
+			}
+		}
+
+
 		// unspecified errors
 		throw new Error('Unspecified Error: ' + text);
 	}
@@ -92,6 +104,21 @@ export async function apiPost<T>(
 ): Promise<T> {
 	const body = JSON.stringify(data ?? {});
 	return await apiFetch<T>(path, { method: 'POST', body, ...init }, verbose);
+}
+
+export async function apiPut<T>(
+	path: string,
+	data: unknown = null,
+	init?: RequestInit,
+	verbose: boolean = false,
+): Promise<T> {
+	const body = JSON.stringify(data ?? {});
+	try{
+		return await apiFetch<T>(path, { method: 'PUT', body, ...init }, verbose);
+	} catch(e) {
+		debug("ERR PUT", e)
+		throw e
+	}
 }
 
 export async function apiTest(): Promise<boolean> {
