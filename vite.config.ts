@@ -8,7 +8,8 @@ export default defineConfig({
 		sveltekit(),
 		purgeCss(),
 		Icons({
+			autoInstall: true,
 			compiler: 'svelte',
 		}),
-	]
+	],
 });
