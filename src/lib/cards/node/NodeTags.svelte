@@ -65,7 +65,7 @@
 			{/each}
 		{/if}
 	</p>
-	<div class="arrow variant-filled-warning" />
+	<div class="arrow variant-filled-warning"></div>
 </div>
 
 <div class="space-y-4">

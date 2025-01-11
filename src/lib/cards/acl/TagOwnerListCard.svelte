@@ -1,15 +1,14 @@
 <script lang="ts">
 	import { getToastStore } from '@skeletonlabs/skeleton';
-	import type { ACLBuilder } from '$lib/common/acl';
+	import type { ACLBuilder } from '$lib/common/acl.svelte';
 	import type { User } from '$lib/common/types';
 	import { toastSuccess, toastError } from '$lib/common/funcs';
-	import { MultiSelect } from 'svelte-multiselect';
+	import MultiSelect from '$lib/parts/MultiSelect.svelte';
 	import Delete from '$lib/parts/Delete.svelte';
 	import CardListContainer from '$lib/cards/CardListContainer.svelte';
 	import { debug } from '$lib/common/debug';
 	import { UserStore } from '$lib/Stores';
 	import { get } from 'svelte/store';
-	import { onMount } from 'svelte';
 
 	import RawMdiTag from '~icons/mdi/tag';
 	import Text from '$lib/parts/Text.svelte';
@@ -17,17 +16,36 @@
 
 	const ToastStore = getToastStore();
 
-	export let acl: ACLBuilder;
-	export let tag: string;
-	export let open: boolean = false;
+	type TagOwnerListCardProps = {
+		acl: ACLBuilder,
+		tagName: string,
+		open?: boolean,
+	}
 
-	$: users = get(UserStore)
-	$: tagOwners = acl.tagExists(tag) ? acl.getTagOwners(tag) : [];
-	$: tagNewName = '';
-	$: loading = false;
-	$: deleting = false;
+	let {
+		acl = $bindable(),
+		tagName = $bindable(),
+		open = $bindable(true),
+	}: TagOwnerListCardProps = $props()
 
-	function options(acl: ACLBuilder, users: User[]): string[] {
+	let tag = $state(MakeTag())
+	let users = $derived(get(UserStore))
+	let tagOwners = $derived(acl.tagExists(tagName) ? acl.getTagOwners(tagName) : []);
+	let tagNameNew = $state('');
+	let loading = $state(false);
+	let deleting = $state(false);
+	let options = $derived(makeOptions(acl, users))
+
+	function MakeTag() {
+		return {
+			get name() { return tagName },
+			set name(n: string) { renameTag(n) },
+			get owners() { return tagOwners },
+			set owners(o: string[]) { setTagOwners(o) }
+		}
+	}
+
+	function makeOptions(acl: ACLBuilder, users: User[]): string[] {
 		const us = users.map(u => u.name)
 		us.sort()
 
@@ -37,12 +55,13 @@
 		return us.concat(gs)
 	}
 
-	function renameTag() {
+	function renameTag(tagNameNew: string) {
+		loading = true
 		try {
-			if (tag !== tagNewName) {
-				acl = acl.renameTag(tag, tagNewName);
-				toastSuccess(`Group renamed from '${tag}' to '${tagNewName}'`, ToastStore);
-				tag = tagNewName;
+			if (tag.name !== tagNameNew) {
+				acl.renameTag(tag.name, tagNameNew);
+				toastSuccess(`Tag renamed from '${tag.name}' to '${tagNameNew}'`, ToastStore);
+				tagName = tagNameNew;
 			}
 			return true;
 		} catch (e) {
@@ -50,14 +69,17 @@
 				toastError('', ToastStore, e);
 			}
 			debug(e)
+		} finally {
+			loading = false
 		}
 	}
 
 	function deleteTag() {
 		deleting = true;
+		loading = true
 		try{
-			acl = acl.deleteTag(tag);
-			toastSuccess(`Tag '${tag}' deleted`, ToastStore)
+			acl.deleteTag(tag.name);
+			toastSuccess(`Tag '${tag.name}' deleted`, ToastStore)
 		}catch(e){
 			if(e instanceof Error){
 				toastError('', ToastStore, e);
@@ -65,53 +87,42 @@
 			debug(e);
 		} finally {
 			deleting = false
+			loading = false
 		}
 	}
 
-	function saveTag() {
-		acl.setTagOwners(tag, tagOwners)
+	function removeMember(member: string) {
+		setTagOwners(tag.owners.filter(m => m != member) ?? [])
 	}
 
-	function clearTag() {
-		tagOwners
-		saveTag();
+	function setTagOwners(tagOwners: string[]) {
+		acl.setTagOwners(tag.name, tagOwners)
 	}
 </script>
 
-<ListEntry id={tag} name={tag} logo={RawMdiTag} bind:open>
+<ListEntry id={tagName} name={tagName} logo={RawMdiTag} bind:open>
+	{#snippet children()}
 	<CardListContainer>
 		<h3 class="font-mono mb-4 flex flex-row items-center">
 			<span>Owners of</span>
 			<Text
-				bind:value={tag}
-				bind:valueNew={tagNewName}
-				submit={renameTag}
-				class="font-extralight text-secondary-500 dark:text-secondary-300"
+				bind:value={tag.name}
+				bind:valueNew={tagNameNew}
+				submit={() => { tag.name = tagNameNew; return true}}
+				class="font-extralight text-secondary-500 dark:text-secondary-300 rounded-md"
 				showRenameIcon={true}
 			/>
 		</h3>
-		<div class="h-40">
-			{#if tagOwners !== undefined}
-				<MultiSelect
-					id={tag}
-					bind:selected={tagOwners}
-					on:change={saveTag}
-					on:removeAll={clearTag}
-					--sms-options-max-height="18vh"
-					inputClass="input"
-					liOptionClass="input rounded-none"
-					liActiveOptionClass="text-black"
-					ulOptionsClass="input rounded-none"
-					maxOptions={0}
-					closeDropdownOnSelect={false}
-					autoScroll={true}
-					options={options(acl, users)}
-					duplicates={false}
-				/>
-			{/if}
-			<div class="pt-4">
-				<Delete func={deleteTag} />
-			</div>
+		<MultiSelect
+			id={"tag-" + tagName + "-select"}
+			bind:items={tag.owners}
+			options={options}
+			placeholder={"Select owners of " + tagName + "..."}
+			onItemClick={removeMember}
+		/>
+		<div class="pt-4">
+			<Delete func={deleteTag} />
 		</div>
 	</CardListContainer>
+	{/snippet}
 </ListEntry>

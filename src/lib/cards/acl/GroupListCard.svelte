@@ -1,14 +1,13 @@
 <script lang="ts">
 	import { getToastStore } from '@skeletonlabs/skeleton';
-	import type { ACLBuilder } from '$lib/common/acl';
+	import type { ACLBuilder } from '$lib/common/acl.svelte';
 	import { toastSuccess, toastError } from '$lib/common/funcs';
-	import { MultiSelect } from 'svelte-multiselect';
+	import MultiSelect from '$lib/parts/MultiSelect.svelte';
 	import Delete from '$lib/parts/Delete.svelte';
 	import CardListContainer from '$lib/cards/CardListContainer.svelte';
 	import { debug } from '$lib/common/debug';
 	import { UserStore } from '$lib/Stores';
 	import { get } from 'svelte/store';
-	import { onMount } from 'svelte';
 
 	import RawMdiGroup from '~icons/mdi/account-group-outline';
 	import Text from '$lib/parts/Text.svelte';
@@ -16,22 +15,38 @@
 
 	const ToastStore = getToastStore();
 
-	export let acl: ACLBuilder;
-	export let group: string;
-	export let open: boolean = false;
+	type GroupListCardProps = {
+		acl: ACLBuilder,
+		groupName: string,
+		open: boolean,
+	}
 
-	$: users = get(UserStore)
-	$: groupMembers = acl.getGroupMembers(group);
-	$: groupNewName = '';
-	$: loading = false;
-	$: deleting = false;
+	let {acl = $bindable(), groupName, open = $bindable()}: GroupListCardProps = $props()
 
-	function renameGroup() {
+	let users = $derived(get(UserStore))
+	let userNames = $derived(users.map((u) => u.name).toSorted())
+	let groupMembers = $derived(acl.getGroupMembers(groupName))
+
+	let group = $state(makeGroup());
+	let groupNameNew = $state('');
+	let loading = $state(false);
+	let deleting = $state(false);
+
+	function makeGroup() {
+		return {
+			get members() { return groupMembers ?? [] },
+			set members(m: string[]) { setGroupMembers(m) },
+			get name() { return groupName },
+			set name(n: string) { renameGroup(n) },
+		}
+	}
+
+	function renameGroup(groupNameNew: string) {
 		try {
-			if (group !== groupNewName) {
-				acl = acl.renameGroup(group, groupNewName);
-				toastSuccess(`Group renamed from '${group}' to '${groupNewName}'`, ToastStore);
-				group = groupNewName;
+			if (groupName !== groupNameNew) {
+				acl.renameGroup(groupName, groupNameNew);
+				toastSuccess(`Group renamed from '${groupName}' to '${groupNameNew}'`, ToastStore);
+				groupName = groupNameNew;
 			}
 			return true;
 		} catch (e) {
@@ -45,8 +60,8 @@
 	function deleteGroup() {
 		deleting = true;
 		try {
-			acl = acl.deleteGroup(group);
-			toastSuccess(`Group '${group}' deleted`, ToastStore);
+			acl.deleteGroup(groupName);
+			toastSuccess(`Group '${groupName}' deleted`, ToastStore);
 		} catch (e) {
 			if (e instanceof Error) {
 				toastError('', ToastStore, e);
@@ -57,11 +72,15 @@
 		}
 	}
 
-	function saveGroup() {
+	function removeMember(member: string) {
+		setGroupMembers(groupMembers?.filter(m => m != member) ?? [])
+	}
+
+	function setGroupMembers(members: string[]) {
 		loading = true;
 		try {
-			debug(`Saving group '${group}' with ${groupMembers}`);
-			acl = acl.setGroupMembers(group, groupMembers ?? []);
+			debug(`Saving group '${groupName}' with ${members}`);
+			acl.setGroupMembers(groupName, members);
 		} catch (e) {
 			if (e instanceof Error) {
 				toastError('', ToastStore, e);
@@ -70,54 +89,31 @@
 			loading = false;
 		}
 	}
-
-	function clearGroup() {
-		groupMembers = [];
-		saveGroup();
-	}
-
-	onMount(() => {
-		const unsubUserStore = UserStore.subscribe(us => users = us)
-		return () => {
-			unsubUserStore();
-		}
-	})
 </script>
 
-<ListEntry id={group} name={group} logo={RawMdiGroup} bind:open>
+<ListEntry id={groupName} name={groupName} logo={RawMdiGroup} bind:open>
+	{#snippet children()}
 	<CardListContainer>
 		<h3 class="font-mono mb-4 flex flex-row items-center">
 			<span>Members of</span>
 			<Text
-				bind:value={group}
-				bind:valueNew={groupNewName}
-				submit={renameGroup}
-				class="font-extralight text-secondary-500 dark:text-secondary-300"
+				bind:value={group.name}
+				bind:valueNew={groupNameNew}
+				submit={()=>{ group.name = groupNameNew; return true }}
+				class="font-extralight text-secondary-500 dark:text-secondary-300 rounded-md"
 				showRenameIcon={true}
 			/>
 		</h3>
-		<div class="h-40">
-			{#if groupMembers !== undefined}
-				<MultiSelect
-					id={group}
-					bind:selected={groupMembers}
-					on:change={saveGroup}
-					on:removeAll={clearGroup}
-					--sms-options-max-height="18vh"
-					inputClass="input"
-					liOptionClass="input rounded-none"
-					liActiveOptionClass="text-black"
-					ulOptionsClass="input rounded-none"
-					maxOptions={0}
-					closeDropdownOnSelect={false}
-					autoScroll={true}
-					options={users.map((u) => u.name).toSorted()}
-					duplicates={false}
-				/>
-			{/if}
-			<div class="pt-4">
-				<Delete func={deleteGroup} />
-			</div>
+		<MultiSelect
+			bind:items={group.members}
+			options={userNames}
+			id={"group-" + groupName + "-select"}
+			placeholder={"Select members of " + groupName + "..."}
+			onItemClick={removeMember}
+		/>
+		<div class="pt-4">
+			<Delete func={deleteGroup} />
 		</div>
 	</CardListContainer>
+	{/snippet}
 </ListEntry>

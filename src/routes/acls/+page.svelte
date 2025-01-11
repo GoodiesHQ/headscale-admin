@@ -2,7 +2,7 @@
 	import { debug } from '$lib/common/debug';
 	import Page from '$lib/page/Page.svelte';
 	import PageHeader from '$lib/page/PageHeader.svelte';
-	import { Tab, TabGroup, getToastStore } from '@skeletonlabs/skeleton';
+	import { TabGroup, getToastStore } from '@skeletonlabs/skeleton';
 	import { onMount } from 'svelte';
 	import JWCC from 'json5'
 	import RawMdiGroups from '~icons/mdi/account-group';
@@ -11,50 +11,38 @@
 	import RawMdiCodeJSON from '~icons/mdi/code-json';
 	import RawMdiSecurity from '~icons/mdi/security';
 
-	import type { ACL } from '$lib/common/acl';
-	import { ACLBuilder } from '$lib/common/acl';
+	import { ACLBuilder, type ACL } from '$lib/common/acl.svelte';
 	import Groups from './Groups.svelte';
 	import Hosts from './Hosts.svelte';
 	import TagOwners from './TagOwners.svelte'
-	import { apiGet, getPolicy } from '$lib/common/api';
+	import { getPolicy } from '$lib/common/api';
+	import { toastError } from '$lib/common/funcs';
+	import Policies from './Policies.svelte';
+	import Tabbed from '$lib/parts/Tabbed.svelte';
 
-	$: acl = ACLBuilder.emptyACL();
+	const ToastStore = getToastStore()
+
+	let acl = $state(ACLBuilder.emptyACL());
+	let aclJSON = $derived(acl.JSON(4))
+	let loading = $state(false)
 
 	// Navigation tabs
-	let tabSet: number = 0;
+	let tabSet: number = $state(0);
 	const tabs = [
 		{ name: 'groups', title: 'Groups', logo: RawMdiGroups },
 		{ name: 'tag-owners', title: 'Tag Owners', logo: RawMdiTag },
 		{ name: 'hosts', title: 'Hosts', logo: RawMdiDevices },
-		{ name: 'acl-policies', title: 'Policies', logo: RawMdiSecurity },
+		{ name: 'policies', title: 'Policies', logo: RawMdiSecurity },
 		{ name: 'config', title: 'Config', logo: RawMdiCodeJSON },
 	];
 
 	onMount(() => {
-
 		getPolicy().then(policy => {
-			console.log(policy)
-			let x = JWCC.parse<ACL>(policy)
-			acl = ACLBuilder.fromPolicy(x)
-			console.log(x)
-			console.log(JWCC.stringify(x))
-			// let x = parse(policy)
-			// console.log(x)
+			acl = ACLBuilder.fromPolicy(JWCC.parse<ACL>(policy))
+		}).catch(reason => {
+			debug("failed to get policy:", reason)
+			toastError(`Unable to get policy from server.`, ToastStore, reason)
 		})
-
-		/*
-		acl = acl.setGroupMembers('alpha', ['user.one', 'cloud']);
-		acl = acl.setGroupMembers('bravo', ['user.two', 'aarcher']);
-		acl = acl.setGroupMembers('charlie', ['user.three', 'aarcher']);
-		acl = acl.setGroupMembers('delta', ['user.four', 'user.five']);
-
-		acl = acl.setTagOwners("test1", ["aarcher", "group:testgroup"])
-
-		acl = acl.setHost("test1", "1.1.1.1/32")
-		acl = acl.setHost("test2", "1.0.0.1/32")
-
-		console.log(acl)
-		*/
 	});
 </script>
 
@@ -70,31 +58,19 @@
 		class="bg-surface-100-800-token w-full px-2 py-2"
 	>
 		<div class="flex text-center">
-			{#each tabs as tab, i}
-				<Tab
-					bind:group={tabSet}
-					name={tab.name}
-					value={i}
-					padding="px-2 py-2 md:px-4 md:pt-4 lg:px-6 xl:px-8"
-				>
-					<svelte:fragment slot="lead">
-						<span class="flex flex-row items-center text-xs sm:text-sm lg:text-md justify-center">
-							<svelte:component this={tab.logo} />
-						</span>
-					</svelte:fragment>
-					{tab.title}
-				</Tab>
-			{/each}
+			<Tabbed {tabs} bind:tabSet />
 		</div>
 		<svelte:fragment slot="panel">
 			{#if tabs[tabSet].name == 'groups'}
-				<Groups bind:acl />
-			{:else if tabs[tabSet].name == 'hosts'}
-				<Hosts bind:acl />
+				<Groups bind:loading bind:acl />
 			{:else if tabs[tabSet].name == 'tag-owners'}
-				<TagOwners bind:acl />
+				<TagOwners bind:loading bind:acl />
+			{:else if tabs[tabSet].name == 'hosts'}
+				<Hosts bind:loading bind:acl />
+			{:else if tabs[tabSet].name == 'policies'}
+				<Policies bind:loading bind:acl />
 			{:else if tabs[tabSet].name == 'config'}
-				<pre>{JSON.stringify(acl, null, 2)}</pre>
+				<pre>{aclJSON}</pre>
 			{:else}
 				Ok
 			{/if}

@@ -1,32 +1,35 @@
 <script lang="ts">
 	import CardListPage from '$lib/cards/CardListPage.svelte';
-	import type { ACLBuilder, AclHosts } from '$lib/common/acl';
+	import type { ACLBuilder, AclHosts } from '$lib/common/acl.svelte';
 	import { toastError, toastSuccess } from '$lib/common/funcs';
 	import { getToastStore } from '@skeletonlabs/skeleton';
 	import NewItem from './NewItem.svelte';
 	import HostListCard from '$lib/cards/acl/HostListCard.svelte';
 	import { debug } from '$lib/common/debug';
+	import { UserStore } from '$lib/Stores';
+	import { get } from 'svelte/store';
 
 	const ToastStore = getToastStore();
 
-	export let acl: ACLBuilder;
+	let {acl = $bindable(), loading = $bindable(false)}: {acl: ACLBuilder, loading?: boolean} = $props();
 
-	$: loading = false;
+	let users = $state(get(UserStore))
+	let userNames = $derived(users.map(u => u.name))
 
-	$: showCreateHost = false;
-	$: newHostName = '';
-	$: newHostCIDR = '';
+	let showCreateHost = $state(false);
+	let newHostName = $state('');
+	let newHostCIDR = $state('');
 
-	let hostsFilter = '';
+	let hostsFilter = $state('');
 
-	function  toggleShowCreateHost(){
+	function toggleShowCreateHost(){
 		showCreateHost = !showCreateHost;
 	}
 
 	function newHost() {
 		loading = true;
 		try {
-			acl = acl.createHost(newHostName, newHostCIDR);
+			acl.createHost(newHostName, newHostCIDR);
 			toastSuccess(`Host '${newHostName}' created`, ToastStore);
 			newHostName = '';
 			newHostCIDR = '';
@@ -52,14 +55,14 @@
 		}
 	}
 
-	$: filteredHosts = filterHosts(acl.getHosts(), hostsFilter);
+	let filteredHosts = $derived(filterHosts(acl.getHosts(), hostsFilter));
 </script>
 
 
 <CardListPage>
 	<div class="mb-2">
-		<button class="btn-sm rounded-md variant-filled-success" on:click={toggleShowCreateHost}>
-			Create
+		<button class="btn-sm rounded-md variant-filled-success" onclick={toggleShowCreateHost}>
+			Create Host
 		</button>
 		{#if showCreateHost}
 			<NewItem
@@ -83,7 +86,7 @@
 		/>
 	</div>
 	<!--{#each filteredHosts.sort(([k1], [k2]) => k1.localeCompare(k2)) as [k, v]}-->
-	{#each filteredHosts as [host, cidr]}
-		<HostListCard bind:acl {host} {cidr} />
+	{#each filteredHosts as [hostName, hostCIDR]}
+		<HostListCard bind:acl {hostName} {hostCIDR} {userNames} />
 	{/each}
 </CardListPage>

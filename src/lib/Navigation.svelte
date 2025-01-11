@@ -12,7 +12,7 @@
 
 	import { page } from '$app/stores';
 	import { ApiKeyInfoStore, ApiKeyStore, hasValidApi } from './Stores';
-	import { onMount } from 'svelte';
+	import { onMount, type Component } from 'svelte';
 
 	export let labels = true;
 
@@ -30,7 +30,7 @@
 	type Page = {
 		path: string;
 		name: string;
-		logo: ConstructorOfATypedSvelteComponent;
+		logo: Component;
 	};
 
 	const allPages: Page[] = [

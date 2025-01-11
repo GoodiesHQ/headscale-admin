@@ -1,28 +1,25 @@
 <script lang="ts">
 	import { Accordion, getToastStore } from '@skeletonlabs/skeleton';
-	import type { ACLBuilder } from '$lib/common/acl';
+	import type { ACLBuilder } from '$lib/common/acl.svelte';
 	import { debug } from '$lib/common/debug';
 	import { toastError, toastSuccess } from '$lib/common/funcs';
 	import CardListPage from '$lib/cards/CardListPage.svelte';
 	import TagOwnerListCard from '$lib/cards/acl/TagOwnerListCard.svelte';
-
 	import NewItem from './NewItem.svelte';
-
-	export let acl: ACLBuilder;
 
 	const ToastStore = getToastStore();
 
-	$: loading = false;
+	let {acl = $bindable(), loading = $bindable(false)}: {acl: ACLBuilder, loading?: boolean} = $props();
 
-	$: showCreateTag = false;
-	$: newTagName = '';
+	let showCreateTag = $state(false);
+	let newTagName = $state('');
 
-	let tagsFilter = '';
+	let tagsFilter = $state('');
 
 	function newTag() {
 		loading = true;
 		try {
-			acl = acl.createTag(newTagName);
+			acl.createTag(newTagName);
 			toastSuccess(`Tag Ownership of '${newTagName}' created`, ToastStore);
 			newTagName = '';
 			showCreateTag = false;
@@ -45,6 +42,8 @@
 		}
 	}
 
+	let filteredTags = $derived(filterTags(acl.getTagNames(), tagsFilter))
+
 	function toggleShowCreateTag() {
 		console.log(acl)
 		showCreateTag = !showCreateTag;
@@ -54,8 +53,8 @@
 
 <CardListPage>
 	<div class="mb-2">
-		<button class="btn-sm rounded-md variant-filled-success" on:click={toggleShowCreateTag}>
-			Create
+		<button class="btn-sm rounded-md variant-filled-success" onclick={toggleShowCreateTag}>
+			Create Tag
 		</button>
 		{#if showCreateTag}
 			<NewItem
@@ -78,8 +77,8 @@
 		/>
 	</div>
 	<Accordion autocollapse={false}>
-	{#each filterTags(acl.getTagNames(), tagsFilter) as tag}
-		<TagOwnerListCard bind:acl bind:tag />
+	{#each filteredTags as tag}
+		<TagOwnerListCard bind:acl tagName={tag} />
 	{/each}
 	</Accordion>
 </CardListPage>

@@ -1,24 +1,39 @@
 <script lang="ts">
 	import { AccordionItem, getToastStore } from '@skeletonlabs/skeleton';
+	import type { Component, Snippet } from 'svelte';
 
-    export let id: string;
-    export let name: string;
-    export let nameClasses: string  = "grid"
-    export let logo: ConstructorOfATypedSvelteComponent;
-    export let logoClasses: string = ""
-    export let open: boolean = false;
+	type ListEntryProps = {
+		id: string,
+		name: string,
+		nameClasses?: string,
+		logo: Component,
+		logoClasses?: string,
+		open: boolean,
+		children?: Snippet,
+	}
+
+	let {
+		id,
+		name,
+		nameClasses = "grid",
+		logo,
+		logoClasses = "",
+		open = $bindable(false),
+		children = undefined,
+	}: ListEntryProps = $props()
+
 </script>
 
 <AccordionItem
 	bind:open
 	id={id}
-	class="backdrop-brightness-100 bg-white/25 dark:bg-white/5 rounded-md"
+	class="backdrop-brightness-100 bg-white/25 dark:bg-white/5 rounded-md overflow-visible"
 	padding="py-4 px-4"
 	regionControl="!rounded-none"
 >
 	<svelte:fragment slot="lead">
 		<span class="{logoClasses}">
-            <svelte:component this={logo}/>
+			<logo></logo>
 		</span>
 	</svelte:fragment>
 	<svelte:fragment slot="summary">
@@ -27,6 +42,6 @@
 		</div>
 	</svelte:fragment>
 	<svelte:fragment slot="content">
-        <slot />
+		{@render children?.()}
     </svelte:fragment>
 </AccordionItem>

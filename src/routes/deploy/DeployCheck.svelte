@@ -37,7 +37,7 @@
 	data-popup="popupHover-{popupId}"
 >
 	<p>{help}</p>
-	<div class="arrow variant-filled-tertiary" />
+	<div class="arrow variant-filled-tertiary"></div>
 </div>
 
 <div class="flex flex-col col-span-12 md:col-span-6 xl:col-span-4 pb-4 mx-4">

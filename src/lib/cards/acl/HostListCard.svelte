@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { getToastStore } from '@skeletonlabs/skeleton';
-	import type { ACLBuilder } from '$lib/common/acl';
+	import RawMdiAlert from '~icons/mdi/alert';
+	import { getToastStore, popup, type PopupSettings } from '@skeletonlabs/skeleton';
+	import type { ACLBuilder } from '$lib/common/acl.svelte';
 	import { toastSuccess, toastError } from '$lib/common/funcs';
 	import Delete from '$lib/parts/Delete.svelte';
 	import { debug } from '$lib/common/debug';
@@ -8,22 +9,37 @@
 
 	const ToastStore = getToastStore();
 
-	export let acl: ACLBuilder;
+	type HostListCardProps = {
+		acl: ACLBuilder,
+		hostName: string,
+		hostCIDR: string,
+		userNames: string[],
+	}
 
-	export let host: string;
-	export let cidr: string;
+	let {acl = $bindable(), hostName = $bindable(), hostCIDR = $bindable(), userNames}: HostListCardProps = $props()
 
-	$: hostNewName = '';
-	$: hostNewCIDR = '';
-	$: loading = false;
 
-	function renameHost() {
+	let host = $state(makeHost())
+	let hostNameNew = $state('');
+	let hostCIDRNew = $state('');
+	let loading = $state(false);
+
+	function makeHost() {
+		return {
+			get name() { return hostName },
+			set name(n: string) { renameHost(n) },
+			get cidr() { return hostCIDR },
+			set cidr(c: string) { recidrHost(c) },
+		}
+	}
+
+	function renameHost(hostNameNew: string) {
 		loading = true;
 		try {
-			if (host !== hostNewName) {
-				acl = acl.renameHost(host, hostNewName);
-				toastSuccess(`Host renamed from '${host}' to '${hostNewName}'`, ToastStore);
-				host = hostNewName;
+			if (host.name !== hostNameNew) {
+				acl.renameHost(host.name, hostNameNew);
+				// toastSuccess(`Host renamed from '${host.name}' to '${hostNameNew}'`, ToastStore);
+				hostName = hostNameNew
 				debug(acl.hosts);
 			}
 			return true;
@@ -37,12 +53,12 @@
 		}
 	}
 
-	function recidrHost() {
+	function recidrHost(hostCIDRNew: string) {
 		loading = true;
 		try {
-			if (cidr !== hostNewCIDR) {
-				acl = acl.setHost(host, hostNewCIDR);
-				cidr = hostNewCIDR;
+			if (host.cidr !== hostCIDRNew) {
+				acl.setHost(host.name, hostCIDRNew);
+				hostCIDR = hostCIDRNew;
 			}
 			return true;
 		} catch (e) {
@@ -57,7 +73,7 @@
 
 	function deleteHost() {
 		try {
-			acl = acl.deleteHost(host);
+			acl.deleteHost(host.name);
 			toastSuccess(`Host '${host}' deleted`, ToastStore);
 		} catch (e) {
 			debug(e);
@@ -66,25 +82,63 @@
 			}
 		}
 	}
+
+	let timerInfo: ReturnType<typeof setTimeout>;
+	let popupShow = $state(false)
+
+	const popupInfo: PopupSettings = {
+		event: 'hover',
+		target: 'popupHover-host-' + hostName,
+		placement: 'top',
+	};
+
+	function handleMouseEnter() {
+		timerInfo = setTimeout(() => {
+			popupShow = true;
+		}, 333);
+	}
+
+	function handleMouseLeave() {
+		popupShow = false;
+		clearTimeout(timerInfo);
+	}
 </script>
+
+<div
+	class="card p-4 variant-filled-warning text-center {popupShow ? '' : 'invisible'}"
+	data-popup="popupHover-host-{hostName}"
+>
+	<p>Host '{hostName}' has the same name as a user.<br />Please rename the host.</p>
+	<div class="arrow variant-filled-warning"></div>
+</div>
 
 <div
 	class="card py-3 px-4 grid grid-cols-12 backdrop-brightness-100 bg-white/25 dark:bg-white/5 rounded-md"
 >
-	<div class="col-span-4 text-wrap hyphens-auto">
+	<div class="col-span-4 text-wrap hyphens-auto flex flex-row">
+		{#if userNames.includes(hostName)}
+		<button
+			class="btn p-1 btn-icon variant-soft-error w-6 h-6 [&>*]:pointer-events-none"
+			use:popup={popupInfo}
+			onmouseenter={handleMouseEnter}
+			onmouseleave={handleMouseLeave}
+		>
+			<RawMdiAlert />
+		</button>
+		{/if}
 		<Text
-			bind:value={host}
-			bind:valueNew={hostNewName}
-			submit={renameHost}
+			bind:value={host.name}
+			bind:valueNew={hostNameNew}
+			submit={() => { host.name = hostNameNew; return true }}
 			class="font-extralight rounded-md"
 			showRenameIcon={false}
 		/>
 	</div>
 	<div class="col-span-4 text-left">
 		<Text
-			bind:value={cidr}
-			bind:valueNew={hostNewCIDR}
-			submit={recidrHost}
+			bind:value={host.cidr}
+			bind:valueNew={hostCIDRNew}
+			submit={() => { host.cidr = hostCIDRNew; return true }}
 			class="text-sm font-mono rounded-md text-primary-500 dark:text-primary-300"
 			showRenameIcon={false}
 		/>
@@ -93,57 +147,3 @@
 		<Delete func={deleteHost} disabled={loading} />
 	</div>
 </div>
-<!--AccordionItem
-	{open}
-	id={host}
-	class="backdrop-brightness-100 bg-white/25 dark:bg-white/5 rounded-md"
-	padding="py-4 px-4"
-	regionControl="!rounded-none"
->
-	<svelte:fragment slot="lead">
-		<span class="">
-			<RawMdiGroup />
-		</span>
-	</svelte:fragment>
-	<svelte:fragment slot="summary">
-		<div class="grid">
-			{host}
-		</div>
-	</svelte:fragment>
-	<svelte:fragment slot="content">
-		<CardListContainer>
-			<h3 class="font-mono mb-4 flex flex-row items-center">
-				<span>Host</span>
-				{#if !showRenameHost}
-					<button
-						class="flex flex-row ml-2 items-center"
-						on:click={() => {
-							hostNewName = host;
-							showRenameHost = true;
-						}}
-					>
-						<span class="text-primary-500 dark:text-primary-300">{host}</span>
-						<span class="text-xs ml-1"><RawMdiRename /></span>
-					</button>
-				{:else}
-					<form on:submit|preventDefault={renameHost}>
-						<input
-							use:focus
-							type="text"
-							class="input p-0 m-0 text-xs ml-2 w-32"
-							bind:value={hostNewName}
-						/>
-					</form>
-				{/if}
-			</h3>
-			<div class="">
-				<input
-
-				/>
-				<div class="pt-4">
-					<Delete func={deleteHost} />
-				</div>
-			</div>
-		</CardListContainer>
-	</svelte:fragment>
-</AccordionItem-->

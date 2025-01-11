@@ -73,6 +73,7 @@
 			<svelte:fragment slot="lead">
 				<div>
 					<button
+						aria-label="open navigation panel"
 						class="lg:hidden btn btn-sm mr-4"
 						on:click={() => {
 							DrawerStore.open(drawerSettings);
@@ -108,7 +109,7 @@
 	<svelte:fragment slot="sidebarLeft">
 		<Navigation />
 	</svelte:fragment>
-	<div class="pl-2" transition:fade|local>
+	<div class="pl-2 h-full" transition:fade|local>
 		<slot />
 	</div>
 </AppShell>

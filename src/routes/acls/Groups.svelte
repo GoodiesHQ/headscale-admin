@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Accordion, getToastStore } from '@skeletonlabs/skeleton';
-	import type { ACLBuilder } from '$lib/common/acl';
+	import type { ACLBuilder } from '$lib/common/acl.svelte';
 	import { debug } from '$lib/common/debug';
 	import { toastError, toastSuccess } from '$lib/common/funcs';
 	import CardListPage from '$lib/cards/CardListPage.svelte';
@@ -8,20 +8,20 @@
 
 	import NewItem from './NewItem.svelte';
 
-	export let acl: ACLBuilder;
+	let {acl = $bindable(), loading = $bindable(false)}: {acl: ACLBuilder, loading?: boolean} = $props();
 
 	const ToastStore = getToastStore();
 
-	$: loading = false;
+	let showCreateGroup = $state(false);
+	let newGroupName = $state('');
+	let groupsFilterString = $state('');
 
-	$: showCreateGroup = false;
-	$: newGroupName = '';
-	let groupsFilter = '';
+	let filteredGroups = $derived(filterGroups(acl.getGroupNames(), groupsFilterString))
 
 	function newGroup() {
 		loading = true;
 		try {
-			acl = acl.createGroup(newGroupName);
+			acl.createGroup(newGroupName);
 			toastSuccess(`Group '${newGroupName}' created`, ToastStore);
 			newGroupName = '';
 			showCreateGroup = false;
@@ -34,8 +34,12 @@
 		}
 	}
 
-	function filterGroups(groups: string[], filter: string) {
+	function filterGroups(groups: string[], filter: string): string[] {
 		try {
+			if (filter === '') {
+				return groups;
+			}
+
 			const r = RegExp(filter);
 			return groups.filter((g) => r.test(g));
 		} catch {
@@ -52,8 +56,8 @@
 
 <CardListPage>
 	<div class="mb-2">
-		<button class="btn-sm rounded-md variant-filled-success" on:click={toggleShowCreateGroup}>
-			Create
+		<button class="btn-sm rounded-md variant-filled-success" onclick={toggleShowCreateGroup}>
+			Create Group
 		</button>
 		{#if showCreateGroup}
 			<NewItem
@@ -70,12 +74,12 @@
 			type="text"
 			class="input rounded-md text-sm mb-0"
 			placeholder="Filter Groups..."
-			bind:value={groupsFilter}
+			bind:value={groupsFilterString}
 		/>
 	</div>
 	<Accordion autocollapse={false}>
-	{#each filterGroups(acl.getGroupNames(), groupsFilter) as group}
-		<GroupListCard bind:acl bind:group />
+	{#each filteredGroups as groupName}
+		<GroupListCard bind:acl groupName={groupName} open />
 	{/each}
 	</Accordion>
 </CardListPage>

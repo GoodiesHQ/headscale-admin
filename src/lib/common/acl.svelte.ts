@@ -6,18 +6,19 @@ export type TagOwnersTyped = { users: string[], groups: string[] }
 export type AclGroups = { [key: string]: string[] }
 export type AclTagOwners = { [key: string]: TagOwners }
 export type AclHosts = { [key: string]: string }
-export type AclAcls = {
+export type AclPolicy = {
     action: 'accept',
     proto?: string,
     src: string[],
     dst: string[],
-}[]
+}
+export type AclPolicies = AclPolicy[]
 
 export type ACL = {
     groups: AclGroups, // keys must start with "group:"
     tagOwners: AclTagOwners, // keys must start with "tag:"
     hosts: AclHosts, // keys are DNS-style hostnames
-    acls: AclAcls,
+    acls: AclPolicies,
 }
 
 export type PrefixType = "group" | "tag";
@@ -32,12 +33,31 @@ const RegexTagName = /^[^\s:]+$/
 const RegexHostName = /^[a-z0-9-\.]+$/
 
 export class ACLBuilder implements ACL {
+    groups = $state<AclGroups>({})
+    tagOwners = $state<AclTagOwners>({})
+    hosts = $state<AclHosts>({})
+    acls = $state<AclPolicies>([])
+
     constructor(
-        public groups: AclGroups,
-        public tagOwners: AclTagOwners,
-        public hosts: AclHosts,
-        public acls: AclAcls,
-    ) { }
+        groups: AclGroups,
+        tagOwners: AclTagOwners,
+        hosts: AclHosts,
+        acls: AclPolicies,
+    ) {
+        this.groups = groups
+        this.tagOwners = tagOwners
+        this.hosts = hosts
+        this.acls = acls
+    }
+
+    JSON(space: number = 0): string {
+        return JSON.stringify({
+            groups: this.groups,
+            tagOwners: this.tagOwners,
+            hosts: this.hosts,
+            acls: this.acls,
+        }, null, space)
+    }
 
     static emptyACL(): ACLBuilder {
         return new ACLBuilder({}, {}, {}, []);
@@ -138,29 +158,28 @@ export class ACLBuilder implements ACL {
      */
 
 
-    createHost(name: string, cidr: string): ACLBuilder {
-        return this.setHost(name, cidr)
+    createHost(name: string, cidr: string) {
+        this.setHost(name, cidr)
     }
 
     getHostCIDR(name: string): string | undefined {
         return this.hosts[name]
     }
 
-    setHost(name: string, cidr: string): ACLBuilder {
+    setHost(name: string, cidr: string) {
         name = ACLBuilder.validateHostName(name);
         cidr = ACLBuilder.validateHostCIDR(cidr);
         this.hosts[name] = cidr
-        return this
     }
 
-    renameHost(nameOld: string, nameNew: string): ACLBuilder {
+    renameHost(nameOld: string, nameNew: string) {
         nameOld = ACLBuilder.validateHostName(nameOld);
         nameNew = ACLBuilder.validateHostName(nameNew);
         if (this.hosts[nameOld] === undefined) {
-            throw new Error(`Group '${nameOld}' does not exist`)
+            throw new Error(`Host '${nameOld}' does not exist`)
         }
         if (this.hosts[nameNew] !== undefined) {
-            throw new Error(`Group '${nameNew}' already exists`)
+            throw new Error(`Host '${nameNew}' already exists`)
         }
 
         const hosts: AclHosts = {}
@@ -168,7 +187,6 @@ export class ACLBuilder implements ACL {
             hosts[name === nameOld ? nameNew : name] = value;
         })
         this.hosts = hosts;
-        return this
     }
 
     getHostNames(): string[] {
@@ -179,11 +197,10 @@ export class ACLBuilder implements ACL {
         return Object.entries(this.hosts);
     }
 
-    deleteHost(name: string): ACLBuilder {
+    deleteHost(name: string) {
         if (this.hosts[name] !== undefined) {
             delete this.hosts[name];
         }
-        return this
     }
 
 
@@ -200,21 +217,20 @@ export class ACLBuilder implements ACL {
      * deleteTag(name)
      */
 
-    createTag(name: string): ACLBuilder {
+    createTag(name: string) {
         name = ACLBuilder.validateTagName(name);
         const { prefixed } = ACLBuilder.normalizePrefix(name, 'tag')
         this.tagOwners[prefixed] = [];
-        return this
     }
 
-    renameTag(nameOld: string, nameNew: string): ACLBuilder {
+    renameTag(nameOld: string, nameNew: string) {
         nameNew = ACLBuilder.validateTagName(nameNew);
         const { prefixed: prefixedNew } = ACLBuilder.normalizePrefix(nameNew, 'tag')
         const { stripped: strippedOld, prefixed: prefixedOld } = ACLBuilder.normalizePrefix(nameOld, 'tag')
 
         // if names are equal, don't do anything
         if (prefixedNew === prefixedOld) {
-            return this
+            return
         }
 
         if (this.tagOwners[prefixedOld] === undefined) {
@@ -228,30 +244,27 @@ export class ACLBuilder implements ACL {
         this.tagOwners = tagOwners
 
         //TODO: change all references from old tag to new tag
-
-        return this
     }
 
-    setTagOwners(name: string, owners: TagOwners): ACLBuilder {
+    setTagOwners(name: string, owners: TagOwners) {
         const { prefixed } = ACLBuilder.normalizePrefix(name, 'tag')
         const ownersAll = [...owners]
         this.tagOwners[prefixed] = ownersAll
-        return this
     }
 
-    getTagNames(): string[] {
+    getTagNames(withPrefix: boolean = false): string[] {
         return Object.keys(this.tagOwners).map(name => {
-            return ACLBuilder.normalizePrefix(name, 'tag').stripped
+            let {stripped, prefixed} = ACLBuilder.normalizePrefix(name, 'tag')
+            return withPrefix ? prefixed : stripped;
         })
     }
 
-    getTagOwners(name: string): TagOwners {
+    getTagOwners(name: string): string[]{
         const { stripped, prefixed } = ACLBuilder.normalizePrefix(name, 'tag')
         const owners = this.tagOwners[prefixed] 
         if (owners === undefined) {
             throw new Error(`Tag ${stripped} does not exist`);
         }
-
         return owners
     }
 
@@ -287,7 +300,7 @@ export class ACLBuilder implements ACL {
         return this.tagOwners[prefixed] !== undefined;
     }
 
-    deleteTag(name: string): ACLBuilder {
+    deleteTag(name: string) {
         const { stripped, prefixed } = ACLBuilder.normalizePrefix(name, 'tag')
 
         if (this.tagOwners[prefixed] === undefined) {
@@ -295,7 +308,6 @@ export class ACLBuilder implements ACL {
         }
 
         delete this.tagOwners[prefixed]
-        return this
     }
 
 
@@ -310,7 +322,7 @@ export class ACLBuilder implements ACL {
      * groupExists(name)
      * deleteGroup(name)
      */
-    createGroup(name: string): ACLBuilder {
+    createGroup(name: string) {
         name = ACLBuilder.validateGroupName(name);
         const { stripped, prefixed } = ACLBuilder.normalizePrefix(name, 'group')
 
@@ -319,17 +331,16 @@ export class ACLBuilder implements ACL {
         }
 
         this.groups[prefixed] = []
-        return this
     }
 
-    renameGroup(nameOld: string, nameNew: string): ACLBuilder {
+    renameGroup(nameOld: string, nameNew: string) {
         nameNew = ACLBuilder.validateGroupName(nameNew);
         const { prefixed: prefixedNew } = ACLBuilder.normalizePrefix(nameNew, 'group')
         const { stripped: strippedOld, prefixed: prefixedOld } = ACLBuilder.normalizePrefix(nameOld, 'group')
 
         // if names are equal, don't do anything
         if (prefixedNew === prefixedOld) {
-            return this
+            return
         }
 
         if (this.groups[prefixedOld] === undefined) {
@@ -343,15 +354,17 @@ export class ACLBuilder implements ACL {
         this.groups = groups
 
         //TODO: change all references from old group to new group
-
-        return this
     }
 
-    setGroupMembers(name: string, members: string[]): ACLBuilder {
-        const { stripped, prefixed } = ACLBuilder.normalizePrefix(name, 'group')
+    setGroupMembers(name: string, members: string[]) {
+        const { prefixed } = ACLBuilder.normalizePrefix(name, 'group')
 
         this.groups[prefixed] = [...members];
-        return this
+    }
+
+    getGroupByName(name: string): string[] {
+        const { stripped, prefixed } = ACLBuilder.normalizePrefix(name, 'group')
+        return this.groups[name]
     }
 
     getGroupNames(withPrefix: boolean = false): string[] {
@@ -373,7 +386,7 @@ export class ACLBuilder implements ACL {
         return this.groups[prefixed] !== undefined
     }
 
-    deleteGroup(name: string): ACLBuilder {
+    deleteGroup(name: string) {
         const { stripped, prefixed } = ACLBuilder.normalizePrefix(name, 'group')
 
         if (this.groups[prefixed] === undefined) {
@@ -381,6 +394,71 @@ export class ACLBuilder implements ACL {
         }
 
         delete this.groups[prefixed];
-        return this
+    }
+    /*
+     * POLICIES:
+     * --------------------------------
+     * createPolicy(policy)
+     * getAllPolicies()
+     * getPolicy(idx)
+     * setPolicy(idx, policy)
+     */
+
+    createPolicy(policy: AclPolicy) {
+        this.acls.push(policy)
+    }
+
+    getAllPolicies(): AclPolicies {
+        return this.acls
+    }
+
+    getPolicy(idx: number): AclPolicy {
+        this.validatePolicyIndex(idx)
+        return this.acls[idx]
+    }
+
+    private validatePolicyIndex(idx: number) {
+        if (idx >= this.acls.length || idx < 0) {
+            throw new Error(`Policy does not exist at index '${idx}'`)
+        }
+    }
+
+    public static DefaultPolicy(): AclPolicy {
+        return {
+            action: "accept",
+            proto: undefined,
+            src: [],
+            dst: [],
+        }
+    }
+
+    setPolicySrc(idx: number, src: string[]) {
+        this.validatePolicyIndex(idx)
+        this.acls[idx].src = src
+    }
+
+    setPolicyDst(idx: number, dst: string[]) {
+        this.validatePolicyIndex(idx)
+        this.acls[idx].dst = dst
+    }
+
+    setPolicyProto(idx: number, proto: string | undefined) {
+        this.validatePolicyIndex(idx)
+        this.acls[idx].proto = proto
+    }
+
+    setPolicy(idx: number, policy: AclPolicy) {
+        this.validatePolicyIndex(idx)
+        this.acls[idx] = {
+            action: policy.action,
+            proto: policy.proto,
+            src: policy.src,
+            dst: policy.dst,
+        }
+    }
+
+    delPolicy(idx: number) {
+        this.validatePolicyIndex(idx)
+        this.acls.splice(idx, 1)
     }
 }
