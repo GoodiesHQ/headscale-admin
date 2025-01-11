@@ -2,7 +2,7 @@ name: Docker Build and Push
 on:
   push:
     branches:
-      - dev-acl
+      - dev
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -23,5 +23,5 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: goodieshq/headscale-admin:dev-acl
+          tags: goodieshq/headscale-admin:dev
           platforms: linux/amd64,linux/arm64,linux/arm64/v8
