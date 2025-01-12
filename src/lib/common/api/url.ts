@@ -17,6 +17,7 @@ export const API_URL_APIKEY = '/api/v1/apikey';
 export const API_URL_PREAUTHKEY = '/api/v1/preauthkey';
 export const API_URL_DEBUG = '/api/v1/debug';
 
+/*
 export function defaultApiEndpoints(): ApiEndpoints {
 	return {
 		User: API_URL_USER,
@@ -28,6 +29,7 @@ export function defaultApiEndpoints(): ApiEndpoints {
 		Debug: API_URL_DEBUG,
 	};
 }
+*/
 
 /*export function urlJoin<T extends { toString(): string }>(...parts: T[]): string {
 	return parts.map((part) => part.toString()).join('/');

@@ -2,7 +2,6 @@
 	import { ALL_THEMES, setTheme } from './Themes';
 	import { page } from '$app/stores';
 	import {
-		ApiEndpointsStore,
 		ApiKeyInfoStore,
 		ApiKeyStore,
 		ApiTtlStore,
@@ -11,9 +10,8 @@
 		DebugStore,
 		populateApiKeyInfoStore,
 		populateStores,
-		ApiLegacyStore,
 	} from '$lib/Stores';
-	import { API_URL_MACHINE, API_URL_NODE, defaultApiEndpoints } from '$lib/common/api';
+	import { API_URL_MACHINE, API_URL_NODE } from '$lib/common/api';
 	import { debug } from '$lib/common/debug';
 	import { createPopulateErrorHandler } from '$lib/common/errors';
 	import {
@@ -49,8 +47,6 @@
 		apiTtl: get(ApiTtlStore) / 1000,
 		debug: get(DebugStore),
 		theme: get(ThemeStore),
-		legacyApi: get(ApiLegacyStore),
-		// legacyApi: get(ApiEndpointsStore).Node === API_URL_MACHINE,
 	} as Settings;
 
 	$: apiKeyInfo = get(ApiKeyInfoStore);
@@ -70,7 +66,7 @@
 			ApiTtlStore.set(settings.apiTtl * 1000);
 			DebugStore.set(settings.debug);
 			ThemeStore.set(settings.theme);
-			ApiLegacyStore.set(settings.legacyApi);
+			// ApiLegacyStore.set(settings.legacyApi);
 
 			ApiKeyInfoStore.set({
 				expires: '',
@@ -78,10 +74,6 @@
 				informedUnauthorized: false,
 				informedExpiringSoon: false,
 			});
-
-			const oldApiEndpoint = defaultApiEndpoints();
-			oldApiEndpoint.Node = settings.legacyApi ? API_URL_MACHINE : API_URL_NODE;
-			ApiEndpointsStore.set(oldApiEndpoint);
 
 			toastSuccess('Saved Settings', ToastStore);
 			const handler = createPopulateErrorHandler(ToastStore);
@@ -93,9 +85,6 @@
 			loading = false;
 		}
 	}
-
-	// import { Theme } from '$lib/Stores';
-	// $: {if (browser) {document.body.setAttribute('data-theme', $theme);}}
 
 	onMount(() => {
 		const unsubApiKeyStore = ApiKeyStore.subscribe((apikey) => {
@@ -223,7 +212,7 @@
 					/>
 				</div>
 			</div>
-			<div class="col-span-12 lg:col-span-8">
+			<!--div class="col-span-12 lg:col-span-8">
 				<div class="pt-2 pb-4 flex flex-row items-center">
 					<label class="text-lg font-mono">
 						Legacy API (Headscale &lt; 0.23):
@@ -235,7 +224,7 @@
 						/>
 					</label>
 				</div>
-			</div>
+			</div-->
 			<div class="col-span-12 lg:col-span-8">
 				<div class="pt-2 pb-4 flex flex-row items-center">
 					<label class="text-lg font-mono">

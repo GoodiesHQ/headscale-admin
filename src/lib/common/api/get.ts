@@ -1,5 +1,4 @@
-import { ApiEndpointsStore } from '$lib/Stores';
-import { apiGet } from '$lib/common/api';
+import { API_URL_NODE, API_URL_POLICY, API_URL_PREAUTHKEY, API_URL_ROUTES, API_URL_USER, apiGet } from '$lib/common/api';
 import { isApiMachines, isApiNodes } from '$lib/common/types';
 import type {
 	ApiDevices,
@@ -15,7 +14,7 @@ import type {
 import { get } from 'svelte/store';
 
 export async function getUsers(init?: RequestInit): Promise<User[]> {
-	const { users } = await apiGet<ApiUsers>(get(ApiEndpointsStore).User, init);
+	const { users } = await apiGet<ApiUsers>(API_URL_USER, init);
 	return users;
 }
 
@@ -31,7 +30,7 @@ export async function getPreAuthKeys(
 
 	usernames.forEach(async (username: string) => {
 		promises.push(
-			apiGet<ApiPreAuthKeys>(get(ApiEndpointsStore).PreAuthKey + '?user=' + username, init),
+			apiGet<ApiPreAuthKeys>(API_URL_PREAUTHKEY + '?user=' + username, init),
 		);
 	});
 
@@ -45,7 +44,7 @@ export async function getPreAuthKeys(
 }
 
 export async function getNodes(): Promise<Node[]> {
-	const devices = await apiGet<ApiDevices>(get(ApiEndpointsStore).Node);
+	const devices = await apiGet<ApiDevices>(API_URL_NODE);
 	if (isApiMachines(devices)) {
 		const { machines } = devices;
 		return machines;
@@ -58,11 +57,11 @@ export async function getNodes(): Promise<Node[]> {
 }
 
 export async function getRoutes(): Promise<Route[]> {
-	const { routes } = await apiGet<ApiRoutes>(get(ApiEndpointsStore).Routes);
+	const { routes } = await apiGet<ApiRoutes>(API_URL_ROUTES);
 	return routes;
 }
 
 export async function getPolicy(): Promise<string> {
-	const { policy } = await apiGet<ApiPolicy>(get(ApiEndpointsStore).Policy)
+	const { policy } = await apiGet<ApiPolicy>(API_URL_POLICY)
 	return policy
 }

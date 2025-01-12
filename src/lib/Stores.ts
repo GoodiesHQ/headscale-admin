@@ -4,7 +4,7 @@ import { Mutex } from 'async-mutex';
 import type { User, Node, PreAuthKey, Route, ApiKeyInfo, ApiApiKeys, Deployment } from '$lib/common/types';
 import { getUsers, getPreAuthKeys, getNodes, getRoutes } from '$lib/common/api/get';
 import { localStorageStore, type ToastStore } from '@skeletonlabs/skeleton';
-import { /*API_URL_APIKEY,*/ apiGet, defaultApiEndpoints, type ApiEndpoints } from './common/api';
+import { apiGet } from './common/api';
 import { toastError, toastWarning } from './common/funcs';
 import { debug } from './common/debug';
 
@@ -15,11 +15,6 @@ export const NodeStore: Writable<Node[]> = writable([]);
 export const PreAuthKeyStore: Writable<PreAuthKey[]> = writable([]);
 export const DebugStore: Writable<boolean> = localStorageStore('debug', false);
 export const ApiValid: Writable<boolean> = writable(false);
-export const ApiLegacyStore: Writable<boolean> = writable(false);
-export const ApiEndpointsStore: Writable<ApiEndpoints> = localStorageStore(
-	'apiEndpoints',
-	defaultApiEndpoints(),
-);
 export const ApiUrlStore: Writable<string> = localStorageStore<string>('apiUrl', '');
 export const ApiKeyStore: Writable<string> = localStorageStore<string>('apiKey', '');
 export const ApiKeyInfoStore: Writable<ApiKeyInfo> = localStorageStore<ApiKeyInfo>('apiKeyInfo', {
