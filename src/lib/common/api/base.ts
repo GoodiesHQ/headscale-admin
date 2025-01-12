@@ -60,7 +60,7 @@ function headers(): { headers: HeadersInit } {
 }
 
 export function toUrl(path: string): string {
-	return get(ApiUrlStore) + path;
+	return new URL(path, get(ApiUrlStore)).href
 }
 
 async function apiFetch<T>(path: string, init?: RequestInit, verbose: boolean = false): Promise<T> {
