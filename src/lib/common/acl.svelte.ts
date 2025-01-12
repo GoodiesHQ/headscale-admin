@@ -69,6 +69,7 @@ export class ACLBuilder implements ACL {
             tagOwners: this.tagOwners,
             hosts: this.hosts,
             acls: this.acls,
+            ssh: this.ssh,
         }, null, space)
     }
 
