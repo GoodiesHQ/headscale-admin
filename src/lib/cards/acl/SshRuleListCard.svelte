@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Autocomplete, getToastStore, InputChip, popup, Tab, TabGroup, type PopupSettings } from '@skeletonlabs/skeleton';
-	import { ACLBuilder, type AclPolicy } from '$lib/common/acl.svelte';
+	import { ACLBuilder, type AclPolicy, type AclSshRule } from '$lib/common/acl.svelte';
 	import { toastSuccess, toastError, toOptions } from '$lib/common/funcs';
 	import MultiSelect from '$lib/parts/MultiSelect.svelte';
 	import Delete from '$lib/parts/Delete.svelte';
@@ -12,7 +12,6 @@
 	import RawMdiGroups from '~icons/mdi/account-group';
 	import RawMdiPencil from '~icons/mdi/pencil';
 	import RawMdiTag from '~icons/mdi/tag';
-	import RawMdiDevices from '~icons/mdi/devices';
 	import RawMdiSecurity from '~icons/mdi/security';
 
 	import ListEntry from './ListEntry.svelte';
@@ -41,35 +40,35 @@
 	let tagNamesOptions = $derived(toOptions(tagNames))
 	let groupNames = $derived(acl.getGroupNames(true));
 	let groupNamesOptions = $derived(toOptions(groupNames));
-	let hostNames = $derived(acl.getHostNames())
-	let hostNamesOptions = $derived(toOptions(hostNames));
-	let policy = $derived(makePolicy(idx));
+	let rule = $derived(makeSshRule(idx));
 
 	let deleting = $state(false);
 
 	let tabSetSrc = $state(0)
-	let tabSetDst = $state(0)
-	const tabs = [
+	const tabsSrc = [
 		{ name: "custom", title: "Custom", logo: RawMdiPencil },
 		{ name: "user", title: "User", logo: RawMdiTag },
-		{ name: "host", title: "Host", logo: RawMdiDevices },
 		{ name: "group", title: "Group", logo: RawMdiGroups },
 		{ name: "tag", title: "Tag", logo: RawMdiTag },
 	]
+
+	let tabSetDst = $state(0)
+	const tabsDst = [
+		{ name: "custom", title: "Custom", logo: RawMdiPencil },
+		{ name: "user", title: "User", logo: RawMdiTag },
+		{ name: "tag", title: "Tag", logo: RawMdiTag },
+	]
 	
-	let srcNewType = $derived(tabs[tabSetSrc].name)
+	let srcNewType = $derived(tabsSrc[tabSetSrc].name)
 	let srcNewHost = $state('')
 	let srcNewHostEditable = $derived(srcNewType == "custom")
 
-	let dstNewType = $derived(tabs[tabSetDst].name)
+	let dstNewType = $derived(tabsDst[tabSetDst].name)
 	let dstNewHost = $state('')
 	let dstNewHostEditable = $derived(dstNewType == "custom")
-	let dstNewPorts = $state('')
-	let dstNewPortsEditable = $derived(policy.proto != "icmp")
 
 	let optionsSrc = $derived(
 		srcNewType == "user" ? userNamesOptions :
-		srcNewType == "host" ? hostNamesOptions :
 		srcNewType == "group" ? groupNamesOptions:
 		srcNewType == "tag" ? tagNamesOptions:
 		undefined
@@ -77,40 +76,28 @@
 
 	let optionsDst = $derived(
 		dstNewType == "user" ? userNamesOptions :
-		dstNewType == "host" ? hostNamesOptions :
-		dstNewType == "group" ? groupNamesOptions:
 		dstNewType == "tag" ? tagNamesOptions:
 		undefined
 	)
 
-	function getDstHost(dst: string): string {
-		const i = dst.lastIndexOf(':')
-		return i < 0 ? dst : dst.substring(0, i)
-	}
-
-	function getDstPorts(dst: string): string {
-		const i = dst.lastIndexOf(':')
-		return i < 0 ? dst : dst.substring(i+1, dst.length)
-	}
-
-	function makePolicy(idx: number) {
+	function makeSshRule(idx: number) {
 		return {
-			get policy() { return acl.getPolicy(idx) },
-			set policy(policy: AclPolicy) { acl.setPolicy(idx, policy); },
-			get src() { return acl.getPolicy(idx).src },
-			set src(src: string[]) { acl.setPolicySrc(idx, src) },
-			get dst() { return acl.getPolicy(idx).dst },
-			set dst(dst: string[]) { acl.setPolicyDst(idx, dst) },
-			get proto() { return acl.getPolicy(idx).proto },
-			set proto(proto: string | undefined) { acl.setPolicyProto(idx, proto) },
+			get rule() { return acl.getSshRule(idx) },
+			set rule(rule: AclSshRule) { acl.setSshRule(idx, rule); },
+			get src() { return acl.getSshRule(idx).src },
+			set src(src: string[]) { acl.setSshRuleSrc(idx, src) },
+			get dst() { return acl.getSshRule(idx).dst },
+			set dst(dst: string[]) { acl.setSshRuleDst(idx, dst) },
+			get users() { return acl.getSshRule(idx).users },
+			set users(users: string[]) { acl.setSshRuleUsers(idx, users) },
 		}
 	}
 
-	function deletePolicy() {
+	function deleteSshRule() {
 		deleting = true;
 		try {
-			acl.delPolicy(idx)
-			toastSuccess(`Policy #'${idx+1}' has been deleted`, ToastStore);
+			acl.delSshRule(idx)
+			toastSuccess(`SSH Rule #'${idx+1}' has been deleted`, ToastStore);
 		} catch (e) {
 			if (e instanceof Error) {
 				toastError('', ToastStore, e);
@@ -122,11 +109,11 @@
 	}
 
 	function delSrc(srcIdx: number) {
-		policy.src.splice(srcIdx, 1)
+		rule.src.splice(srcIdx, 1)
 	}
 
 	function delDst(dstIdx: number) {
-		policy.dst.splice(dstIdx, 1)
+		rule.dst.splice(dstIdx, 1)
 	}
 
 	function addSrc(host: string) {
@@ -134,64 +121,25 @@
 			throw new Error("Invailid Host Provided")
 		}
 
-		policy.src.push(host)
+		rule.src.push(host)
 	}
 
-	function addDst(host: string, ports: string) {
+	function addDst(host: string) {
 		if (host.length === 0) {
 			throw new Error("Invailid Host Provided")
 		}
 
-		if (policy.proto === "icmp") {
-			ports = "*"
-		}
-
-		const portsAll = ports.replaceAll(" ", "").split(",")
-		for (const p of portsAll) {
-			if (p == "*") {
-				continue
-			}
-
-			const n = parseInt(p, 10)
-
-			if (isNaN(n)) {
-				throw new Error("Invalid Port Number Provided")
-			}
-
-			if (n < 1 || n > 65535) {
-				throw new Error("Invalid Port Number Provided")
-			}
-		}
-
-		policy.dst.push(host + ":" + ports)
+		rule.dst.push(host)
 	}
-
+	
+	function delUsername(username: string) {
+		rule.users = rule.users.filter(u => u != username)
+	}
 </script>
 
-<ListEntry id={idx.toString()} name={"Policy #" + (idx + 1)} logo={RawMdiSecurity} bind:open>
+<ListEntry id={idx.toString()} name={"SSH Rule #" + (idx + 1)} logo={RawMdiSecurity} bind:open>
 	{#snippet children()}
 	<CardListContainer>
-		<div class="mb-6">
-			<h3 class="font-mono mb-2 flex flex-row items-center">
-				<span>Protocol:</span>
-			</h3>
-			<div>
-				<div class="btn-group text-sm rounded-md variant-soft">
-					<button
-						class={"btn-sm hover:variant-soft-primary " + (policy.proto === undefined ? "variant-soft-primary" : "")}
-						onclick={()=>{ policy.proto = undefined }}>Any</button>
-					<button
-						class={"btn-sm hover:variant-soft-primary " + (policy.proto === "tcp" ? "variant-soft-primary" : "")}
-						onclick={()=>{ policy.proto = "tcp" }}>TCP</button>
-					<button
-						class={"btn-sm hover:variant-soft-primary " + (policy.proto === "udp" ? "variant-soft-primary" : "")}
-						onclick={()=>{ policy.proto = "udp" }}>UDP</button>
-					<button
-						class={"btn-sm hover:variant-soft-primary " + (policy.proto === "icmp" ? "variant-soft-primary" : "")}
-						onclick={()=>{ policy.proto = "icmp" }}>ICMP</button>
-				</div>
-			</div>
-		</div>
 		<h3 class="font-mono mb-2 flex flex-row items-center">
 			<span>Sources:</span>
 		</h3>
@@ -205,7 +153,7 @@
 				border=""
 				class="bg-surface-100-800-token w-full px-2 py-2"
 			>
-				<Tabbed {tabs} bind:tabSet={tabSetSrc} />
+				<Tabbed tabs={tabsSrc} bind:tabSet={tabSetSrc} />
 			</TabGroup>
 		</div>
 		<div class="mb-6">
@@ -244,7 +192,7 @@
 				</button>
 			</div>
 		</div>
-		{#each policy.src as src, i}
+		{#each rule.src as src, i}
 		<div
 			class="card py-3 px-4 grid grid-cols-12 backdrop-brightness-100 bg-white/25 dark:bg-white/5 rounded-md"
 		>
@@ -270,7 +218,7 @@
 				border=""
 				class="bg-surface-100-800-token w-full px-2 py-2"
 			>
-				<Tabbed {tabs} bind:tabSet={tabSetDst} />
+				<Tabbed tabs={tabsDst} bind:tabSet={tabSetDst} />
 			</TabGroup>
 		</div>
 		<div class="mb-6">
@@ -291,18 +239,12 @@
 					placeholder="Dst Object..."
 					bind:value={dstNewHost}
 					disabled={!dstNewHostEditable} />
-				<input
-					class="input rounded-md mt-2"
-					placeholder="Dst Ports..."
-					bind:value={dstNewPorts}
-					disabled={!dstNewPortsEditable} />
 				<button
 					class="btn btn-sm rounded-md mt-2 variant-soft-tertiary"
 					onclick={()=>{
 						try{
-							addDst(dstNewHost, dstNewPorts)
+							addDst(dstNewHost)
 							dstNewHost = ""
-							dstNewPorts = ""
 						} catch(e) {
 							if (e instanceof Error) {
 								toastError('', ToastStore, e)
@@ -315,23 +257,34 @@
 				</button>
 			</div>
 		</div>
-		{#each policy.dst as dst, i}
+		{#each rule.dst as dst, i}
 		<div
 			class="card py-3 px-4 grid grid-cols-12 backdrop-brightness-100 bg-white/25 dark:bg-white/5 rounded-md"
 		>
 			<div class="col-span-6 text-wrap hyphens-auto flex flex-row">
-				<span class="font-extralight rounded-md">{getDstHost(dst)}</span>
+				<span class="font-extralight rounded-md">{dst}</span>
 			</div>
 			<div class="col-span-4 text-left">
-				<span class="font-extralight rounded-md">{getDstPorts(dst)}</span>
+				<span class="font-extralight rounded-md">{dst}</span>
 			</div>
 			<div class="col-span-2 text-right">
 				<Delete func={()=>{delDst(i)}} disabled={loading} />
 			</div>
 		</div>
 		{/each}
+		<h3 class="font-mono mb-2 mt-4 flex flex-row items-center">
+			<span>Usernames:</span>
+		</h3>
+		<MultiSelect
+			id={"ssh-rule-users-" + idx.toString()}
+			bind:items={rule.users}
+			onItemClick={(item) => {
+				debug("clicked on " + item)
+				delUsername(item)
+			}}
+		/>
 		<div class="pt-4">
-			<Delete func={deletePolicy} />
+			<Delete func={deleteSshRule} />
 		</div>
 	</CardListContainer>
 	{/snippet}

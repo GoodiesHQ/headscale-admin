@@ -3,7 +3,7 @@
 	import type { ACLBuilder, AclHosts } from '$lib/common/acl.svelte';
 	import { toastError, toastSuccess } from '$lib/common/funcs';
 	import { getToastStore } from '@skeletonlabs/skeleton';
-	import NewItem from './NewItem.svelte';
+	import NewItem from '$lib/parts/NewItem.svelte';
 	import HostListCard from '$lib/cards/acl/HostListCard.svelte';
 	import { debug } from '$lib/common/debug';
 	import { UserStore } from '$lib/Stores';

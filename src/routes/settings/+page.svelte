@@ -37,7 +37,6 @@
 		apiKey: string;
 		apiTtl: number;
 		theme: string;
-		legacyApi: boolean;
 		debug: boolean;
 	};
 
@@ -66,7 +65,6 @@
 			ApiTtlStore.set(settings.apiTtl * 1000);
 			DebugStore.set(settings.debug);
 			ThemeStore.set(settings.theme);
-			// ApiLegacyStore.set(settings.legacyApi);
 
 			ApiKeyInfoStore.set({
 				expires: '',

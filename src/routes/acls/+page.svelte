@@ -1,25 +1,28 @@
 <script lang="ts">
-	import { debug } from '$lib/common/debug';
-	import Page from '$lib/page/Page.svelte';
-	import PageHeader from '$lib/page/PageHeader.svelte';
 	import { TabGroup, getToastStore } from '@skeletonlabs/skeleton';
 	import { onMount } from 'svelte';
 	import JWCC from 'json5'
-	import RawMdiGroups from '~icons/mdi/account-group';
-	import RawMdiTag from '~icons/mdi/tag';
-	import RawMdiDevices from '~icons/mdi/devices';
 	import RawMdiCodeJSON from '~icons/mdi/code-json';
+	import RawMdiConsole from '~icons/mdi/console';
+	import RawMdiDevices from '~icons/mdi/devices';
+	import RawMdiGroups from '~icons/mdi/account-group';
 	import RawMdiSecurity from '~icons/mdi/security';
+	import RawMdiTag from '~icons/mdi/tag';
 
 	import { ACLBuilder, type ACL } from '$lib/common/acl.svelte';
-	import Groups from './Groups.svelte';
-	import Hosts from './Hosts.svelte';
-	import TagOwners from './TagOwners.svelte'
+	import { debug } from '$lib/common/debug';
 	import { getPolicy } from '$lib/common/api';
 	import { toastError } from '$lib/common/funcs';
-	import Policies from './Policies.svelte';
+	import Page from '$lib/page/Page.svelte';
+	import PageHeader from '$lib/page/PageHeader.svelte';
 	import Tabbed from '$lib/parts/Tabbed.svelte';
+
 	import Config from './Config.svelte';
+	import Groups from './Groups.svelte';
+	import Hosts from './Hosts.svelte';
+	import Policies from './Policies.svelte';
+	import TagOwners from './TagOwners.svelte'
+	import SshRules from './SshRules.svelte';
 
 	const ToastStore = getToastStore()
 
@@ -33,6 +36,7 @@
 		{ name: 'tag-owners', title: 'Tag Owners', logo: RawMdiTag },
 		{ name: 'hosts', title: 'Hosts', logo: RawMdiDevices },
 		{ name: 'policies', title: 'Policies', logo: RawMdiSecurity },
+		{ name: 'ssh', title: 'SSH', logo: RawMdiConsole },
 		{ name: 'config', title: 'Config', logo: RawMdiCodeJSON },
 	];
 
@@ -69,6 +73,8 @@
 				<Hosts bind:loading bind:acl />
 			{:else if tabs[tabSet].name == 'policies'}
 				<Policies bind:loading bind:acl />
+			{:else if tabs[tabSet].name == 'ssh'}
+				<SshRules bind:loading bind:acl />
 			{:else if tabs[tabSet].name == 'config'}
 				<Config bind:loading bind:acl />
 			{/if}

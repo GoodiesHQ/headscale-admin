@@ -5,7 +5,7 @@
 	import { debug } from "$lib/common/debug";
 	import { toastError, toastSuccess } from "$lib/common/funcs";
 	import { CodeBlock, getModalStore, getToastStore, type ModalSettings } from "@skeletonlabs/skeleton";
-	import LoaderModal from "./LoaderModal.svelte";
+	import LoaderModal from "$lib/parts/LoaderModal.svelte";
     import JWCC from 'json5'
 
     const ToastStore = getToastStore()

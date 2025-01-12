@@ -6,19 +6,29 @@ export type TagOwnersTyped = { users: string[], groups: string[] }
 export type AclGroups = { [key: string]: string[] }
 export type AclTagOwners = { [key: string]: TagOwners }
 export type AclHosts = { [key: string]: string }
+export type AclPolicies = AclPolicy[]
+export type AclSshRules = AclSshRule[]
+export type AclPoliciesIndexed = {policy: AclPolicy, idx: number}[]
+export type AclSshRulesIndexed = {rule: AclSshRule, idx: number}[]
 export type AclPolicy = {
     action: 'accept',
     proto?: string,
     src: string[],
     dst: string[],
 }
-export type AclPolicies = AclPolicy[]
+export type AclSshRule = {
+    action: 'accept',
+    src: string[],
+    dst: string[],
+    users: string[],
+}
 
 export type ACL = {
     groups: AclGroups, // keys must start with "group:"
     tagOwners: AclTagOwners, // keys must start with "tag:"
     hosts: AclHosts, // keys are DNS-style hostnames
     acls: AclPolicies,
+    ssh?: AclSshRules,
 }
 
 export type PrefixType = "group" | "tag";
@@ -37,17 +47,20 @@ export class ACLBuilder implements ACL {
     tagOwners = $state<AclTagOwners>({})
     hosts = $state<AclHosts>({})
     acls = $state<AclPolicies>([])
+    ssh = $state<AclSshRules|undefined>(undefined)
 
     constructor(
         groups: AclGroups,
         tagOwners: AclTagOwners,
         hosts: AclHosts,
         acls: AclPolicies,
+        ssh?: AclSshRules,
     ) {
         this.groups = groups
         this.tagOwners = tagOwners
         this.hosts = hosts
         this.acls = acls
+        this.ssh = ssh
     }
 
     JSON(space: number = 0): string {
@@ -60,15 +73,18 @@ export class ACLBuilder implements ACL {
     }
 
     static emptyACL(): ACLBuilder {
-        return new ACLBuilder({}, {}, {}, []);
+        return new ACLBuilder({}, {}, {}, [], []);
     }
 
     static fromPolicy(acl: ACL): ACLBuilder {
+        const ssh = acl.ssh ? [...acl.ssh] : []
+
         return new ACLBuilder(
             {...acl.groups},
             {...acl.tagOwners},
             {...acl.hosts},
             [...acl.acls],
+            [...ssh],
         )
     }
 
@@ -402,6 +418,10 @@ export class ACLBuilder implements ACL {
      * getAllPolicies()
      * getPolicy(idx)
      * setPolicy(idx, policy)
+     * delPolicy(idx)
+     * setPolicySrc(idx, src)
+     * setPolicyDst(idx, dst)
+     * setPolicyProto(idx, proto)
      */
 
     createPolicy(policy: AclPolicy) {
@@ -460,5 +480,92 @@ export class ACLBuilder implements ACL {
     delPolicy(idx: number) {
         this.validatePolicyIndex(idx)
         this.acls.splice(idx, 1)
+    }
+
+    /*
+     * SSH Rules:
+     * --------------------------------
+     * createSshRule(rule)
+     * getAllPolicies()
+     * getPolicy(idx)
+     * setPolicy(idx, policy)
+     * delPolicy(idx)
+     * setPolicySrc(idx, src)
+     * setPolicyDst(idx, dst)
+     * setPolicyProto(idx, proto)
+     */
+
+    createSshRule(rule: AclSshRule) {
+        if (this.ssh === undefined){
+            this.ssh = []
+        }
+        this.ssh.push(rule)
+    }
+
+    getAllSshRules(): AclSshRules|undefined {
+        return this.ssh
+    }
+
+    getSshRule(idx: number): AclSshRule {
+        this.validateSshRuleIndex(idx)
+        if (this.ssh !== undefined){
+            return this.ssh[idx]
+        }
+        throw new Error("No SSH Rules defined")
+    }
+
+    private validateSshRuleIndex(idx: number) {
+        if (this.ssh === undefined || idx >= this.ssh.length || idx < 0) {
+            throw new Error(`SSH Rule does not exist at index '${idx}'`)
+        }
+    }
+
+    public static DefaultSshRule(): AclSshRule {
+        return {
+            action: "accept",
+            src: [],
+            dst: [],
+            users: [],
+        }
+    }
+
+    setSshRuleSrc(idx: number, src: string[]) {
+        this.validateSshRuleIndex(idx)
+        if (this.ssh != undefined) {
+            this.ssh[idx].src = src
+        }
+    }
+
+    setSshRuleDst(idx: number, dst: string[]) {
+        this.validateSshRuleIndex(idx)
+        if (this.ssh !== undefined) {
+            this.ssh[idx].dst = dst
+        }
+    }
+
+    setSshRuleUsers(idx: number, users: string[]) {
+        this.validateSshRuleIndex(idx)
+        if (this.ssh !== undefined) {
+            this.ssh[idx].users = users
+        }
+    }
+
+    setSshRule(idx: number, rule: AclSshRule) {
+        this.validateSshRuleIndex(idx)
+        if (this.ssh !== undefined) {
+            this.ssh[idx] = {
+                action: rule.action,
+                src: rule.src,
+                dst: rule.dst,
+                users: rule.users,
+            }
+        }
+    }
+
+    delSshRule(idx: number) {
+        this.validateSshRuleIndex(idx)
+        if (this.ssh !== undefined) {
+            this.ssh.splice(idx, 1)
+        }
     }
 }

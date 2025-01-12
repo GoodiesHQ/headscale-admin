@@ -6,7 +6,7 @@
 	import CardListPage from '$lib/cards/CardListPage.svelte';
 	import GroupListCard from '$lib/cards/acl/GroupListCard.svelte';
 
-	import NewItem from './NewItem.svelte';
+	import NewItem from '$lib/parts/NewItem.svelte';
 
 	let {acl = $bindable(), loading = $bindable(false)}: {acl: ACLBuilder, loading?: boolean} = $props();
 

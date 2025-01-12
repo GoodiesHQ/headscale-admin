@@ -1,11 +1,12 @@
 <script lang="ts">
+	import { toOptions } from '$lib/common/funcs';
     import { clickOutside } from '$lib/common/usables'
 	import { Autocomplete } from '@skeletonlabs/skeleton';
 
     type MultiSelectProps = {
         id: string,
         items: string[],
-        options: string[],
+        options?: string[],
         placeholder?: string,
         onItemClick: (item: string) => void,
     }
@@ -13,7 +14,7 @@
     let {
         id = $bindable(),
         items = $bindable(),
-        options,
+        options = undefined,
         placeholder = "Select...",
         onItemClick,
     }: MultiSelectProps = $props()
@@ -21,12 +22,7 @@
     let selectShow = $state(false)
     let selectItem = $state('')
     let selectInputID = $derived(id + '-select-item')
-	let selectOptions = $derived(
-		options.map(opt => ({
-			label: opt,
-			value: opt,
-		}))
-	)
+	let selectOptions = $derived(options === undefined ? undefined : toOptions(options))
 
     function selectInputFocus () {
         document.getElementById(selectInputID)?.focus()
@@ -34,6 +30,14 @@
 
     function selectHide() {
         selectShow = false
+    }
+
+    function addItem(event: Event) {
+        event.preventDefault()
+        if (options === undefined && !items.includes(selectItem)){ 
+            items.push(selectItem)
+        }
+        selectItem = ''
     }
 
 </script>
@@ -47,6 +51,8 @@
         {/each}
     </div>
     <div>
+        <form onsubmit={addItem}
+        >
         <input
             id={selectInputID}
             class="input variant-soft rounded-md"
@@ -54,10 +60,11 @@
             bind:value={selectItem}
             onfocus={() => { selectShow = true; }}
         />
+        </form>
 
         <!-- onfocus={() => { groupMemberSelectShow = true; }} -->
 
-        {#if selectShow}
+        {#if options !== undefined && selectShow}
         <div class="card w-full max-h-40 p-4 mt-2 overflow-y-auto" tabindex="-1">
             <Autocomplete
                 class="rounded-md"

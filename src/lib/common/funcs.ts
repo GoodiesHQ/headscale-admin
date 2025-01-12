@@ -241,3 +241,9 @@ function makeDrawerSettings(
 export function openDrawer(drawerStore: DrawerStore, id: string, meta: unknown) {
 	drawerStore.open(makeDrawerSettings(id, meta));
 }
+export function toOptions(values: string[]): {label: string, value:string}[] {
+	return values.map(v => ({
+		label: v,
+		value: v,
+	}))
+}

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { Accordion, getToastStore } from '@skeletonlabs/skeleton';
-	import { ACLBuilder, type AclPolicies } from '$lib/common/acl.svelte';
+	import { ACLBuilder, type AclPolicies, type AclPoliciesIndexed } from '$lib/common/acl.svelte';
 	import { debug } from '$lib/common/debug';
-	import { toastError, toastSuccess } from '$lib/common/funcs';
+	import { toastSuccess } from '$lib/common/funcs';
 	import CardListPage from '$lib/cards/CardListPage.svelte';
 
 	import PolicyListCard from '$lib/cards/acl/PolicyListCard.svelte';
@@ -11,21 +11,32 @@
 
 	let {acl = $bindable(), loading = $bindable(false)}: {acl: ACLBuilder, loading?: boolean} = $props();
 	let policyFilterString = $state('')
-	let filteredPolicies = $derived(filterPolicies(acl.getAllPolicies()));
+	let filteredPolicies = $derived(filterPolicies(acl.getAllPolicies(), policyFilterString));
 
 	function newPolicy() {
 		acl.createPolicy(ACLBuilder.DefaultPolicy())
-		toastSuccess('Created Policy ID #' + acl.acls.length, ToastStore)
+		debug("created new policy at index " + (acl.acls.length - 1).toString())
+		toastSuccess('Created Policy #' + acl.acls.length, ToastStore)
 	}
 
-	function filterPolicies(policies: AclPolicies): AclPolicies {
-		try {
-			return policies
+	function filterPolicies(policies: AclPolicies, filter: string): AclPoliciesIndexed {
+		const policiesIndexed = policies.map((policy, idx) => ({policy, idx}))
+		try{
+			if (filter === '') {
+				return policiesIndexed
+			}
+
+			const r = RegExp(filter)
+			return policiesIndexed.filter(({policy}) => {
+				return policy.src.some(src => r.test(src)) ||
+				policy.dst.some(dst => r.test(dst)) ||
+				(policy.proto !== undefined && r.test(policy.proto))
+			})
 		} catch {
-			return policies
+			debug(`Policy Regex "${filter}" is invalid`);
+			return policiesIndexed;
 		}
 	}
-
 </script>
 
 <CardListPage>
@@ -44,8 +55,8 @@
 		/>
 	</div>
 	<Accordion autocollapse={false}>
-	{#each filteredPolicies as _, i}
-		<PolicyListCard bind:acl idx={i} open />
+	{#each filteredPolicies as {idx}}
+		<PolicyListCard bind:acl bind:loading {idx} open />
 	{/each}
 	</Accordion>
 </CardListPage>

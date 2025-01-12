@@ -5,7 +5,7 @@
 	import { toastError, toastSuccess } from '$lib/common/funcs';
 	import CardListPage from '$lib/cards/CardListPage.svelte';
 	import TagOwnerListCard from '$lib/cards/acl/TagOwnerListCard.svelte';
-	import NewItem from './NewItem.svelte';
+	import NewItem from '$lib/parts/NewItem.svelte';
 
 	const ToastStore = getToastStore();
 
