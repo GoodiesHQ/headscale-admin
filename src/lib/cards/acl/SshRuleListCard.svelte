@@ -261,10 +261,7 @@
 		<div
 			class="card py-3 px-4 grid grid-cols-12 backdrop-brightness-100 bg-white/25 dark:bg-white/5 rounded-md"
 		>
-			<div class="col-span-6 text-wrap hyphens-auto flex flex-row">
-				<span class="font-extralight rounded-md">{dst}</span>
-			</div>
-			<div class="col-span-4 text-left">
+			<div class="col-span-10 text-wrap hyphens-auto flex flex-row">
 				<span class="font-extralight rounded-md">{dst}</span>
 			</div>
 			<div class="col-span-2 text-right">

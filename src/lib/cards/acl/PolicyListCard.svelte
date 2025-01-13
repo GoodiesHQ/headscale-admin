@@ -83,16 +83,6 @@
 		undefined
 	)
 
-	function getDstHost(dst: string): string {
-		const i = dst.lastIndexOf(':')
-		return i < 0 ? dst : dst.substring(0, i)
-	}
-
-	function getDstPorts(dst: string): string {
-		const i = dst.lastIndexOf(':')
-		return i < 0 ? dst : dst.substring(i+1, dst.length)
-	}
-
 	function makePolicy(idx: number) {
 		return {
 			get policy() { return acl.getPolicy(idx) },
@@ -320,10 +310,10 @@
 			class="card py-3 px-4 grid grid-cols-12 backdrop-brightness-100 bg-white/25 dark:bg-white/5 rounded-md"
 		>
 			<div class="col-span-6 text-wrap hyphens-auto flex flex-row">
-				<span class="font-extralight rounded-md">{getDstHost(dst)}</span>
+				<span class="font-extralight rounded-md">{ACLBuilder.getPolicyDstHost(dst)}</span>
 			</div>
 			<div class="col-span-4 text-left">
-				<span class="font-extralight rounded-md">{getDstPorts(dst)}</span>
+				<span class="font-extralight rounded-md">{ACLBuilder.getPolicyDstPorts(dst)}</span>
 			</div>
 			<div class="col-span-2 text-right">
 				<Delete func={()=>{delDst(i)}} disabled={loading} />

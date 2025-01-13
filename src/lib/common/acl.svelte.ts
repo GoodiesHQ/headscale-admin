@@ -204,6 +204,11 @@ export class ACLBuilder implements ACL {
             hosts[name === nameOld ? nameNew : name] = value;
         })
         this.hosts = hosts;
+
+        this.acls.forEach(acl => {
+            acl.src = acl.src.map(src => (src === nameOld ? nameNew : src));
+            acl.dst = acl.dst.map(dst => (ACLBuilder.getPolicyDstHost(dst) === nameOld ? nameNew + ":" + ACLBuilder.getPolicyDstPorts(dst) : dst));
+        });
     }
 
     getHostNames(): string[] {
@@ -260,7 +265,16 @@ export class ACLBuilder implements ACL {
         })
         this.tagOwners = tagOwners
 
-        //TODO: change all references from old tag to new tag
+        this.acls.forEach(acl => {
+            acl.src = acl.src.map(src => (src === prefixedOld ? prefixedNew : src));
+            acl.dst = acl.dst.map(dst => (ACLBuilder.getPolicyDstHost(dst) === prefixedOld ? prefixedNew + ":" + ACLBuilder.getPolicyDstPorts(dst) : dst));
+        });
+        if (this.ssh !== undefined) {
+            for (const rule of this.ssh) {
+                rule.src = rule.src.map(src => (src === prefixedOld ? prefixedNew : src))
+                rule.dst = rule.dst.map(dst => (dst === prefixedOld ? prefixedNew : dst))
+            }
+        }
     }
 
     setTagOwners(name: string, owners: TagOwners) {
@@ -370,7 +384,22 @@ export class ACLBuilder implements ACL {
         })
         this.groups = groups
 
-        //TODO: change all references from old group to new group
+        this.acls.forEach(acl => {
+            acl.src = acl.src.map(src => (src === prefixedOld ? prefixedNew : src));
+            acl.dst = acl.dst.map(dst => (ACLBuilder.getPolicyDstHost(dst) === prefixedOld ? prefixedNew + ":" + ACLBuilder.getPolicyDstPorts(dst) : dst));
+        });
+
+        for (const key in this.tagOwners) {
+            this.tagOwners[key] = this.tagOwners[key].map(owner =>
+                owner === prefixedOld ? prefixedNew : owner
+            );
+        }
+        if (this.ssh !== undefined) {
+            for (const rule of this.ssh) {
+                rule.src = rule.src.map(src => (src === prefixedOld ? prefixedNew : src))
+                rule.dst = rule.dst.map(src => (src === prefixedOld ? prefixedNew : src))
+            }
+        }
     }
 
     setGroupMembers(name: string, members: string[]) {
@@ -424,6 +453,17 @@ export class ACLBuilder implements ACL {
      * setPolicyDst(idx, dst)
      * setPolicyProto(idx, proto)
      */
+
+	public static getPolicyDstHost(dst: string): string {
+		const i = dst.lastIndexOf(':')
+		return i < 0 ? dst : dst.substring(0, i)
+	}
+
+	public static getPolicyDstPorts(dst: string): string {
+		const i = dst.lastIndexOf(':')
+		return i < 0 ? dst : dst.substring(i+1, dst.length)
+	}
+
 
     createPolicy(policy: AclPolicy) {
         this.acls.push(policy)
