@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { ALL_THEMES, setTheme } from './Themes';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import {
 		ApiKeyInfoStore,
 		ApiKeyStore,
@@ -60,7 +60,11 @@
 	async function saveSettings() {
 		loading = true;
 		try {
+			if(settings.apiUrl === '') {
+				settings.apiUrl = page.url.origin
+			}
 			ApiUrlStore.set(settings.apiUrl);
+			debug("API URL is set to:", get(ApiUrlStore))
 			ApiKeyStore.set(settings.apiKey);
 			ApiTtlStore.set(settings.apiTtl * 1000);
 			DebugStore.set(settings.debug);
@@ -120,7 +124,7 @@
 					<input
 						class="input rounded-md w-full mr-4 text-sm"
 						type="text"
-						placeholder={$page.url.origin}
+						placeholder={page.url.origin}
 						disabled={loading}
 						bind:value={settings.apiUrl}
 					/>
