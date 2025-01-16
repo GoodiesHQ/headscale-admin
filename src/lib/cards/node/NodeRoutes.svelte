@@ -50,10 +50,10 @@
 
 <CardListEntry title={showTitle ? "Routes:" : undefined} valueClasses="justify-right text-right" top>
 	<div class="mb-2 flex flex-row">
-		<button class="btn btn-sm items-end gap-1 px-0 ml-4 text-success-700 dark:text-success-400" disabled={!node.online} onclick={() => {toggleAll(routes, 'on')}}>
+		<button class="btn btn-sm items-end gap-1 px-0 ml-4 text-success-700 dark:text-success-400" onclick={() => {toggleAll(routes, 'on')}}>
 			<ToggleOn />
 		</button>
-		<button class="btn btn-sm items-end gap-1 px-0 ml-4 text-error-600 dark:text-error-400" disabled={!node.online} onclick={() => {toggleAll(routes, 'off')}}>
+		<button class="btn btn-sm items-end gap-1 px-0 ml-4 text-error-600 dark:text-error-400" onclick={() => {toggleAll(routes, 'off')}}>
 			<ToggleOff />
 		</button>
 	</div>
