@@ -10,18 +10,26 @@
 	import RawMdiSecurity from '~icons/mdi/security';
 	import RawMdiSettings from '~icons/mdi/settings';
 
-	import { page } from '$app/stores';
-	import { ApiKeyInfoStore, ApiKeyStore, hasValidApi } from './Stores';
-	import { onMount, type Component } from 'svelte';
+	// import { ApiKeyInfoStore, ApiKeyStore, hasValidApi } from './Stores';
+	import type { Component } from 'svelte';
+	import { page } from '$app/state';
+	import { App } from '$lib/States.svelte';
 
-	export let labels = true;
+	type NavigationProps = {
+		labels?: boolean
+	}
+
+	let {
+		labels = true,
+	}: NavigationProps = $props()
 
 	const DrawerStore = getDrawerStore();
 
-	$: classesActive = (href: string) =>
-		href === $page.route.id ? 'bg-primary-300 dark:bg-primary-700' : '';
+	function classesActive(href: string): string {
+		return href === page.route.id ? 'bg-primary-300 dark:bg-primary-700' : '';
+	}
 
-	let newPath = '';
+	let newPath = $state('');
 
 	function setActivePath(path: string) {
 		newPath = path;
@@ -39,34 +47,18 @@
 		{ path: '/nodes', name: 'Nodes', logo: RawMdiDevices },
 		{ path: '/deploy', name: 'Deploy', logo: RawMdiHomeGroupPlus },
 		{ path: '/routes', name: 'Routes', logo: RawMdiRouter },
-		...(false ? [{ path: '/acls', name: 'ACLs', logo: RawMdiSecurity }] : []),
 		{ path: '/acls', name: 'ACLs', logo: RawMdiSecurity },
 		{ path: '/settings', name: 'Settings', logo: RawMdiSettings },
 	].filter((p) => p != undefined);
 
-	$: getPages = (): Page[] => {
-		// before rendering, show no elements
+	function getPages(pages: Page[]): Page[] {
 		if (typeof window === 'undefined') {
 			return [];
 		}
 
-		return hasValidApi() ? allPages : allPages.slice(-1);
+		return App.hasValidApi ? pages : pages.slice(-1);
 	};
-
-	$: pages = getPages();
-
-	onMount(() => {
-		const unsubApiKeyStore = ApiKeyStore.subscribe(() => {
-			pages = getPages();
-		});
-		const unsubApiKeyInfoStore = ApiKeyInfoStore.subscribe(() => {
-			pages = getPages();
-		});
-		return () => {
-			unsubApiKeyStore();
-			unsubApiKeyInfoStore();
-		};
-	});
+	const pages = $derived(getPages(allPages));
 </script>
 
 <nav class="list-nav pt-0">
@@ -76,13 +68,14 @@
 				<a
 					href="{base}{p.path}"
 					class={'!rounded-none ' + classesActive(p.path)}
-					on:click={() => {
+					onclick={() => {
 						DrawerStore.close();
 						setActivePath(p.path);
 					}}
 				>
 					<span class="flex flex-row items-center text-lg">
-						<svelte:component this={p.logo} class="mr-4" />
+						<p.logo />
+						<!--svelte:component this={p.logo} class="mr-4" /-->
 						{#if labels}
 							<span class="text-sm">{p.name}</span>
 						{/if}

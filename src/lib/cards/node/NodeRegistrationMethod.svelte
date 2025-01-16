@@ -2,9 +2,14 @@
 	import CardListEntry from '../CardListEntry.svelte';
 	import type { Node } from '$lib/common/types';
 
-	export let node: Node;
+	type NodeRegistrationMethodProps = {
+		node: Node,
+	}
 
-	$: getRegMethod = (n: Node): string => {
+	let { node }: NodeRegistrationMethodProps = $props()
+	const nodeRegMethod = $derived(getRegMethod(node))
+
+	function getRegMethod(n: Node): string {
 		if (n.registerMethod == 'REGISTER_METHOD_AUTH_KEY') {
 			return 'Auth Key';
 		}
@@ -19,5 +24,5 @@
 </script>
 
 <CardListEntry title="Register Method:">
-	{getRegMethod(node)}
+	{nodeRegMethod}
 </CardListEntry>

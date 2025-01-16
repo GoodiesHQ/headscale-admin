@@ -1,7 +1,7 @@
 <script lang="ts">
+	import type { Node } from '$lib/common/types';
 	import CardListContainer from '../CardListContainer.svelte';
 	import CardSeparator from '../CardSeparator.svelte';
-	import type { Node } from '$lib/common/types';
 	import ItemCreatedAt from '../common/ItemCreatedAt.svelte';
 	import ItemListName from '../common/ItemListName.svelte';
 	import NodeHostname from './NodeHostname.svelte';
@@ -14,7 +14,14 @@
 	import NodeOwner from './NodeOwner.svelte';
 	import NodeLastSeen from './NodeLastSeen.svelte';
 
-	export let node: Node;
+	// export let node: Node;
+	type NodeInfoProps = {
+		node: Node,
+		loading?: boolean,
+	}
+
+	let { node, loading = $bindable(false)} = $props()
+
 </script>
 
 <CardListContainer>
@@ -28,7 +35,7 @@
 	<CardSeparator />
 	<NodeHostname {node} />
 	<CardSeparator />
-	<NodeExpiresAt {node} />
+	<NodeExpiresAt {node} bind:loading />
 	<CardSeparator />
 	<NodeAddresses {node} />
 	<CardSeparator />

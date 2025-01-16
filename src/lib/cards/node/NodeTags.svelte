@@ -1,20 +1,29 @@
 <script lang="ts">
-	import type { Node } from '$lib/common/types';
-	import CardListEntry from '../CardListEntry.svelte';
 	import { InputChip, getToastStore, popup, type PopupSettings } from '@skeletonlabs/skeleton';
-	import { NodeStore, updateStoreItem } from '$lib/Stores';
+
+	import type { Node } from '$lib/common/types';
 	import { setNodeTags } from '$lib/common/api';
 	import { toastError } from '$lib/common/funcs';
+	import CardListEntry from '../CardListEntry.svelte';
+
 	import RawMdiWarning from '~icons/mdi/warning-outline';
 
-	export let node: Node;
+	import { App } from '$lib/States.svelte';
 
-	$: tagsForced = node.forcedTags.map((tag) => tag.replace('tag:', ''));
-	$: tagsValid = node.validTags.map((tag) => tag.replace('tag:', ''));
-	$: tagsInvalid = node.invalidTags.map((tag) => tag.replace('tag:', ''));
-	$: disabled = false;
+	type NodeTagsProps = {
+		node: Node,
+	}
 
-	$: popupInvalidTagsShow = false;
+	let {
+		node = $bindable(),
+	}: NodeTagsProps = $props()
+
+	const tagsForced = $derived(node.forcedTags.map((tag) => tag.replace('tag:', '')));
+	const tagsValid = $derived(node.validTags.map((tag) => tag.replace('tag:', '')));
+	const tagsInvalid = $derived(node.invalidTags.map((tag) => tag.replace('tag:', '')));
+
+	let disabled = $state(false);
+	let popupInvalidTagsShow = $state(false);
 
 	const popupInfo: PopupSettings = {
 		event: 'hover',
@@ -30,11 +39,10 @@
 			const n = await setNodeTags(node, tagsForced);
 			n.validTags = [...tagsValid];
 			n.invalidTags = [...tagsInvalid];
-			await updateStoreItem(NodeStore, n);
+			App.updateValue(App.nodes, n);
 		} catch (e) {
 			toastError('Invalid Tags: ' + e, ToastStore);
 		} finally {
-			tagsForced = node.forcedTags.map((tag) => tag.replace('tag:', ''));
 			disabled = false;
 		}
 	}
@@ -81,14 +89,15 @@
 		/>
 	</CardListEntry>
 	<CardListEntry top>
-		<span slot="title" class="flex flex-row items-center">
+		{#snippet childTitle()}
+		<span class="flex flex-row items-center">
 			Advertised Tags:
 			{#if tagsInvalid.length > 0}
 				<button
 					class="btn ml-2 btn-icon w-6 h-6 [&>*]:pointer-events-none"
 					use:popup={popupInfo}
-					on:mouseenter={handleMouseEnter}
-					on:mouseleave={handleMouseLeave}
+					onmouseenter={handleMouseEnter}
+					onmouseleave={handleMouseLeave}
 				>
 					<span class="text-warning-500">
 						<RawMdiWarning />
@@ -96,6 +105,7 @@
 				</button>
 			{/if}
 		</span>
+		{/snippet}
 		<div class="space-x-2 space-y-1">
 			{#each tagsValid as tag}
 				<button type="button" class="chip variant-filled-success">{tag}</button>

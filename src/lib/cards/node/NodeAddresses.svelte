@@ -2,7 +2,11 @@
 	import CardListEntry from '../CardListEntry.svelte';
 	import type { Node } from '$lib/common/types';
 
-	export let node: Node;
+	type NodeAddressesProps = {
+		node: Node,
+	}
+
+	let { node }: NodeAddressesProps = $props()
 </script>
 
 <CardListEntry title="IP Addresses:" top>

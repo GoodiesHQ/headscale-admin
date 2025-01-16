@@ -16,21 +16,3 @@ export const API_URL_ROUTES = '/api/v1/routes';
 export const API_URL_APIKEY = '/api/v1/apikey';
 export const API_URL_PREAUTHKEY = '/api/v1/preauthkey';
 export const API_URL_DEBUG = '/api/v1/debug';
-
-/*
-export function defaultApiEndpoints(): ApiEndpoints {
-	return {
-		User: API_URL_USER,
-		Node: API_URL_MACHINE,
-		Routes: API_URL_ROUTES,
-		ApiKey: API_URL_APIKEY,
-		PreAuthKey: API_URL_PREAUTHKEY,
-		Policy: API_URL_POLICY,
-		Debug: API_URL_DEBUG,
-	};
-}
-*/
-
-/*export function urlJoin<T extends { toString(): string }>(...parts: T[]): string {
-	return parts.map((part) => part.toString()).join('/');
-}*/

@@ -1,16 +1,20 @@
 <script lang="ts">
 	import CardListEntry from '../CardListEntry.svelte';
-	import type { Node } from '$lib/common/types';
-	import { onMount } from 'svelte';
-	import { getTimeDifference, getTime, getTimeDifferenceColor } from '$lib/common/funcs';
-
 	import Delete from '$lib/parts/Delete.svelte';
+	import type { Node } from '$lib/common/types';
+	import { getTimeDifference, getTime, getTimeDifferenceColor } from '$lib/common/funcs';
 	import { expireNode } from '$lib/common/api';
-	import { NodeStore, updateStoreItem } from '$lib/Stores';
+	import { onMount } from 'svelte';
+	import { App } from '$lib/States.svelte';
 
-	export let node: Node;
+	type NodeExpiresAtProps = {
+		node: Node,
+		loading?: boolean,
+	}
 
-	$: diff = getTimeDifference(getTime(node.expiry ?? ''));
+	let { node, loading = $bindable(false) }: NodeExpiresAtProps = $props()
+
+	let diff = $state(getTimeDifference(getTime(node.expiry ?? '')));
 
 	onMount(() => {
 		const interval = setInterval(() => {
@@ -31,8 +35,12 @@
 		<span class="items-center">
 			<Delete
 				func={async () => {
-					const nodeNew = await expireNode(node);
-					updateStoreItem(NodeStore, nodeNew);
+					loading = true
+					try{
+						App.updateValue(App.nodes, await expireNode(node))
+					} finally {
+						loading = false
+					}
 				}}
 			/>
 		</span>

@@ -4,8 +4,12 @@
 	import { onMount } from 'svelte';
 	import CardListEntry from '../CardListEntry.svelte';
 
-	export let node: Node;
-	$: lastSeen = getTimeDifferenceMessage(getTime(node.lastSeen));
+	type NodeLastSeenProps = {
+		node: Node,
+	}
+	let { node }: NodeLastSeenProps = $props()
+
+	let lastSeen = $state(getTimeDifferenceMessage(getTime(node.lastSeen)));
 
 	onMount(() => {
 		const interval = setInterval(() => {

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { AccordionItem, getToastStore } from '@skeletonlabs/skeleton';
+	import { AccordionItem } from '@skeletonlabs/skeleton';
 	import type { Component, Snippet } from 'svelte';
 
 	type ListEntryProps = {

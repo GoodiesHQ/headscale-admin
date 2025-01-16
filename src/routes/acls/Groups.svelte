@@ -16,7 +16,7 @@
 	let newGroupName = $state('');
 	let groupsFilterString = $state('');
 
-	let filteredGroups = $derived(filterGroups(acl.getGroupNames(), groupsFilterString))
+	const filteredGroups = $derived(filterGroups(acl.getGroupNames(), groupsFilterString))
 
 	function newGroup() {
 		loading = true;

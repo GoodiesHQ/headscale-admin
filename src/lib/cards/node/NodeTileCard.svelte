@@ -2,7 +2,6 @@
 	import { xxHash32 } from 'js-xxhash';
 	import type { Node, Route } from '$lib/common/types';
 	import { onMount } from 'svelte';
-	import { RouteStore } from '$lib/Stores';
 	import {
 		dateToStr,
 		getTimeDifference,
@@ -15,17 +14,23 @@
 	import CardTileEntry from '../CardTileEntry.svelte';
 	import OnlineNodeIndicator from '$lib/parts/OnlineNodeIndicator.svelte';
 	import OnlineUserIndicator from '$lib/parts/OnlineUserIndicator.svelte';
-	import { get } from 'svelte/store';
+	import { App } from '$lib/States.svelte';
 
-	export let node: Node;
-	let routes: Route[] = get(RouteStore);
-	$: lastSeen = getTimeDifferenceMessage(getTime(node.lastSeen));
-	$: routeCount = getRouteCount(routes, node);
+	type NodeTileCardProps = {
+		node: Node,
+	}
+
+	let { node = $bindable() }: NodeTileCardProps = $props()
+
+	let lastSeen = $state(getTimeDifferenceMessage(getTime(node.lastSeen)));
+	const routeCount = $derived(getRouteCount(App.routes.value, node));
 	const drawerStore = getDrawerStore();
 
-	$: color = (xxHash32(node.id + ':' + node.givenName, 0xbeefbabe) & 0xff_ff_ff)
+	let color = $state(
+		(xxHash32(node.id + ':' + node.givenName, 0xbeefbabe) & 0xff_ff_ff)
 		.toString(16)
-		.padStart(6, '0');
+		.padStart(6, '0')
+	);
 
 	function getRouteCount(routes: Route[], node: Node) {
 		return routes.filter((r) => (r.node ?? r.machine).id == node.id).length;
@@ -35,10 +40,9 @@
 		const lastSeenInterval = setInterval(() => {
 			lastSeen = getTimeDifferenceMessage(getTime(node.lastSeen));
 		}, 1000);
-		const unsubRouteStore = RouteStore.subscribe((rs) => (routes = rs));
+
 		return () => {
 			clearInterval(lastSeenInterval);
-			unsubRouteStore();
 		};
 	});
 </script>

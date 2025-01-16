@@ -1,20 +1,23 @@
 <script lang="ts">
-	import { NodeStore, UserStore, appendStoreItem } from '$lib/Stores';
 	import { createNode } from '$lib/common/api';
 	import { debug } from '$lib/common/debug';
 	import { toastError, toastSuccess, focus } from '$lib/common/funcs';
 	import { getToastStore } from '@skeletonlabs/skeleton';
-	import { onMount } from 'svelte';
-	import { get } from 'svelte/store';
+
 	import RawMdiCheckCircleOutline from '~icons/mdi/check-circle-outline';
 
-	let nodekey = '';
-	let username = '';
-	let loading = false;
-	$: users = get(UserStore);
-	const ToastStore = getToastStore();
+	import { App } from '$lib/States.svelte';
 
-	export let show;
+	type NodeCreateProps = {
+		show: boolean,
+	}
+
+	let { show = $bindable(false) }: NodeCreateProps = $props()
+
+	let nodekey = $state('');
+	let username = $state('');
+	let loading = $state(false);
+	const ToastStore = getToastStore();
 
 	async function newNode() {
 		if (nodekey == '' || username == '') {
@@ -27,7 +30,7 @@
 			const n = await createNode(nodekey, username);
 
 			// append to the store
-			appendStoreItem(NodeStore, n);
+			App.nodes.value.push(n)
 
 			// success message
 			toastSuccess('Created node "' + n.name + '"', ToastStore);
@@ -44,18 +47,10 @@
 			loading = false;
 		}
 	}
-
-	onMount(() => {
-		const unsubUserStore = UserStore.subscribe((us) => (users = us));
-
-		return () => {
-			unsubUserStore();
-		};
-	});
 </script>
 
 <div class="flex w-full">
-	<form on:submit={newNode} class="w-full flex flex-row space-x-4">
+	<form onsubmit={newNode} class="w-full flex flex-row space-x-4">
 		<input
 			class="input rounded-md w-full md:w-1/2 lg:w-1/3"
 			type="text"
@@ -65,7 +60,7 @@
 			use:focus
 		/>
 		<select class="select rounded-md w-full md:w-1/2 lg:w-1/3" bind:value={username}>
-			{#each users as user}
+			{#each App.users.value as user}
 				<option value={user.name}>{user.name} (ID: {user.id})</option>
 			{/each}
 		</select>

@@ -8,7 +8,10 @@
 	import ItemListName from '../common/ItemListName.svelte';
 	import ItemDelete from '../common/ItemDelete.svelte';
 
-	export let user: User;
+	type UserInfoProps = {
+		user: User,
+	}
+	let { user = $bindable() }: UserInfoProps = $props()
 </script>
 
 <CardListContainer>

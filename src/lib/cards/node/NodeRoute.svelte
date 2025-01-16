@@ -5,24 +5,32 @@
 	import RawMdiToggleSwitchOn from '~icons/mdi/toggle-switch';
 	import RawMdiToggleSwitchOff from '~icons/mdi/toggle-switch-off';
 	import Delete from '$lib/parts/Delete.svelte';
-	import { RouteStore, updateStoreItem } from '$lib/Stores';
 	import { isExpired } from '$lib/common/funcs';
 	import { debug } from '$lib/common/debug';
+	import { App } from '$lib/States.svelte';
 
-	export let route: Route;
-	export let node: Node;
-	export let showDelete: boolean = true;
+	type NodeRouteProps = {
+		route: Route,
+		node: Node,
+		showDelete: boolean,
+		loading?: boolean,
+	}
+	let {
+		route = $bindable(),
+		node = $bindable(),
+		showDelete = $bindable(false),
+		loading = $bindable(false),
+	}: NodeRouteProps = $props()
 
-	$: enabled = route.enabled;
-
-	$: loading = false;
+	const enabled = $derived(route.enabled);
 
 	// component is disabled
-	$: disabled =
+	const disabled = $derived(
 		loading || // route status is actively being changed
 		!route.advertised || // route is not advertised
 		isExpired(node.expiry || '') /* || // node is expired
 		!node.online; // node is not online */
+	)
 </script>
 
 <div class="col-span-6 text-start items-center">
@@ -38,17 +46,17 @@
 		class="btn {enabled
 			? 'text-success-700 dark:text-success-400'
 			: 'text-error-600 dark:text-error-400'} my-0 py-0 mx-0 px-0 text-start text-xl"
-		on:click={async () => {
+		onclick={async () => {
 			loading = true;
 			try {
 				if (enabled) {
 					await disableRoute(route);
 					route.enabled = false;
-					updateStoreItem(RouteStore, route);
+					App.updateValue(App.routes, route);
 				} else {
 					await enableRoute(route);
 					route.enabled = true;
-					updateStoreItem(RouteStore, route);
+					App.updateValue(App.routes, route);
 				}
 			} catch (error) {
 				debug(error);

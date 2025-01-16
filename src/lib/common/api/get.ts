@@ -1,22 +1,15 @@
 import { API_URL_NODE, API_URL_POLICY, API_URL_PREAUTHKEY, API_URL_ROUTES, API_URL_USER, apiGet } from '$lib/common/api';
-import { isApiMachines, isApiNodes } from '$lib/common/types';
 import type {
-	ApiDevices,
-	ApiUsers,
+	ApiNodes,
+	ApiPolicy,
 	ApiPreAuthKeys,
 	ApiRoutes,
+	ApiUsers,
 	Node,
-	User,
 	PreAuthKey,
 	Route,
-	ApiPolicy,
+	User,
 } from '$lib/common/types';
-import { get } from 'svelte/store';
-
-export async function getUsers(init?: RequestInit): Promise<User[]> {
-	const { users } = await apiGet<ApiUsers>(API_URL_USER, init);
-	return users;
-}
 
 export async function getPreAuthKeys(
 	usernames?: string[],
@@ -43,17 +36,14 @@ export async function getPreAuthKeys(
 	return preAuthKeysAll;
 }
 
+export async function getUsers(init?: RequestInit): Promise<User[]> {
+	const { users } = await apiGet<ApiUsers>(API_URL_USER, init);
+	return users;
+}
+
 export async function getNodes(): Promise<Node[]> {
-	const devices = await apiGet<ApiDevices>(API_URL_NODE);
-	if (isApiMachines(devices)) {
-		const { machines } = devices;
-		return machines;
-	}
-	if (isApiNodes(devices)) {
-		const { nodes } = devices;
-		return nodes;
-	}
-	return [];
+	const { nodes } = await apiGet<ApiNodes>(API_URL_NODE);
+	return nodes;
 }
 
 export async function getRoutes(): Promise<Route[]> {

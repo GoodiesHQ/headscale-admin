@@ -1,7 +1,13 @@
 <script lang="ts">
 	import { AccordionItem } from '@skeletonlabs/skeleton';
-	export let id: string;
-	let open = false;
+	import type { Snippet } from 'svelte';
+	type CardListItemProps = {
+		id: string,
+		children: Snippet,
+	}
+
+	let { id, children }: CardListItemProps = $props()
+	let open = $state(false);
 </script>
 
 <AccordionItem
@@ -11,5 +17,5 @@
 	padding="py-4 px-4"
 	regionControl="!rounded-none"
 >
-	<slot />
+	{@render children()}
 </AccordionItem>

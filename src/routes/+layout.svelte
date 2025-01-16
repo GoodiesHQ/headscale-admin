@@ -9,24 +9,24 @@
 		Modal,
 		Toast,
 		getDrawerStore,
+		getToastStore,
 		initializeStores,
 		type DrawerSettings,
-		getToastStore,
 	} from '@skeletonlabs/skeleton';
 
 	import { base } from '$app/paths';
-	import { beforeNavigate, goto } from '$app/navigation';
+	import { goto } from '$app/navigation';
 
 	initializeStores();
 
 	const DrawerStore = getDrawerStore();
 
-	$: drawerSettings = {
+	let drawerSettings = $state({
 		id: 'navDrawer',
 		position: 'left',
 		width: 'w-64',
 		padding: '',
-	} as DrawerSettings;
+	}) as DrawerSettings;
 
 	// Highlight JS
 	import hljs from 'highlight.js';
@@ -40,26 +40,24 @@
 	import { onMount } from 'svelte';
 	storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
 
-	import { hasValidApi, populateStores, ThemeStore } from '$lib/Stores';
 	import PageDrawer from '$lib/page/PageDrawer.svelte';
 	import { fade } from 'svelte/transition';
 	import { createPopulateErrorHandler } from '$lib/common/errors';
 	import { version } from '$lib/common/debug';
+	import { App } from '$lib/States.svelte';
+	import { setTheme } from '$lib/common/themes';
 
-	$: ToastStore = getToastStore();
+	let { children } = $props()
+
+	let ToastStore = $state(getToastStore());
 
 	onMount(() => {
-		ThemeStore.subscribe((theme) => {
-			document.body.setAttribute('data-theme', theme);
-		});
+		setTheme(App.theme.value || 'skeleton')
+		App.populateAll(createPopulateErrorHandler(ToastStore), true)
 
-		populateStores(createPopulateErrorHandler(ToastStore), true);
-
-		if (!hasValidApi()) {
+		if (!App.hasValidApi) {
 			goto(`${base}/settings`);
 		}
-
-		return () => {};
 	});
 </script>
 
@@ -75,7 +73,7 @@
 					<button
 						aria-label="open navigation panel"
 						class="lg:hidden btn btn-sm mr-4"
-						on:click={() => {
+						onclick={() => {
 							DrawerStore.open(drawerSettings);
 						}}
 					>
@@ -110,6 +108,6 @@
 		<Navigation />
 	</svelte:fragment>
 	<div class="pl-2 h-full" transition:fade|local>
-		<slot />
+		{@render children()}
 	</div>
 </AppShell>

@@ -3,15 +3,27 @@
 	import RawMdiArrowUpThin from '~icons/mdi/arrow-up-thin';
 	import RawMdiArrowDownThin from '~icons/mdi/arrow-down-thin';
 
-	export let value: string;
-	export let name: string;
-	export let direction: Direction;
-	export let toggle: (_: string) => void;
+	type SortBtnProps = {
+		value: string,
+		name: string,
+		direction: Direction,
+		toggle: (_: string) => void,
+	}
+	let {
+		value = $bindable(),
+		name,
+		direction,
+		toggle,
+	}: SortBtnProps = $props()
 </script>
 
-<button on:click={() => toggle(name.toLowerCase())}>
+<button onclick={() => toggle(name.toLowerCase())}>
 	<span class={value.toLowerCase() === name.toLowerCase() ? '' : 'invisible'}>
-		<svelte:component this={direction === 'up' ? RawMdiArrowUpThin : RawMdiArrowDownThin} />
+		{#if direction === 'up'}
+			<RawMdiArrowUpThin />
+		{:else}
+			<RawMdiArrowDownThin />
+		{/if}
 	</span>
 	{name}
 </button>

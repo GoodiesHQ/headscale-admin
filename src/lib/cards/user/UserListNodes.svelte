@@ -1,21 +1,20 @@
 <script lang="ts">
 	import CardListEntry from '../CardListEntry.svelte';
-	import { NodeStore, UserStore } from '$lib/Stores';
 	import type { Node, User } from '$lib/common/types';
-	import { onMount } from 'svelte';
-	import { get } from 'svelte/store';
 	import OnlineNodeIndicator from '$lib/parts/OnlineNodeIndicator.svelte';
 	import { openDrawer } from '$lib/common/funcs';
 	import { getDrawerStore } from '@skeletonlabs/skeleton';
+	import { App } from '$lib/States.svelte';
 
-	export let user: User;
-	export let title = 'Nodes:';
+	type UserListNodesProps = {
+		user: User,
+		title?: string,
+	}
+	let { user = $bindable(), title = 'Nodes:'}: UserListNodesProps = $props();
 
 	const drawerStore = getDrawerStore();
 
-	$: nodes = get(NodeStore);
-	$: users = get(UserStore);
-	$: filteredNodes = filter(users, user, nodes); // react on users or nodes
+	const filteredNodes = $derived(filter(App.users.value, user, App.nodes.value));
 
 	function filter(us: User[], user: User, ns: Node[]): Node[] {
 		if (us.filter((u) => u.id == user.id).length == 1) {
@@ -23,15 +22,6 @@
 		}
 		return [];
 	}
-
-	onMount(() => {
-		const unsubUserStore = UserStore.subscribe((us) => (users = us));
-		const unsubNodeStore = NodeStore.subscribe((ns) => (nodes = ns));
-		return () => {
-			unsubUserStore();
-			unsubNodeStore();
-		};
-	});
 </script>
 
 <CardListEntry {title}>
@@ -39,7 +29,7 @@
 		<div class="flex flex-row items-center gap-3 justify-end">
 			<a
 				href=" "
-				on:click={() => {
+				onclick={() => {
 					openDrawer(drawerStore, 'nodeDrawer-' + node.id, node);
 				}}
 			>

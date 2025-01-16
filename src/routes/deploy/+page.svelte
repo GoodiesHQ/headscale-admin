@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { ApiUrlStore, DeploymentDefaultStore, GetDefaultDeployment, NodeStore, PreAuthKeyStore, SaveDeploymentDefaultStore, UserStore } from '$lib/Stores';
 	import {
 		copyToClipboard,
 		isExpired,
@@ -8,20 +7,17 @@
 		toastError,
 		toastSuccess,
 	} from '$lib/common/funcs';
+	import DeployCheck from './DeployCheck.svelte';
 	import Page from '$lib/page/Page.svelte';
 	import PageHeader from '$lib/page/PageHeader.svelte';
-	import { InputChip, getToastStore } from '@skeletonlabs/skeleton';
-	import { get } from 'svelte/store';
-	import DeployCheck from './DeployCheck.svelte';
-	import { onMount } from 'svelte';
 	import type { Deployment, PreAuthKey } from '$lib/common/types';
+	import { InputChip, getToastStore } from '@skeletonlabs/skeleton';
+	import { page } from '$app/state';
 	import { slide } from 'svelte/transition';
-	import { page } from '$app/stores';
+
+	import { App } from '$lib/States.svelte';
 
 	const ToastStore = getToastStore();
-	$: users = get(UserStore);
-	$: nodes = get(NodeStore);
-	$: preAuthKeys = get(PreAuthKeyStore);
 
 	function createFilter(username: string) {
 		return (pak: PreAuthKey) => {
@@ -30,10 +26,10 @@
 	}
 
 	// $: deployment = defaultDeployment();
-	let deployment: Deployment = GetDefaultDeployment();
+	let deployment: Deployment = $state(App.deploymentDefaults.value);
 
-	$: craftCommand = (d: Deployment) => {
-		const cmd = ['tailscale up --login-server=' + (get(ApiUrlStore) || $page.url.origin)];
+	let craftCommand = (d: Deployment) => {
+		const cmd = ['tailscale up --login-server=' + (App.apiUrl.value || page.url.origin)];
 
 		// general
 		d.shieldsUp && cmd.push('--shields-up');
@@ -65,17 +61,6 @@
 		d.acceptExitNode && d.acceptExitNodeValue && cmd.push('--exit-node=' + d.acceptExitNodeValue);
 		return cmd.join(' ');
 	};
-
-	onMount(() => {
-		const unsubNodeStore = NodeStore.subscribe((ns) => (nodes = ns));
-		const unsubUserStore = UserStore.subscribe((us) => (users = us));
-		const unsubPreAuthKeyStore = PreAuthKeyStore.subscribe((ps) => (preAuthKeys = ps));
-		return () => {
-			unsubNodeStore();
-			unsubUserStore();
-			unsubPreAuthKeyStore();
-		};
-	});
 </script>
 
 <Page>
@@ -83,7 +68,7 @@
 		<svelte:fragment slot="button">
 			<button
 				class="bg-gray-400/30 dark:bg-gray-800/70 border border-dashed border-slate-200 border-1 pr-0 pl-4 rounded-lg justify-start text-left w-[90%]"
-				on:click={() =>
+				onclick={() =>
 					copyToClipboard(craftCommand(deployment), ToastStore, 'Copied Command to Clipboard!')}
 				><code class="text-black dark:text-white text-sm block py-4 w-full"
 					>{craftCommand(deployment)}</code
@@ -134,7 +119,7 @@
 			<div class="flex flex-col gap-2">
 				<select bind:value={deployment.preAuthKeyUser} class="input rounded-md">
 					<option value=""></option>
-					{#each users as user}
+					{#each App.users.value as user}
 						<option value={user.name}>{user.name}</option>
 					{/each}
 				</select>
@@ -142,9 +127,9 @@
 					<div transition:slide>
 						<select bind:value={deployment.preAuthKey} class="input rounded-md">
 							<option value=""
-								>{preAuthKeys.filter(createFilter(deployment.preAuthKeyUser)).length} Valid Key(s)</option
+								>{App.preAuthKeys.value.filter(createFilter(deployment.preAuthKeyUser)).length} Valid Key(s)</option
 							>
-							{#each preAuthKeys.filter(createFilter(deployment.preAuthKeyUser)) as preAuthKey}
+							{#each App.preAuthKeys.value.filter(createFilter(deployment.preAuthKeyUser)) as preAuthKey}
 								<option value={preAuthKey.key}>{preAuthKey.key}</option>
 							{/each}
 						</select>
@@ -208,7 +193,7 @@
 		>
 			<label class="label">
 				<select class="select" bind:value={deployment.acceptExitNodeValue}>
-					{#each nodes as node}
+					{#each App.nodes.value as node}
 						<option value={node.ipAddresses.filter((s) => /^\d+\.\d+\.\d+\.\d+$/.test(s))[0]}
 							>{node.givenName} ({node.name})</option
 						>
@@ -217,8 +202,8 @@
 			</label>
 		</DeployCheck>
 	</div>
-		<button class="btn rounded-md variant-filled-secondary mt-4" on:click={() => {
-			SaveDeploymentDefaultStore(deployment)
+		<button class="btn rounded-md variant-filled-secondary mt-4" onclick={() => {
+			App.saveDeploymentDefaults(deployment)
 			toastSuccess('Saved Deployment Defaults', ToastStore)
 		}}>
 			Save Defaults

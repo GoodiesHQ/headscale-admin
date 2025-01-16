@@ -2,35 +2,30 @@
 	import CardListEntry from '../CardListEntry.svelte';
 	import type { Node } from '$lib/common/types';
 	import OnlineUserIndicator from '$lib/parts/OnlineUserIndicator.svelte';
-	import RawMdiSwapHorizontal from '~icons/mdi/swap-horizontal';
-	import RawMdiCheckCircleOutline from '~icons/mdi/check-circle-outline';
-	import RawMdiCloseCircleOutline from '~icons/mdi/close-circle-outline';
 	import { changeNodeOwner } from '$lib/common/api';
 	import { openDrawer, toastError, toastSuccess } from '$lib/common/funcs';
 	import { debug } from '$lib/common/debug';
 	import { getDrawerStore, getToastStore } from '@skeletonlabs/skeleton';
 	import { slide } from 'svelte/transition';
-	import { get } from 'svelte/store';
-	import { NodeStore, UserStore, updateStoreItem } from '$lib/Stores';
-	import { onMount } from 'svelte';
 
-	export let node: Node;
-	$: users = get(UserStore);
+	import RawMdiSwapHorizontal from '~icons/mdi/swap-horizontal';
+	import RawMdiCheckCircleOutline from '~icons/mdi/check-circle-outline';
+	import RawMdiCloseCircleOutline from '~icons/mdi/close-circle-outline';
+
+	import { App } from '$lib/States.svelte';
+
+	type NodeOwnerProps = {
+		node: Node,
+	}
+	let { node }: NodeOwnerProps = $props()
+	
 	const drawerStore = getDrawerStore();
-	let transferUser: string = '';
-	let showTransfer = false;
-	let transferring = false;
+	let transferUser = $state('');
+	let showTransfer = $state(false);
+	let transferring = $state(false);
 
 	const ToastStore = getToastStore();
 
-	onMount(() => {
-		const unsubUserStore = UserStore.subscribe((us) => {
-			users = us;
-		});
-		return () => {
-			unsubUserStore();
-		};
-	});
 </script>
 
 <CardListEntry title="Owner:" top>
@@ -38,7 +33,7 @@
 		<!--button type="button" class="btn-sm ml-0"-->
 		<a
 			href=" "
-			on:click={() => {
+			onclick={() => {
 				openDrawer(drawerStore, 'userDrawer-' + node.user.id, node.user);
 			}}
 		>
@@ -49,7 +44,7 @@
 		<button
 			type="button"
 			class="btn-sm btn-icon-sm ml-0"
-			on:click={() => {
+			onclick={() => {
 				showTransfer = !showTransfer;
 			}}
 		>
@@ -61,7 +56,7 @@
 			<span class="pr-3">New Owner:</span>
 			<label class="label">
 				<select class="select" bind:value={transferUser}>
-					{#each users as user}
+					{#each App.users.value as user}
 						<option value={user.name}>{user.name}</option>
 					{/each}
 				</select>
@@ -70,11 +65,11 @@
 				type="submit"
 				class="btn-sm btn-icon-sm"
 				disabled={transferring || transferUser == ''}
-				on:click={async () => {
+				onclick={async () => {
 					transferring = true;
 					try {
 						const n = await changeNodeOwner(node, transferUser);
-						updateStoreItem(NodeStore, n);
+						App.updateValue(App.nodes, n);
 						showTransfer = false;
 						toastSuccess(
 							`Changed owner of ${node.givenName} from "${node.user.name}" to "${n.user.name}"`,
@@ -96,7 +91,7 @@
 			<button
 				type="button"
 				class="btn-sm btn-icon-sm"
-				on:click={() => {
+				onclick={() => {
 					showTransfer = false;
 				}}
 			>

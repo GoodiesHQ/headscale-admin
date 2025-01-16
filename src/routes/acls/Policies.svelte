@@ -11,7 +11,7 @@
 
 	let {acl = $bindable(), loading = $bindable(false)}: {acl: ACLBuilder, loading?: boolean} = $props();
 	let policyFilterString = $state('')
-	let filteredPolicies = $derived(filterPolicies(acl.getAllPolicies(), policyFilterString));
+	const filteredPolicies = $derived(filterPolicies(acl.getAllPolicies(), policyFilterString));
 
 	function newPolicy() {
 		acl.createPolicy(ACLBuilder.DefaultPolicy())

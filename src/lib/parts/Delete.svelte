@@ -5,9 +5,13 @@
 	import RawMdiCheckCircleOutline from '~icons/mdi/check-circle-outline';
 	import RawMdiCloseCircleOutline from '~icons/mdi/close-circle-outline';
 
-	export let func: () => void;
-	export let show = false;
-	export let disabled = false;
+	type DeleteProps = {
+		func: () => void,
+		show?: boolean,
+		disabled?: boolean,
+	}
+
+	let { func, show = false, disabled = false }: DeleteProps = $props()
 </script>
 
 <div class="flex flex-row items-center justify-end py-0 my-0 pl-0 ml-4">
@@ -15,7 +19,7 @@
 		<span transition:slide={{ delay: 50, axis: 'x' }} class="text-right flex space-x-2">
 			<button
 				{disabled}
-				on:click={async () => {
+				onclick={async () => {
 					try {
 						disabled = true;
 						if (func.constructor.name === 'AsyncFunction') {
@@ -33,7 +37,7 @@
 			</button>
 			<button
 				{disabled}
-				on:click={() => {
+				onclick={() => {
 					show = false;
 				}}
 			>
@@ -42,7 +46,7 @@
 		</span>
 	{/if}
 	<span class="text-error-600 dark:text-error-400 ml-2">
-		<button {disabled} on:click={() => (show = !show)}>
+		<button {disabled} onclick={() => (show = !show)}>
 			<RawMdiDelete />
 		</button>
 	</span>

@@ -1,29 +1,28 @@
 <script lang="ts">
-	import { UserStore, appendStoreItem } from '$lib/Stores';
 	import { createUser } from '$lib/common/api';
 	import { toastError, toastSuccess, focus } from '$lib/common/funcs';
+	import { App } from '$lib/States.svelte';
 	import { getToastStore } from '@skeletonlabs/skeleton';
-	import { get } from 'svelte/store';
 	import RawMdiCheckCircleOutline from '~icons/mdi/check-circle-outline';
+	
+	type UserCreateProps = {
+		show: boolean,
+		loading?: boolean,
+	};
 
-	let username = '';
-	let loading = false;
+	let { show = $bindable(), loading = $bindable(false)}: UserCreateProps = $props()
+
+	let username = $state('');
 	const toastStore = getToastStore();
-	export let show: boolean;
 
-	async function newUser() {
+	async function newUser(event?: Event) {
+		event?.preventDefault()
+
 		loading = true;
 		try {
-			// create the user
 			const u = await createUser(username);
-
-			// append to the store
-			appendStoreItem(UserStore, u);
-
-			// success message
+			App.users.value.push(u)
 			toastSuccess('Created user "' + username + '"', toastStore);
-
-			// no longer needed
 			show = false;
 			username = '';
 		} catch (error) {
@@ -37,7 +36,7 @@
 </script>
 
 <div class="flex w-full">
-	<form on:submit={newUser} class="w-full">
+	<form onsubmit={newUser} class="w-full">
 		<input
 			class="input rounded-md w-full md:w-1/2 lg:w-1/3"
 			type="text"

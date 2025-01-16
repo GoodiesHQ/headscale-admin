@@ -1,21 +1,33 @@
 <script lang="ts">
-	import { get, type Writable } from 'svelte/store';
-	import { toggleLayout, type LayoutStyle } from '$lib/Stores';
-	import { onMount } from 'svelte';
 	import { SlideToggle } from '@skeletonlabs/skeleton';
 	import { slide } from 'svelte/transition';
 	import RawMdiViewListOutline from '~icons/mdi/view-list-outline';
 	import RawMdiViewGridOutline from '~icons/mdi/view-grid-outline';
 	import { focus } from '$lib/common/funcs';
+	import type { LayoutStyle, Valued } from '$lib/States.svelte';
+	import { App } from '$lib/States.svelte';
+	import type { Snippet } from 'svelte';
 
-	export let filterString: string = '';
-	export let title: string;
-	export let layout: Writable<LayoutStyle> | undefined = undefined;
-	export let showButtonArea = false;
+	type PageHeaderProps = {
+		filterString?: string,
+		title: string,
+		show?: boolean,
+		layout?: Valued<LayoutStyle>,
+		buttonText?: string,
+		button?: Snippet,
+	}
 
-	export let buttonText: string | null = 'Create';
-	$: layoutCurrent = layout ? get(layout) : null;
-	$: regexIsValid = validRegex(filterString);
+	let {
+		filterString = $bindable(''),
+		title,
+		show = $bindable(false),
+		layout = $bindable(undefined),
+		buttonText = 'Create',
+		button,
+	}: PageHeaderProps = $props()
+
+	const layoutCurrent = $derived(layout !== undefined ? layout.value : null)
+	const regexIsValid = $derived(validRegex(filterString));
 
 	function validRegex(filterString: string): boolean {
 		try {
@@ -25,16 +37,6 @@
 			return false;
 		}
 	}
-
-	onMount(() => {
-		const unsubLayout = layout?.subscribe((l) => (layoutCurrent = l));
-
-		return () => {
-			if (unsubLayout) {
-				unsubLayout();
-			}
-		};
-	});
 </script>
 
 <div class="py-5">
@@ -46,8 +48,8 @@
 				<SlideToggle
 					class="pr-0 pt-5 text-end"
 					name="toggle-layout-user"
-					checked={get(layout) == 'list'}
-					on:change={() => toggleLayout(layout)}
+					checked={layoutCurrent === 'list'}
+					on:change={() => App.toggleLayout(layout)}
 					active="bg-primary-500"
 					background="bg-secondary-500"
 					size="sm"
@@ -56,19 +58,19 @@
 			</div>
 		{/if}
 	</div>
-	{#if $$slots.button}
+	{#if button !== undefined}
 	<!--div class="flex justify-start pt-4 space-x-5 {$$slots.button ? '' : 'invisible'}"-->
 	<div class="flex justify-start pt-4 space-x-5">
 		{#if buttonText}
 			<button
 				type="button"
 				class="btn btn-sm variant-filled-success rounded-sm"
-				on:click={(_) => (showButtonArea = !showButtonArea)}
+				onclick={(_) => (show = !show)}
 			>
 				{buttonText}
 			</button>
 		{/if}
-		{#if $$props.filterString !== undefined}
+		{#if filterString !== undefined}
 			<input
 				type="text"
 				class="input rounded-md text-sm w-64 md:w-96 {regexIsValid ? '' : 'input-error'}"
@@ -80,8 +82,8 @@
 	</div>
 	{/if}
 </div>
-{#if $$slots.button && showButtonArea}
+{#if button !== undefined && show}
 	<div transition:slide class="pb-8">
-		<slot name="button" />
+		{@render button()}
 	</div>
 {/if}

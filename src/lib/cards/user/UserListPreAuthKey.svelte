@@ -5,21 +5,37 @@
 	import { copyToClipboard } from '$lib/common/funcs';
 	import Delete from '$lib/parts/Delete.svelte';
 	import { expirePreAuthKey, getPreAuthKeys } from '$lib/common/api';
-	import { PreAuthKeyStore, updateStoreItem } from '$lib/Stores';
+	import { App } from '$lib/States.svelte';
+	import { onMount } from 'svelte';
+
+	type UserListPreAuthKeyProps = {
+		preAuthKey: PreAuthKey,
+	}
+	let { preAuthKey }: UserListPreAuthKeyProps = $props()
 
 	const toastStore = getToastStore();
-	export let preAuthKey: PreAuthKey;
+	let pakIsExpired = $state(isExpired(preAuthKey))
 
 	function isExpired(preAuthKey: PreAuthKey): boolean {
 		return new Date() > new Date(preAuthKey.expiration);
 	}
+
+	onMount(()=>{
+		const interval = setInterval(() => {
+			pakIsExpired = isExpired(preAuthKey)
+		}, 1000)
+
+		return () => {
+			clearInterval(interval)
+		}
+	})
 </script>
 
 <div class="flex flex-row items-start">
 	<div class="flex flex-col px-2 gap-2">
 		<button
 			class="font-mono flex items-center border-2 border-dashed w-auto py-1.5 px-2 mr-3 border-slate-300 dark:border-slate-700"
-			on:click={() => copyToClipboard(preAuthKey.key, toastStore)}
+			onclick={() => copyToClipboard(preAuthKey.key, toastStore)}
 		>
 			<span class="mr-2">
 				<RawMdiClipboard />
@@ -32,7 +48,7 @@
 					await expirePreAuthKey(preAuthKey);
 					const keys = await getPreAuthKeys([preAuthKey.user]);
 					keys.forEach((pak) => {
-						updateStoreItem(PreAuthKeyStore, pak);
+						App.updateValue(App.preAuthKeys, pak)
 					});
 				}}
 			/>
@@ -48,7 +64,7 @@
 				Used
 			</span>
 			<span
-				class="badge badge-glass {isExpired(preAuthKey)
+				class="badge badge-glass {pakIsExpired
 					? 'variant-ghost-error'
 					: 'variant-flat opacity-50'}"
 			>

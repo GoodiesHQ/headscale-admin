@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { getModalStore } from "@skeletonlabs/skeleton";
 
-    type EditorModalProps = {
+    type LoaderModalProps = {
         title: string,
         body: string,
         callback: (data: string) => boolean,
     }    
-    let { title, body, callback }: EditorModalProps = $props()
+    let { title, body, callback }: LoaderModalProps = $props()
 
     let data = $state('')
     let errorMessage = $state('')

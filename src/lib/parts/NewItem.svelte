@@ -4,18 +4,27 @@
 	import { slide } from 'svelte/transition';
 	import RawMdiCheckCircleOutline from '~icons/mdi/check-circle-outline';
 
-	export let title: string;
-	export let name: string;
-	export let value: string | undefined = undefined;
-	export let disabled: boolean = false;
-	export let submit: (newItemName: string, newItemValue?: string) => void;
+	type NewItemProps = {
+		title: string,
+		name: string,
+		value?: string,
+		disabled?: boolean,
+		submit: (newItemName: string, newItemValu?: string) => void,
+	}
+	let {
+		title,
+		name = $bindable(),
+		value = $bindable(undefined),
+		disabled = false,
+		submit,
+	}: NewItemProps = $props()
 
 	const ToastStore = getToastStore();
 </script>
 
 <form
 	transition:slide
-	on:submit={() => {
+	onsubmit={() => {
 		try {
 			if (value === undefined) {
 				submit(name);

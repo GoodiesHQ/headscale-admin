@@ -1,12 +1,18 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
 	import { fade } from 'svelte/transition';
+
+	type PageProps = {
+		classes?: string,
+		children: Snippet,
+	}
+	let { classes = '', children }: PageProps = $props()
 
 	const time = 150;
 	const optsIn = { delay: time, duration: time };
 	const optsOut = { duration: time };
-	export let classes: string = '';
 </script>
 
 <div in:fade={optsIn} out:fade={optsOut} class={classes}>
-	<slot />
+	{@render children()}
 </div>

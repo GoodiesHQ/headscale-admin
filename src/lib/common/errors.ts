@@ -1,6 +1,6 @@
 // TODO: add support for more specific errors so error handling can be far more graceful
 
-import { informUserUnauthorized } from '$lib/Stores';
+import { informUserUnauthorized } from '$lib/States.svelte';
 import type { ToastStore } from '@skeletonlabs/skeleton';
 import { debug } from './debug';
 

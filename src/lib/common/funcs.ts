@@ -2,12 +2,16 @@ import type { DrawerStore, ToastStore } from '@skeletonlabs/skeleton';
 import type { DrawerSettings } from '@skeletonlabs/skeleton';
 import IPAddr from 'ipaddr.js';
 import { debug } from './debug';
-import { createApiKey, expireApiKey } from './api';
 import { get } from 'svelte/store';
-import { ApiKeyStore } from '$lib/Stores';
-import type { Node } from './types';
+// import { ApiKeyStore } from '$lib/Stores';
+import type { Direction, Node } from './types';
+import { App } from '$lib/States.svelte';
 // import { createApiKey } from './api';
 // import { ApiKeyStore } from '$lib/Stores';
+
+export function clone<T>(item: T): T {
+	return JSON.parse(JSON.stringify(item)) as T
+}
 
 export function focus(el: HTMLElement | null) {
 	if (el !== null) {
@@ -146,13 +150,6 @@ export function toastError(message: string, toastStore: ToastStore, error?: Erro
 	});
 }
 
-export async function refreshApiKey() {
-	const apiKeyNew = await createApiKey();
-	const apiKeyOld = get(ApiKeyStore);
-	await expireApiKey(apiKeyOld);
-	ApiKeyStore.set(apiKeyNew);
-}
-
 export function copyToClipboard(
 	s: string,
 	toastStore?: ToastStore,
@@ -246,4 +243,74 @@ export function toOptions(values: string[]): {label: string, value:string}[] {
 		label: v,
 		value: v,
 	}))
+}
+
+export function getSortedNodes(nodes: Node[], sortMethod: string, sortDirection: Direction): Node[] {
+	if (sortMethod === 'id') {
+		nodes = nodes.sort((a: Node, b: Node) => {
+			const aid = parseInt(a.id);
+			const bid = parseInt(b.id);
+			if (aid < bid) {
+				return -1;
+			}
+			if (aid > bid) {
+				return 1;
+			}
+			return 0;
+		});
+	} else if (sortMethod === 'name') {
+		nodes = nodes.sort((a: Node, b: Node) => {
+			if (a.givenName < b.givenName) {
+				return -1;
+			}
+			if (a.givenName > b.givenName) {
+				return 1;
+			}
+			return 0;
+		});
+	}
+	if (sortDirection === 'down') {
+		return nodes.reverse();
+	}
+	return nodes;
+}
+
+export function filterNode(node: Node, filterString: string): boolean {
+	const routes = App.routes.value.filter((r) => (r.node ?? r.machine).id == node.id)
+	if (routes.length == 0) {
+		return false
+	}
+	if (filterString === '') {
+		return true;
+	}
+	try {
+		const r = RegExp(filterString);
+		const getTag = (tag: string) => {
+			if (tag.startsWith('tag:')) {
+				return tag.substring(0, 4);
+			}
+			return tag;
+		};
+		return (
+			r.test(node.name) ||
+			r.test(node.givenName) ||
+			node.forcedTags.map(getTag).some((tag) => r.test(tag)) ||
+			node.validTags.map(getTag).some((tag) => r.test(tag))
+		);
+	} catch (err) {
+		return true;
+	}
+}
+
+export function getSortedFilteredNodes(
+	nodes: Node[],
+	filterString:string,
+	sortMethod: string,
+	sortDirection: Direction,
+){
+	return getSortedNodes(
+		nodes.filter((node)=> filterNode(node, filterString)),
+		sortMethod,
+		sortDirection,
+	)
 }

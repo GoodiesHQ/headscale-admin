@@ -1,20 +1,18 @@
 <script lang="ts">
 	import CardListPage from '$lib/cards/CardListPage.svelte';
-	import type { ACLBuilder, AclHosts } from '$lib/common/acl.svelte';
+	import type { ACLBuilder } from '$lib/common/acl.svelte';
 	import { toastError, toastSuccess } from '$lib/common/funcs';
 	import { getToastStore } from '@skeletonlabs/skeleton';
 	import NewItem from '$lib/parts/NewItem.svelte';
 	import HostListCard from '$lib/cards/acl/HostListCard.svelte';
 	import { debug } from '$lib/common/debug';
-	import { UserStore } from '$lib/Stores';
-	import { get } from 'svelte/store';
+	import { App } from '$lib/States.svelte';
 
 	const ToastStore = getToastStore();
 
 	let {acl = $bindable(), loading = $bindable(false)}: {acl: ACLBuilder, loading?: boolean} = $props();
 
-	let users = $state(get(UserStore))
-	let userNames = $derived(users.map(u => u.name))
+	const userNames = $derived(App.users.value.map(u => u.name))
 
 	let showCreateHost = $state(false);
 	let newHostName = $state('');
@@ -55,7 +53,7 @@
 		}
 	}
 
-	let filteredHosts = $derived(filterHosts(acl.getHosts(), hostsFilter));
+	const filteredHosts = $derived(filterHosts(acl.getHosts(), hostsFilter));
 </script>
 
 

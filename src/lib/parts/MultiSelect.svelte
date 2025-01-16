@@ -21,8 +21,8 @@
 
     let selectShow = $state(false)
     let selectItem = $state('')
-    let selectInputID = $derived(id + '-select-item')
-	let selectOptions = $derived(options === undefined ? undefined : toOptions(options))
+    const selectInputID = $derived(id + '-select-item')
+	const selectOptions = $derived(options === undefined ? undefined : toOptions(options))
 
     function selectInputFocus () {
         document.getElementById(selectInputID)?.focus()

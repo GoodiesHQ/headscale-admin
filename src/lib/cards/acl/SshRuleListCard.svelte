@@ -6,7 +6,6 @@
 	import Delete from '$lib/parts/Delete.svelte';
 	import CardListContainer from '$lib/cards/CardListContainer.svelte';
 	import { debug } from '$lib/common/debug';
-	import { UserStore } from '$lib/Stores';
 	import { get } from 'svelte/store';
 
 	import RawMdiGroups from '~icons/mdi/account-group';
@@ -16,6 +15,7 @@
 
 	import ListEntry from './ListEntry.svelte';
 	import Tabbed from '$lib/parts/Tabbed.svelte';
+	import { App } from '$lib/States.svelte';
 
 	const ToastStore = getToastStore();
 
@@ -33,14 +33,13 @@
 		loading = $bindable(false),
 	}: PolicyListCardProps = $props()
 
-	let users = $derived(get(UserStore));
-	let userNames = $derived(users.map((u) => u.name).toSorted());
-	let userNamesOptions = $derived(toOptions(userNames))
-	let tagNames = $derived(acl.getTagNames(true))
-	let tagNamesOptions = $derived(toOptions(tagNames))
-	let groupNames = $derived(acl.getGroupNames(true));
-	let groupNamesOptions = $derived(toOptions(groupNames));
-	let rule = $derived(makeSshRule(idx));
+	const userNames = $derived(App.users.value.map((u) => u.name).toSorted());
+	const userNamesOptions = $derived(toOptions(userNames))
+	const tagNames = $derived(acl.getTagNames(true))
+	const tagNamesOptions = $derived(toOptions(tagNames))
+	const groupNames = $derived(acl.getGroupNames(true));
+	const groupNamesOptions = $derived(toOptions(groupNames));
+	const rule = $derived(makeSshRule(idx));
 
 	let deleting = $state(false);
 
@@ -59,22 +58,22 @@
 		{ name: "tag", title: "Tag", logo: RawMdiTag },
 	]
 	
-	let srcNewType = $derived(tabsSrc[tabSetSrc].name)
+	const srcNewType = $derived(tabsSrc[tabSetSrc].name)
 	let srcNewHost = $state('')
-	let srcNewHostEditable = $derived(srcNewType == "custom")
+	const srcNewHostEditable = $derived(srcNewType == "custom")
 
-	let dstNewType = $derived(tabsDst[tabSetDst].name)
+	const dstNewType = $derived(tabsDst[tabSetDst].name)
 	let dstNewHost = $state('')
-	let dstNewHostEditable = $derived(dstNewType == "custom")
+	const dstNewHostEditable = $derived(dstNewType == "custom")
 
-	let optionsSrc = $derived(
+	const optionsSrc = $derived(
 		srcNewType == "user" ? userNamesOptions :
 		srcNewType == "group" ? groupNamesOptions:
 		srcNewType == "tag" ? tagNamesOptions:
 		undefined
 	)
 
-	let optionsDst = $derived(
+	const optionsDst = $derived(
 		dstNewType == "user" ? userNamesOptions :
 		dstNewType == "tag" ? tagNamesOptions:
 		undefined
@@ -276,7 +275,6 @@
 			id={"ssh-rule-users-" + idx.toString()}
 			bind:items={rule.users}
 			onItemClick={(item) => {
-				debug("clicked on " + item)
 				delUsername(item)
 			}}
 		/>

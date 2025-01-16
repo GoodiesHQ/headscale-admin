@@ -42,10 +42,9 @@
 		}
 	}
 
-	let filteredTags = $derived(filterTags(acl.getTagNames(), tagsFilter))
+	const filteredTags = $derived(filterTags(acl.getTagNames(), tagsFilter))
 
 	function toggleShowCreateTag() {
-		console.log(acl)
 		showCreateTag = !showCreateTag;
 	}
 

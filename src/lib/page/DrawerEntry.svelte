@@ -1,8 +1,14 @@
 <script lang="ts">
 	import CloseBtn from '$lib/parts/CloseBtn.svelte';
 	import { getDrawerStore } from '@skeletonlabs/skeleton';
+	import type { Snippet } from 'svelte';
 
-	export let title: string;
+	type DrawerEntryProps = {
+		title: string,
+		children: Snippet,
+	}
+	let { title, children }: DrawerEntryProps = $props()
+
 	const DrawerStore = getDrawerStore();
 </script>
 
@@ -14,4 +20,4 @@
 		<CloseBtn closeable={DrawerStore} />
 	</div>
 </div>
-<slot />
+{@render children()}

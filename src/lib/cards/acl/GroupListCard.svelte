@@ -1,17 +1,18 @@
 <script lang="ts">
-	import { getToastStore } from '@skeletonlabs/skeleton';
 	import type { ACLBuilder } from '$lib/common/acl.svelte';
-	import { toastSuccess, toastError } from '$lib/common/funcs';
-	import MultiSelect from '$lib/parts/MultiSelect.svelte';
-	import Delete from '$lib/parts/Delete.svelte';
+	import ListEntry from './ListEntry.svelte';
 	import CardListContainer from '$lib/cards/CardListContainer.svelte';
+
+	import Delete from '$lib/parts/Delete.svelte';
+	import MultiSelect from '$lib/parts/MultiSelect.svelte';
+	import Text from '$lib/parts/Text.svelte';
+
+	import { App } from '$lib/States.svelte';
 	import { debug } from '$lib/common/debug';
-	import { UserStore } from '$lib/Stores';
-	import { get } from 'svelte/store';
+	import { getToastStore } from '@skeletonlabs/skeleton';
+	import { toastSuccess, toastError } from '$lib/common/funcs';
 
 	import RawMdiGroup from '~icons/mdi/account-group-outline';
-	import Text from '$lib/parts/Text.svelte';
-	import ListEntry from './ListEntry.svelte';
 
 	const ToastStore = getToastStore();
 
@@ -23,9 +24,8 @@
 
 	let {acl = $bindable(), groupName, open = $bindable()}: GroupListCardProps = $props()
 
-	let users = $derived(get(UserStore))
-	let userNames = $derived(users.map((u) => u.name).toSorted())
-	let groupMembers = $derived(acl.getGroupMembers(groupName))
+	const userNames = $derived(App.users.value.map((u) => u.name).toSorted())
+	const groupMembers = $derived(acl.getGroupMembers(groupName))
 
 	let group = $state(makeGroup());
 	let groupNameNew = $state('');

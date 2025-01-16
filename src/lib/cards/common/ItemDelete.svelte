@@ -9,9 +9,13 @@
 	import { toastError, toastSuccess } from '$lib/common/funcs';
 	import Delete from '$lib/parts/Delete.svelte';
 
-	let show = false;
-	export let item: Named;
+	type ItemDeleteProps = {
+		item: Named,
+	}
 
+	let { item = $bindable() }: ItemDeleteProps = $props()
+
+	let show = false;
 	const prefix: ItemTypeName = getTypeName(item);
 
 	const toastStore = getToastStore();

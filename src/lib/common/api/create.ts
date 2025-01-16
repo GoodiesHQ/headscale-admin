@@ -1,15 +1,13 @@
 import { apiPost } from './base';
 import {
-	type ApiUser,
-	type ApiPreAuthKey,
-	type User,
-	type Node,
-	type ApiDevice,
-	getApiDeviceNode,
 	type ApiApiKey,
+	type ApiNode,
+	type ApiPreAuthKey,
+	type ApiUser,
+	type Node,
+	type User,
 } from '$lib/common/types';
-import { debug } from '../debug';
-import { get } from 'svelte/store';
+import { debug } from '$lib/common/debug';
 import { API_URL_APIKEY, API_URL_NODE, API_URL_PREAUTHKEY, API_URL_USER } from './url';
 
 export async function createApiKey() {
@@ -35,11 +33,9 @@ export async function createNode(key: string, username: string): Promise<Node> {
 	}
 
 	const data = '?user=' + username + '&key=' + key;
-	const device = getApiDeviceNode(
-		await apiPost<ApiDevice>(API_URL_NODE + '/register' + data),
-	);
-	debug('Created Node "' + device.givenName + '" for user "' + username + '"');
-	return device;
+	const { node } = await apiPost<ApiNode>(API_URL_NODE + '/register' + data)
+	debug('Created Node "' + node.givenName + '" for user "' + username + '"');
+	return node;
 }
 
 export async function createPreAuthKey(

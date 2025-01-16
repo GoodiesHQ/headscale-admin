@@ -11,7 +11,7 @@
 
 	let {acl = $bindable(), loading = $bindable(false)}: {acl: ACLBuilder, loading?: boolean} = $props();
 	let sshRuleFilterString = $state('')
-	let filteredSshRules = $derived(filterSshRules(acl.getAllSshRules(), sshRuleFilterString));
+	const filteredSshRules = $derived(filterSshRules(acl.getAllSshRules(), sshRuleFilterString));
 
 	function newSshRule() {
 		acl.createSshRule(ACLBuilder.DefaultSshRule())

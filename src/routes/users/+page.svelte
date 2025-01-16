@@ -6,26 +6,22 @@
 	import CardTilePage from '$lib/cards/CardTilePage.svelte';
 	import PageHeader from '$lib/page/PageHeader.svelte';
 
-	import { UserStore, LayoutUserStore } from '$lib/Stores';
-
-	import { get } from 'svelte/store';
-	import { onMount } from 'svelte';
 	import Page from '$lib/page/Page.svelte';
 	import type { User, Direction } from '$lib/common/types';
 	import SortBtn from '$lib/parts/SortBtn.svelte';
+	import { App } from '$lib/States.svelte';
 
-	$: layout = get(LayoutUserStore);
-	$: showCreate = false;
-	$: users = get(UserStore);
+	let showCreate = $state(false);
+	const layout = $derived(App.layoutUser.value)
 
 	// Sort & Filter
-	$: filterString = '';
-	$: filteredUsers = getFilteredUsers(users, filterString); // react on users or filterString change
-	$: sortMethod = 'id';
-	$: sortDirection = 'up' as Direction;
+	let filterString = $state('');
+	const filteredUsers = $derived(getFilteredUsers(App.users.value, filterString)); // react on users or filterString change
+	let sortMethod = $state('id');
+	let sortDirection = $state<Direction>('up');
 
-	$: outer = layout == 'list' ? CardListPage : CardTilePage;
-	$: inner = layout == 'list' ? UserListCard : UserTileCard;
+	const Outer = $derived(layout == 'list' ? CardListPage : CardTilePage);
+	const Inner = $derived(layout == 'list' ? UserListCard : UserTileCard);
 
 	function filter(user: User, filterString: string): boolean {
 		try {
@@ -83,24 +79,13 @@
 	function getFilteredUsers(users: User[], filterString: string): User[] {
 		return users.filter((user) => filter(user, filterString));
 	}
-
-	onMount(() => {
-		const unsubUserStore = UserStore.subscribe((us) => {
-			users = us;
-		});
-		const unsubLayoutUserStore = LayoutUserStore.subscribe((l) => (layout = l));
-		return () => {
-			unsubUserStore();
-			unsubLayoutUserStore();
-		};
-	});
 </script>
 
 <Page>
-	<PageHeader title="Users" layout={LayoutUserStore} bind:show={showCreate} bind:filterString>
-		<svelte:fragment slot="button">
+	<PageHeader title="Users" layout={App.layoutUser} bind:show={showCreate} bind:filterString>
+		{#snippet button()}
 			<UserCreate bind:show={showCreate} />
-		</svelte:fragment>
+		{/snippet}
 	</PageHeader>
 
 	<div
@@ -110,9 +95,14 @@
 		<SortBtn bind:value={sortMethod} direction={sortDirection} name="Name" {toggle} />
 	</div>
 
-	<svelte:component this={outer}>
+	<Outer>
+		{#each getSortedUsers(filteredUsers, sortMethod, sortDirection) as user}
+			<Inner {user}></Inner>
+		{/each}
+	</Outer>
+	<!--svelte:component this={outer}>
 		{#each getSortedUsers(filteredUsers, sortMethod, sortDirection) as user}
 			<svelte:component this={inner} {user} />
 		{/each}
-	</svelte:component>
+	</svelte:component-->
 </Page>

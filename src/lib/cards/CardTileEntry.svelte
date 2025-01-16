@@ -1,6 +1,17 @@
 <script lang="ts">
-	export let title: string | undefined = undefined;
-	export let value: any = undefined;
+	import type { Snippet } from "svelte";
+
+	type CardTileEntryProps = {
+		title?: string,
+		value?: any,
+		children?: Snippet,
+	}
+
+	let {
+		title = undefined,
+		value = undefined,
+		children = undefined,
+	}: CardTileEntryProps = $props();
 </script>
 
 <div class="flex justify-between items-center mb-2 mt-2">
@@ -10,8 +21,8 @@
 	<div class="flex items-center">
 		{#if value !== undefined}
 			{value}
-		{:else}
-			<slot />
+		{:else if children !== undefined}
+			{@render children()}
 		{/if}
 	</div>
 </div>

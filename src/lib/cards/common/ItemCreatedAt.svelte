@@ -2,7 +2,12 @@
 	import CardListEntry from '../CardListEntry.svelte';
 	import type { Named } from '$lib/common/types';
 
-	export let item: Named;
+	type ItemCreatedAtProps = {
+		item: Named,
+	}
+
+	let { item = $bindable() }: ItemCreatedAtProps = $props()
+
 </script>
 
 <CardListEntry title="Created:">

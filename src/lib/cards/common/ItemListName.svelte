@@ -7,19 +7,23 @@
 	import RawMdiCheckCircleOutline from '~icons/mdi/check-circle-outline';
 	import RawMdiCloseCircleOutline from '~icons/mdi/close-circle-outline';
 	import { renameNode, renameUser } from '$lib/common/api';
-	import { get } from 'svelte/store';
-	import { UserStore, NodeStore } from '$lib/Stores';
 	import { toastError, focus } from '$lib/common/funcs';
 	import { getToastStore } from '@skeletonlabs/skeleton';
 	import { debug } from '$lib/common/debug';
+	import { App } from '$lib/States.svelte';
 
-	export let item: Named;
+	type ItemListNameProps = {
+		item: Named,
+	}
+
+	let { item = $bindable() }: ItemListNameProps = $props()
 
 	const prefix: ItemTypeName = getTypeName(item);
 
-	let newName = item.givenName ?? item.name;
-	let showRename = false;
-	let disableRename = false;
+	let newName = $state(item.givenName ?? item.name);
+	let showRename = $state(false);
+	let disableRename = $state(false);
+
 	const fadeDuration = 200;
 	const toastStore = getToastStore();
 </script>
@@ -44,18 +48,16 @@
 							type="submit"
 							class="btn-sm btn-icon-sm"
 							disabled={disableRename}
-							on:click={async () => {
+							onclick={async () => {
 								disableRename = true;
 								try {
 									switch (prefix) {
 										case 'user':
 											if (isUser(item)) {
 												const u = await renameUser(item, newName);
-												const users = get(UserStore);
-												for (let i = 0; i < users.length; i++) {
-													if (users[i].id == u.id) {
-														users[i].name = u.name;
-														UserStore.set(users);
+												for (let i = 0; i < App.users.value.length; i++) {
+													if (App.users.value[i].id == u.id) {
+														App.users.value[i].name = u.name;
 														break;
 													}
 												}
@@ -63,11 +65,9 @@
 										case 'node':
 											if (isNode(item)) {
 												const m = await renameNode(item, newName);
-												const nodes = get(NodeStore);
-												for (let i = 0; i < nodes.length; i++) {
-													if (nodes[i].id == m.id) {
-														nodes[i].givenName = m.givenName;
-														NodeStore.set(nodes);
+												for (let i = 0; i < App.nodes.value.length; i++) {
+													if (App.nodes.value[i].id == m.id) {
+														App.nodes.value[i].givenName = m.givenName;
 														break;
 													}
 												}
@@ -91,9 +91,7 @@
 						<button
 							type="button"
 							class="btn-sm btn-icon-sm"
-							on:click={() => {
-								showRename = false;
-							}}
+							onclick={() => { showRename = false; }}
 						>
 							<RawMdiCloseCircleOutline />
 						</button>
@@ -109,7 +107,7 @@
 					{item.givenName ?? item.name}
 					<button
 						class="btn-sm btn-icon-sm"
-						on:click={() => {
+						onclick={() => {
 							newName = item.givenName ?? item.name;
 							showRename = true;
 						}}

@@ -1,13 +1,10 @@
 <script lang="ts">
-	import { Autocomplete, getToastStore, InputChip, popup, Tab, TabGroup, type PopupSettings } from '@skeletonlabs/skeleton';
+	import { Autocomplete, getToastStore, TabGroup } from '@skeletonlabs/skeleton';
 	import { ACLBuilder, type AclPolicy } from '$lib/common/acl.svelte';
 	import { toastSuccess, toastError, toOptions } from '$lib/common/funcs';
-	import MultiSelect from '$lib/parts/MultiSelect.svelte';
 	import Delete from '$lib/parts/Delete.svelte';
 	import CardListContainer from '$lib/cards/CardListContainer.svelte';
 	import { debug } from '$lib/common/debug';
-	import { UserStore } from '$lib/Stores';
-	import { get } from 'svelte/store';
 
 	import RawMdiGroups from '~icons/mdi/account-group';
 	import RawMdiPencil from '~icons/mdi/pencil';
@@ -17,6 +14,7 @@
 
 	import ListEntry from './ListEntry.svelte';
 	import Tabbed from '$lib/parts/Tabbed.svelte';
+	import { App } from '$lib/States.svelte';
 
 	const ToastStore = getToastStore();
 
@@ -34,16 +32,15 @@
 		loading = $bindable(false),
 	}: PolicyListCardProps = $props()
 
-	let users = $derived(get(UserStore));
-	let userNames = $derived(users.map((u) => u.name).toSorted());
-	let userNamesOptions = $derived(toOptions(userNames))
-	let tagNames = $derived(acl.getTagNames(true))
-	let tagNamesOptions = $derived(toOptions(tagNames))
-	let groupNames = $derived(acl.getGroupNames(true));
-	let groupNamesOptions = $derived(toOptions(groupNames));
-	let hostNames = $derived(acl.getHostNames())
-	let hostNamesOptions = $derived(toOptions(hostNames));
-	let policy = $derived(makePolicy(idx));
+	const userNames = $derived(App.users.value.map((u) => u.name).toSorted());
+	const userNamesOptions = $derived(toOptions(userNames))
+	const tagNames = $derived(acl.getTagNames(true))
+	const tagNamesOptions = $derived(toOptions(tagNames))
+	const groupNames = $derived(acl.getGroupNames(true));
+	const groupNamesOptions = $derived(toOptions(groupNames));
+	const hostNames = $derived(acl.getHostNames())
+	const hostNamesOptions = $derived(toOptions(hostNames));
+	const policy = $derived(makePolicy(idx));
 
 	let deleting = $state(false);
 
@@ -57,17 +54,17 @@
 		{ name: "tag", title: "Tag", logo: RawMdiTag },
 	]
 	
-	let srcNewType = $derived(tabs[tabSetSrc].name)
+	const srcNewType = $derived(tabs[tabSetSrc].name)
 	let srcNewHost = $state('')
-	let srcNewHostEditable = $derived(srcNewType == "custom")
+	const srcNewHostEditable = $derived(srcNewType == "custom")
 
-	let dstNewType = $derived(tabs[tabSetDst].name)
+	const dstNewType = $derived(tabs[tabSetDst].name)
 	let dstNewHost = $state('')
-	let dstNewHostEditable = $derived(dstNewType == "custom")
+	const dstNewHostEditable = $derived(dstNewType == "custom")
 	let dstNewPorts = $state('')
-	let dstNewPortsEditable = $derived(policy.proto != "icmp")
+	const dstNewPortsEditable = $derived(policy.proto != "icmp")
 
-	let optionsSrc = $derived(
+	const optionsSrc = $derived(
 		srcNewType == "user" ? userNamesOptions :
 		srcNewType == "host" ? hostNamesOptions :
 		srcNewType == "group" ? groupNamesOptions:
@@ -75,7 +72,7 @@
 		undefined
 	)
 
-	let optionsDst = $derived(
+	const optionsDst = $derived(
 		dstNewType == "user" ? userNamesOptions :
 		dstNewType == "host" ? hostNamesOptions :
 		dstNewType == "group" ? groupNamesOptions:

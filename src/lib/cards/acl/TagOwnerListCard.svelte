@@ -7,12 +7,12 @@
 	import Delete from '$lib/parts/Delete.svelte';
 	import CardListContainer from '$lib/cards/CardListContainer.svelte';
 	import { debug } from '$lib/common/debug';
-	import { UserStore } from '$lib/Stores';
 	import { get } from 'svelte/store';
 
 	import RawMdiTag from '~icons/mdi/tag';
 	import Text from '$lib/parts/Text.svelte';
 	import ListEntry from './ListEntry.svelte';
+	import { App } from '$lib/States.svelte';
 
 	const ToastStore = getToastStore();
 
@@ -29,12 +29,11 @@
 	}: TagOwnerListCardProps = $props()
 
 	let tag = $state(MakeTag())
-	let users = $derived(get(UserStore))
-	let tagOwners = $derived(acl.tagExists(tagName) ? acl.getTagOwners(tagName) : []);
+	const tagOwners = $derived(acl.tagExists(tagName) ? acl.getTagOwners(tagName) : []);
 	let tagNameNew = $state('');
 	let loading = $state(false);
 	let deleting = $state(false);
-	let options = $derived(makeOptions(acl, users))
+	const options = $derived(makeOptions(acl, App.users.value))
 
 	function MakeTag() {
 		return {

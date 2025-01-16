@@ -24,7 +24,7 @@
     };
 
 	let {acl = $bindable(), loading = $bindable(false)}: {acl: ACLBuilder, loading?: boolean} = $props();
-	let aclJSON = $derived(acl.JSON(4))
+	const aclJSON = $derived(acl.JSON(4))
 
     let aclNew = $state('')
 

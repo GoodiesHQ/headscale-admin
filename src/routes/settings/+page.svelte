@@ -1,36 +1,28 @@
 <script lang="ts">
-	import { ALL_THEMES, setTheme } from './Themes';
-	import { page } from '$app/state';
-	import {
-		ApiKeyInfoStore,
-		ApiKeyStore,
-		ApiTtlStore,
-		ApiUrlStore,
-		ThemeStore,
-		DebugStore,
-		populateApiKeyInfoStore,
-		populateStores,
-	} from '$lib/Stores';
-	import { API_URL_MACHINE, API_URL_NODE } from '$lib/common/api';
-	import { debug } from '$lib/common/debug';
-	import { createPopulateErrorHandler } from '$lib/common/errors';
+	import { ALL_THEMES, setTheme } from '$lib/common/themes';
 	import {
 		getTime,
 		getTimeDifference,
 		getTimeDifferenceColor,
-		refreshApiKey,
 		toastSuccess,
 	} from '$lib/common/funcs';
-	import type { ExpirationMessage } from '$lib/common/types';
+
+	import { page } from '$app/state';
+	import { debug } from '$lib/common/debug';
+	import { createPopulateErrorHandler } from '$lib/common/errors';
+	import type { ApiKeyInfo, ExpirationMessage } from '$lib/common/types';
 	import Page from '$lib/page/Page.svelte';
 	import PageHeader from '$lib/page/PageHeader.svelte';
 	import { getToastStore } from '@skeletonlabs/skeleton';
-	import { onMount } from 'svelte';
-	import { get } from 'svelte/store';
+	import { refreshApiKey } from '$lib/common/api';
+
+	// icons
 	import RawMdiContentSaveOutline from '~icons/mdi/content-save-outline';
 	import RawMdiOrbit from '~icons/mdi/orbit-variant';
 	import RawMdiEye from '~icons/mdi/eye-outline';
 	import RawMdiEyeOff from '~icons/mdi/eye-off-outline';
+
+	import { App } from '$lib/States.svelte';
 
 	type Settings = {
 		apiUrl: string;
@@ -40,47 +32,46 @@
 		debug: boolean;
 	};
 
-	$: settings = {
-		apiUrl: get(ApiUrlStore),
-		apiKey: get(ApiKeyStore),
-		apiTtl: get(ApiTtlStore) / 1000,
-		debug: get(DebugStore),
-		theme: get(ThemeStore),
-	} as Settings;
+	let settings = $state<Settings>({
+		apiUrl: App.apiUrl.value,
+		apiKey: App.apiKey.value,
+		apiTtl: App.apiTtl.value / 1000,
+		debug: App.debug.value,
+		theme: App.theme.value,
+	});
 
-	$: apiKeyInfo = get(ApiKeyInfoStore);
-	$: apiKeyShow = false;
+	let apiKeyInfo = $state(App.apiKeyInfo.value);
+	let apiKeyShow = $state(false);
+	let loading = $state(false);
 
-	let apiKeyExpirationMessage: ExpirationMessage = { message: '', color: '' };
-
-	$: loading = false;
+	const apiKeyExpirationMessage: ExpirationMessage = $derived(createMessage(App.apiKeyInfo.value));
 
 	const ToastStore = getToastStore();
 
-	async function saveSettings() {
+	async function saveSettings(event?: Event) {
+		event?.preventDefault()
+
 		loading = true;
 		try {
 			if(settings.apiUrl === '') {
 				settings.apiUrl = page.url.origin
 			}
-			ApiUrlStore.set(settings.apiUrl);
-			debug("API URL is set to:", get(ApiUrlStore))
-			ApiKeyStore.set(settings.apiKey);
-			ApiTtlStore.set(settings.apiTtl * 1000);
-			DebugStore.set(settings.debug);
-			ThemeStore.set(settings.theme);
-
-			ApiKeyInfoStore.set({
+			App.apiUrl.value = settings.apiUrl
+			debug("API URL is set to:", App.apiUrl.value)
+			App.apiKey.value = settings.apiKey
+			App.apiTtl.value = settings.apiTtl * 1000
+			App.debug.value = settings.debug
+			App.theme.value = settings.theme
+			App.apiKeyInfo.value = {
 				expires: '',
 				authorized: null,
 				informedUnauthorized: false,
 				informedExpiringSoon: false,
-			});
-
+			};
 			toastSuccess('Saved Settings', ToastStore);
 			const handler = createPopulateErrorHandler(ToastStore);
-			await populateApiKeyInfoStore().catch(handler);
-			await populateStores(handler, false);
+			await App.populateApiKeyInfo().catch(handler);
+			await App.populateAll(handler, false);
 		} catch (err) {
 			debug(err);
 		} finally {
@@ -88,184 +79,144 @@
 		}
 	}
 
-	onMount(() => {
-		const unsubApiKeyStore = ApiKeyStore.subscribe((apikey) => {
-			settings.apiKey = apikey;
-		});
-
-		const unsubApiKeyInfoStore = ApiKeyInfoStore.subscribe((apiKeyInfoNew) => {
-			apiKeyInfo = apiKeyInfoNew;
-			if (apiKeyInfo.expires !== '') {
-				const td = getTimeDifference(getTime(apiKeyInfo.expires));
-				apiKeyExpirationMessage = {
-					message: td.message,
-					color: getTimeDifferenceColor(td),
-				};
-			} else {
-				apiKeyExpirationMessage = { message: '', color: '' };
-			}
-		});
-
-		return () => {
-			unsubApiKeyStore();
-			unsubApiKeyInfoStore();
-		};
-	});
+	function createMessage(apiKeyInfo: ApiKeyInfo): {message: string, color: string} {
+		if (apiKeyInfo.expires !== ''){
+			const td = getTimeDifference(getTime(apiKeyInfo.expires));
+			return {
+				message: td.message,
+				color: getTimeDifferenceColor(td),
+			};
+		} else {
+			return { message: '', color: '' };
+		}
+	}
 </script>
 
-<Page>
+<Page classes="items-start">
 	<PageHeader title="Settings" />
-
-	<form on:submit={saveSettings} class="pb-10">
-		<div class="grid grid-cols-12 gap-4">
-			<div class="col-span-12 lg:col-span-8">
-				<div class="text-xl font-mono">API URL</div>
-				<div class="pt-2 pb-4 flex">
-					<input
-						class="input rounded-md w-full mr-4 text-sm"
-						type="text"
-						placeholder={page.url.origin}
-						disabled={loading}
-						bind:value={settings.apiUrl}
-					/>
-				</div>
+	<form onsubmit={saveSettings} class="max-w-3xl mx-auto p-6 bg-white dark:bg-gray-800 shadow rounded-lg">
+		<div class="space-y-6">
+			<div>
+				<label for="api-url" class="block text-lg font-medium text-gray-700 dark:text-gray-200">API URL</label>
+				<input
+					id="api-url"
+					class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+					type="text"
+					placeholder={page.url.origin}
+					disabled={loading}
+					bind:value={settings.apiUrl}
+				/>
 			</div>
-			<div class="col-span-12 lg:col-span-8">
-				<div class="text-xl font-mono">API Key</div>
-				<div class="pt-2 pb-4 flex">
-					{#if apiKeyShow}
-						<input
-							class="input rounded-md w-full mr-4 text-sm"
-							type="text"
-							placeholder="API Key"
-							disabled={loading}
-							bind:value={settings.apiKey}
-						/>
-					{:else}
-						<input
-							class="input rounded-md w-full mr-4 text-sm"
-							type="password"
-							placeholder="API Key"
-							disabled={loading}
-							bind:value={settings.apiKey}
-						/>
-					{/if}
+
+			<div>
+				<label for="api-key" class="block text-lg font-medium text-gray-700 dark:text-gray-200">API Key</label>
+				<div class="mt-1 flex items-center">
+					<input
+						id="api-key"
+						class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+						type={apiKeyShow ? "text" : "password"}
+						placeholder="Enter your API Key"
+						disabled={loading}
+						bind:value={settings.apiKey}
+					/>
 					<button
 						type="button"
 						disabled={loading}
-						class="btn btn-icon variant-ghost ml-2"
-						on:click={async () => {
-							apiKeyShow = !apiKeyShow;
-						}}
+						class="ml-2 p-2 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none"
+						onclick={() => { apiKeyShow = !apiKeyShow; }}
+						aria-label={apiKeyShow ? "Hide API Key" : "Show API Key"}
 					>
-						<svelte:component this={apiKeyShow ? RawMdiEyeOff : RawMdiEye} />
+						{#if apiKeyShow}
+							<RawMdiEyeOff class="w-5 h-5" />
+						{:else}
+							<RawMdiEye class="w-5 h-5" />
+						{/if}
 					</button>
 					<button
 						type="button"
 						disabled={loading}
-						class="btn btn-icon variant-ghost ml-2"
-						on:click={async () => {
-							// toastSuccess('This does nothing (for now)', ToastStore);
+						class="ml-2 p-2 rounded-md text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none"
+						onclick={async () => {
 							loading = true;
 							try {
 								await refreshApiKey();
-								settings.apiKey = get(ApiKeyStore);
+								settings.apiKey = App.apiKey.value;
 								saveSettings();
 							} finally {
 								loading = false;
 							}
 						}}
+						aria-label="Refresh API Key"
 					>
 						<RawMdiOrbit />
 					</button>
 				</div>
-			</div>
-			<div class="col-span-12 lg:col-span-8 grid grid-cols-12">
-				<div class="col-span-4">
-					{#if apiKeyInfo.authorized === null}
-						{#if loading}
-							<span class="text-warning-500 dark:text-warning-400">Checking...</span>
-						{:else}
-							<span class="text-warning-500 dark:text-warning-400"><!-- Waiting --></span>
+				{#if apiKeyInfo.authorized !== null}
+					<div class="mt-2 text-sm">
+						<span class={apiKeyInfo.authorized ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
+							{apiKeyInfo.authorized ? "Authorized" : "Not Authorized"}
+						</span>
+						{#if apiKeyInfo.authorized && apiKeyExpirationMessage}
+							<span class="ml-2 text-gray-500 dark:text-gray-400">
+								Expires in: {apiKeyExpirationMessage.message}
+							</span>
 						{/if}
-					{/if}
-					{#if apiKeyInfo.authorized === true}
-						<span class="text-success-600 dark:text-success-400">Authorized!</span>
-					{/if}
-					{#if apiKeyInfo.authorized === false}
-						<span class="text-error-500 dark:text-error-400">Not Authorized</span>
-					{/if}
-				</div>
-				<div class="col-span-8">
-					{#if apiKeyInfo.authorized && apiKeyExpirationMessage !== undefined}
-						Expiration: {apiKeyExpirationMessage.message}
-					{/if}
-				</div>
+					</div>
+				{:else if loading}
+					<div class="mt-2 text-sm text-yellow-500 dark:text-yellow-400">Checking authorization...</div>
+				{/if}
 			</div>
-			<div class="col-span-12 lg:col-span-8">
-				<div class="text-xl font-mono">API Refresh Interval</div>
-				<div class="pt-2 pb-4 grid grid-cols-12">
-					<input
-						class="input text-sm rounded-md mr-4 col-span-2 md:col-span-4 xl:col-span-2"
-						type="number"
-						min="1"
-						disabled={loading}
-						bind:value={settings.apiTtl}
-					/>
-				</div>
+
+			<div>
+				<label for="api-ttl" class="block text-lg font-medium text-gray-700 dark:text-gray-200">API Refresh Interval (seconds)</label>
+				<input
+					id="api-ttl"
+					class="mt-1 block w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+					type="number"
+					min="1"
+					disabled={loading}
+					bind:value={settings.apiTtl}
+				/>
 			</div>
-			<!--div class="col-span-12 lg:col-span-8">
-				<div class="pt-2 pb-4 flex flex-row items-center">
-					<label class="text-lg font-mono">
-						Legacy API (Headscale &lt; 0.23):
-						<input
-							class="checkbox"
-							type="checkbox"
-							disabled={loading}
-							bind:checked={settings.legacyApi}
-						/>
-					</label>
-				</div>
-			</div-->
-			<div class="col-span-12 lg:col-span-8">
-				<div class="pt-2 pb-4 flex flex-row items-center">
-					<label class="text-lg font-mono">
-						Console Debugging:
-						<input
-							class="checkbox"
-							type="checkbox"
-							disabled={loading}
-							bind:checked={settings.debug}
-						/>
-					</label>
-				</div>
+
+			<div class="flex items-center">
+				<input
+					id="debugging"
+					type="checkbox"
+					class="h-4 w-4 text-indigo-600 border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600"
+					disabled={loading}
+					bind:checked={settings.debug}
+				/>
+				<label for="debugging" class="ml-2 block text-lg text-gray-700 dark:text-gray-200">
+					Console Debugging
+				</label>
 			</div>
-			<div class="col-span-12 lg:col-span-8">
-				<div class="pt-2 pb-4 flex flex-row items-center">
-					<label class="text-lg font-mono">
-						Theme
-						<select
-							class="input rounded-md w-full mr-4 text-sm"
-							bind:value={settings.theme}
-							on:change={() => setTheme(settings.theme)}
-						>
-							{#each ALL_THEMES as theme}
-								<option value={theme}>{theme}</option>
-							{/each}
-						</select>
-					</label>
-				</div>
+
+			<div>
+				<label for="theme-selector" class="block text-lg font-medium text-gray-700 dark:text-gray-200">Theme</label>
+				<select
+					id="theme-selector"
+					class="mt-1 block w-full rounded-md border-gray-300 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+					bind:value={App.theme.value}
+					onchange={() => {
+						setTheme(App.theme.value)
+						settings.theme = App.theme.value
+					}}
+				>
+					{#each ALL_THEMES as theme}
+						<option value={theme}>{theme}</option>
+					{/each}
+				</select>
 			</div>
-			<div class="col-span-12 pt-10">
+
+			<div class="flex justify-end">
 				<button
 					type="submit"
 					disabled={loading || !settings.apiKey}
-					class="btn variant-filled-success space-x-2 rounded-md"
+					class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
 				>
-					<div>
-						<RawMdiContentSaveOutline />
-					</div>
-					<div>Save</div>
+					<RawMdiContentSaveOutline class="w-5 h-5 mr-2" />
+					Save Settings
 				</button>
 			</div>
 		</div>

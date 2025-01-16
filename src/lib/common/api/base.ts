@@ -1,5 +1,4 @@
-import { ApiKeyInfoStore, ApiKeyStore, ApiUrlStore } from '$lib/Stores';
-import { get } from 'svelte/store';
+import { App } from '$lib/States.svelte';
 import { ApiAuthErrorUnauthorized } from '../errors';
 import { debug } from '../debug';
 
@@ -53,14 +52,14 @@ function headers(): { headers: HeadersInit } {
 	}
 	return {
 		headers: {
-			Authorization: 'Bearer ' + get(ApiKeyStore),
+			Authorization: 'Bearer ' + App.apiKey.value,
 			Accept: 'application/json',
 		},
 	};
 }
 
 export function toUrl(path: string): string {
-	return new URL(path, get(ApiUrlStore)).href
+	return new URL(path, App.apiUrl.value).href
 }
 
 async function apiFetch<T>(path: string, init?: RequestInit, verbose: boolean = false): Promise<T> {
@@ -70,15 +69,13 @@ async function apiFetch<T>(path: string, init?: RequestInit, verbose: boolean = 
 			debug(response);
 		}
 		const apiResponse = await toApiResponse<T>(response);
-		if (get(ApiKeyInfoStore).authorized === null) {
-			const info = get(ApiKeyInfoStore);
-			info.authorized = true;
-			ApiKeyInfoStore.set(info);
+		if (App.apiKeyInfo.value.authorized === null) {
+			App.apiKeyInfo.value.authorized = true
 		}
 		return apiResponse;
 	} catch (err) {
 		if (err instanceof Error) {
-			// debug('Fetch Error:', err.message);
+			debug('Fetch Error:', err.message);
 		}
 		throw err;
 	}
@@ -113,12 +110,7 @@ export async function apiPut<T>(
 	verbose: boolean = false,
 ): Promise<T> {
 	const body = JSON.stringify(data ?? {});
-	try{
-		return await apiFetch<T>(path, { method: 'PUT', body, ...init }, verbose);
-	} catch(e) {
-		debug("ERR PUT", e)
-		throw e
-	}
+	return await apiFetch<T>(path, { method: 'PUT', body, ...init }, verbose);
 }
 
 export async function apiTest(): Promise<boolean> {

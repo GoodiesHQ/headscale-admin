@@ -4,25 +4,26 @@
 	import RawMdiCheckCircleOutline from '~icons/mdi/check-circle-outline';
 	import RawMdiCloseCircleOutline from '~icons/mdi/close-circle-outline';
 	import UserListPreAuthKey from '$lib/cards/user/UserListPreAuthKey.svelte';
-	import { PreAuthKeyStore, appendStoreItem } from '$lib/Stores';
-	import { get } from 'svelte/store';
 	import type { PreAuthKey, User } from '$lib/common/types';
-	import { onMount } from 'svelte';
 	import { slide } from 'svelte/transition';
 	import { createPreAuthKey } from '$lib/common/api';
 	import { debug } from '$lib/common/debug';
 	import CardSeparator from '../CardSeparator.svelte';
+	import { App } from '$lib/States.svelte';
 
-	export let user: User;
-	export let title = 'PreAuth Keys:';
+	type UserListPreAuthKeysProps = {
+		user: User,
+		title?: string,
+	}
+	let { user = $bindable(), title = 'PreAuth Keys:'}: UserListPreAuthKeysProps = $props();
 
-	let hideInvalid = true;
+	let hideInvalid = $state(true);
 
-	$: showCreate = false;
-	$: disableCreate = false;
-	$: preAuthKeys = filter(get(PreAuthKeyStore));
-	$: checked = defaultChecked();
-	$: expires = defaultExpires();
+	let showCreate = $state(false);
+	let disableCreate = $state(false);
+	const preAuthKeys = $derived(filter(App.preAuthKeys.value, user, hideInvalid));
+	let checked = $state(defaultChecked());
+	let expires = $state(defaultExpires());
 
 	function defaultExpires(hours: number = 1, minutes: number = 0) {
 		const tzOffset = new Date().getTimezoneOffset() * 60 * 1000;
@@ -40,28 +41,15 @@
 		};
 	}
 
-	$: isUsed = (p: PreAuthKey): boolean => {
-		return p.used;
-	};
-
-	$: isExpiredOrUsed = (p: PreAuthKey): boolean => {
+	function isExpiredOrUsed(p: PreAuthKey): boolean {
 		return new Date() > new Date(p.expiration) || (p.used && !p.reusable);
 	};
 
-	$: filter = (p: PreAuthKey[]): PreAuthKey[] => {
+	function filter(p: PreAuthKey[], user: User, hideInvalid: boolean): PreAuthKey[] {
 		return p.filter((p) => {
 			return p.user == user.name && (!hideInvalid || (hideInvalid && !isExpiredOrUsed(p)));
 		});
 	};
-
-	onMount(() => {
-		const unsubPreAuthKeyStore = PreAuthKeyStore.subscribe((p) => {
-			preAuthKeys = filter(p);
-		});
-		return () => {
-			unsubPreAuthKeyStore();
-		};
-	});
 </script>
 
 <CardListEntry {title} top>
@@ -73,8 +61,7 @@
 				disabled={disableCreate}
 				type="button"
 				class="btn btn-sm rounded-md variant-filled-success px-2 py-[2px] ml-6"
-				on:click={() => {
-					// checked = defaultChecked();
+				onclick={() => {
 					if (!showCreate) {
 						expires = defaultExpires();
 						showCreate = true;
@@ -97,7 +84,7 @@
 					>
 						<button
 							disabled={disableCreate}
-							on:click={async () => {
+							onclick={async () => {
 								disableCreate = true;
 								try {
 									const preAuthKey = await createPreAuthKey(
@@ -106,7 +93,7 @@
 										checked.reusable,
 										expires,
 									);
-									appendStoreItem(PreAuthKeyStore, preAuthKey);
+									App.preAuthKeys.value.push(preAuthKey)
 								} catch (e) {
 									debug(e);
 								} finally {
@@ -118,7 +105,7 @@
 						>
 							<RawMdiCheckCircleOutline />
 						</button>
-						<button disabled={disableCreate} on:click={() => (showCreate = false)}>
+						<button disabled={disableCreate} onclick={() => (showCreate = false)}>
 							<RawMdiCloseCircleOutline />
 						</button>
 					</div>
@@ -158,12 +145,12 @@
 			</div>
 		{/if}
 	</div>
-	<svelte:fragment slot="bottom">
+	{#snippet childBottom()}
 		<div class="grid grid-cols-12 col-span-12 pt-4">
 			{#each preAuthKeys as preAuthKey}
 				<CardSeparator />
 				<UserListPreAuthKey {preAuthKey} />
 			{/each}
 		</div>
-	</svelte:fragment>
+	{/snippet}
 </CardListEntry>

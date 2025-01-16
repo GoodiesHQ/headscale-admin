@@ -152,10 +152,6 @@ export type ApiNodes = {
 	nodes: Node[];
 };
 
-export type ApiMachines = {
-	machines: Node[];
-};
-
 export type ApiNode = {
 	node: Node;
 };
@@ -163,39 +159,6 @@ export type ApiNode = {
 export type ApiMachine = {
 	machine: Node;
 };
-
-export type ApiDevice = ApiNode | ApiMachine;
-export type ApiDevices = ApiNodes | ApiMachines;
-
-export function isApiNode(device: ApiDevice): device is ApiNode {
-	return (device as ApiNode).node !== undefined;
-}
-
-export function isApiNodes(devices: ApiDevices): devices is ApiNodes {
-	return (devices as ApiNodes).nodes !== undefined;
-}
-
-export function isApiMachine(device: ApiDevice): device is ApiMachine {
-	return (device as ApiMachine).machine !== undefined;
-}
-
-export function isApiMachines(devices: ApiDevices): devices is ApiMachines {
-	return (devices as ApiMachines).machines !== undefined;
-}
-
-export function getApiDeviceNode(device: ApiDevice): Node {
-	if (isApiMachine(device)) {
-		return device.machine;
-	}
-	if (isApiNode(device)) {
-		return device.node;
-	}
-	throw new Error('invalid device type');
-}
-
-/*export type Nodes = {
-	nodes: Node[];
-};*/
 
 export type ApiKey = {
 	id: string;

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import type { Node, Route } from '$lib/common/types';
 	import { onMount } from 'svelte';
-	import { RouteStore } from '$lib/Stores';
 	import {
 		getTime,
 		getTimeDifferenceMessage,
@@ -9,22 +8,23 @@
 	import CardTileContainer from '../CardTileContainer.svelte';
 	import CardTileEntry from '../CardTileEntry.svelte';
 	import OnlineNodeIndicator from '$lib/parts/OnlineNodeIndicator.svelte';
-	import { get } from 'svelte/store';
-	import NodeRoutes from '../node/NodeRoutes.svelte';
 	import RouteInfo from './RouteInfo.svelte';
 
-	export let node: Node;
-	let routes: Route[] = get(RouteStore);
-	$: lastSeen = getTimeDifferenceMessage(getTime(node.lastSeen));
+	type RouteTileCardProps = {
+		node: Node,
+	}
+
+	let { node = $bindable() }: RouteTileCardProps = $props()
+
+	let lastSeen = $state(getTimeDifferenceMessage(getTime(node.lastSeen)));
 
 	onMount(() => {
 		const lastSeenInterval = setInterval(() => {
 			lastSeen = getTimeDifferenceMessage(getTime(node.lastSeen));
 		}, 1000);
-		const unsubRouteStore = RouteStore.subscribe((rs) => (routes = rs));
+
 		return () => {
 			clearInterval(lastSeenInterval);
-			unsubRouteStore();
 		};
 	});
 </script>

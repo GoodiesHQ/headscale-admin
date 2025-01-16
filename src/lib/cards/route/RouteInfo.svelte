@@ -3,7 +3,11 @@
 	import type { Node } from '$lib/common/types';
 	import NodeRoutes from '../node/NodeRoutes.svelte';
 
-	export let node: Node;
+	type RouteInfoProps = {
+		node: Node,
+	}
+
+	let { node = $bindable() }: RouteInfoProps = $props();
 </script>
 
 <CardListContainer>

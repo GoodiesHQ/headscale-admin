@@ -7,8 +7,12 @@
 	import RouteInfo from './RouteInfo.svelte';
 	import OnlineNodeIndicator from '$lib/parts/OnlineNodeIndicator.svelte';
 
-	export let node: Node;
-	export let open: boolean = true;
+	type RouteListCardProps = {
+		node: Node,
+		open?: boolean,
+	}
+
+	let { node = $bindable(), open = $bindable(true)}: RouteListCardProps = $props()
 </script>
 
 <AccordionItem
