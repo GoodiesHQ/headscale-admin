@@ -4,7 +4,7 @@ import IPAddr from 'ipaddr.js';
 import { debug } from './debug';
 import { get } from 'svelte/store';
 // import { ApiKeyStore } from '$lib/Stores';
-import type { Direction, Node } from './types';
+import type { Direction, Node, OnlineStatus, User } from './types';
 import { App } from '$lib/States.svelte';
 // import { createApiKey } from './api';
 // import { ApiKeyStore } from '$lib/Stores';
@@ -245,6 +245,38 @@ export function toOptions(values: string[]): {label: string, value:string}[] {
 	}))
 }
 
+export function getSortedUsers(users: User[], sortMethod: string, sortDirection: Direction): User[] {
+	if (sortMethod === 'id') {
+		users = users.sort((a: User, b: User) => {
+			const aid = parseInt(a.id);
+			const bid = parseInt(b.id);
+			if (aid < bid) {
+				return -1;
+			}
+			if (aid > bid) {
+				return 1;
+			}
+			return 0;
+		});
+	}
+	if (sortMethod === 'name') {
+		users = users.sort((a: User, b: User) => {
+			if (a.name < b.name) {
+				return -1;
+			}
+			if (a.name > b.name) {
+				return 1;
+			}
+			return 0;
+		});
+	}
+	if (sortDirection === 'down') {
+		return users.reverse();
+	}
+	return users;
+}
+
+
 export function getSortedNodes(nodes: Node[], sortMethod: string, sortDirection: Direction): Node[] {
 	if (sortMethod === 'id') {
 		nodes = nodes.sort((a: Node, b: Node) => {
@@ -275,14 +307,35 @@ export function getSortedNodes(nodes: Node[], sortMethod: string, sortDirection:
 	return nodes;
 }
 
-export function filterNode(node: Node, filterString: string): boolean {
-	const routes = App.routes.value.filter((r) => (r.node ?? r.machine).id == node.id)
-	if (routes.length == 0) {
+export function filterUser(user: User, filterString: string, onlineStatus: OnlineStatus = "all"): boolean {
+	try {
+		if (
+			(onlineStatus === 'online' && !App.nodes.value.filter((n) => n.user.id === user.id).some((n) => n.online)) ||
+			(onlineStatus === 'offline' && App.nodes.value.filter((n) => n.user.id === user.id).some((n) => n.online))
+		) {
+			return false;
+		}
+
+		if (filterString === '') {
+			return true;
+		}
+
+		const r = RegExp(filterString);
+		return r.test(user.name) || r.test(user.name.toLowerCase());
+	} catch (error) {
+		return true;
+	}
+}
+
+export function filterNode(node: Node, filterString: string, onlineStatus: OnlineStatus = "all"): boolean {
+	if((onlineStatus === "online" && !node.online) || (onlineStatus === "offline" && node.online)){
 		return false
 	}
+
 	if (filterString === '') {
 		return true;
 	}
+
 	try {
 		const r = RegExp(filterString);
 		const getTag = (tag: string) => {
@@ -302,15 +355,37 @@ export function filterNode(node: Node, filterString: string): boolean {
 	}
 }
 
+export function getSortedFilteredUsers(
+	users: User[],
+	filterString:string,
+	sortMethod: string,
+	sortDirection: Direction,
+	onlineStatus: OnlineStatus,
+){
+	return getSortedUsers(
+		users.filter((user)=> filterUser(user, filterString, onlineStatus)),
+		sortMethod,
+		sortDirection,
+	)
+}
+
 export function getSortedFilteredNodes(
 	nodes: Node[],
 	filterString:string,
 	sortMethod: string,
 	sortDirection: Direction,
+	onlineStatus: OnlineStatus,
+	ignoreRouteless: boolean = false,
 ){
-	return getSortedNodes(
-		nodes.filter((node)=> filterNode(node, filterString)),
+	let nodesSortedFiltered = getSortedNodes(
+		nodes.filter((node)=> filterNode(node, filterString, onlineStatus)),
 		sortMethod,
 		sortDirection,
 	)
+	if(ignoreRouteless === true){
+		return nodesSortedFiltered.filter((n) => {
+			return App.routes.value.some((r) => r.node.id === n.id)
+		})
+	}
+	return nodesSortedFiltered
 }

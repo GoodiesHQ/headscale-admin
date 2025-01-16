@@ -64,7 +64,7 @@ export class StateLocal<T> {
     }
 
     save(value: T) {
-        debug(`Saving '${this.#key}' as '${this.serialize(value)}' in localStorage...`);
+        debug(`Saving '${this.#key}' in localStorage...`);
         localStorage.setItem(this.#key, this.serialize(value));
     }
 
@@ -112,7 +112,6 @@ export class HeadscaleAdmin {
     // theme information
     theme = new StateLocal<string>('theme', 'skeleton', (themeName) => {
         if(themeName !== undefined) {
-            console.log("Setting the theme to", themeName)
             document.body.setAttribute('data-theme', themeName);
         }
     })

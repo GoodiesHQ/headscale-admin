@@ -84,19 +84,7 @@ export class PreAuthKeys {
 	constructor(public preAuthKeys: PreAuthKey[]) { }
 }
 
-type RouteMachine = {
-	id: string;
-	createdAt: string;
-	deletedAt: string;
-	machine: Node;
-	node: never;
-	prefix: string;
-	advertised: boolean;
-	enabled: boolean;
-	isPrimary: boolean;
-};
-
-type RouteNode = {
+export type Route = {
 	id: string;
 	createdAt: string;
 	deletedAt: string;
@@ -107,8 +95,6 @@ type RouteNode = {
 	enabled: boolean;
 	isPrimary: boolean;
 };
-
-export type Route = RouteMachine | RouteNode;
 
 export type ApiRoute = {
 	route: Route;
@@ -182,6 +168,7 @@ export type ApiKeyInfo = {
 };
 
 export type Direction = 'up' | 'down';
+export type OnlineStatus = 'online' | 'offline' | 'all';
 
 export type Deployment = {
 	// general
