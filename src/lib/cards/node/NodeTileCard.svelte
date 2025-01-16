@@ -61,7 +61,11 @@
 		{dateToStr(node.createdAt)}
 	</CardTileEntry>
 	<CardTileEntry title="Last Seen:">
-		{lastSeen}
+		{#if node.online}
+			Online Now
+		{:else}
+			{lastSeen}
+		{/if}
 	</CardTileEntry>
 	<CardTileEntry title="User:">
 		<div class="flex flex-row gap-3 items-center">

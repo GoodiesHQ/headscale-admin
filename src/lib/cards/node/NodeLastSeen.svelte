@@ -22,5 +22,9 @@
 </script>
 
 <CardListEntry title="Last Seen:">
-	{lastSeen}
+	{#if node.online}
+		Online Now
+	{:else}
+		{lastSeen}
+	{/if}
 </CardListEntry>
