@@ -2,12 +2,9 @@ import type { DrawerStore, ToastStore } from '@skeletonlabs/skeleton';
 import type { DrawerSettings } from '@skeletonlabs/skeleton';
 import IPAddr from 'ipaddr.js';
 import { debug } from './debug';
-import { get } from 'svelte/store';
-// import { ApiKeyStore } from '$lib/Stores';
+import DOMPurify from 'dompurify';
 import type { Direction, Node, OnlineStatus, User } from './types';
 import { App } from '$lib/States.svelte';
-// import { createApiKey } from './api';
-// import { ApiKeyStore } from '$lib/Stores';
 
 export function clone<T>(item: T): T {
 	return JSON.parse(JSON.stringify(item)) as T
@@ -124,6 +121,7 @@ export function dateToStr(d: Date | string) {
 }
 
 export function toastSuccess(message: string, toastStore: ToastStore) {
+	message = DOMPurify.sanitize(message)
 	toastStore.trigger({
 		message,
 		background: 'variant-filled-success',
@@ -131,6 +129,7 @@ export function toastSuccess(message: string, toastStore: ToastStore) {
 }
 
 export function toastWarning(message: string, toastStore: ToastStore) {
+	message = DOMPurify.sanitize(message)
 	toastStore.trigger({
 		message,
 		background: 'variant-filled-warning',
@@ -138,6 +137,7 @@ export function toastWarning(message: string, toastStore: ToastStore) {
 }
 
 export function toastError(message: string, toastStore: ToastStore, error?: Error) {
+	message = DOMPurify.sanitize(message)
 	if (error !== undefined) {
 		if (message.length > 0) {
 			message += ': ';
