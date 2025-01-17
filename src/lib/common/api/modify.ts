@@ -74,7 +74,7 @@ export async function disableRoute(r: Route): Promise<Route> {
 
 export async function setPolicy(acl: ACLBuilder) {
 	const path = `${API_URL_POLICY}`
-	await apiPut<ApiPolicy>(path, {"policy": acl.JSON()})
+	await apiPut<ApiPolicy>(path, {"policy": acl.JSON(4)})
 }
 
 export async function refreshApiKey() {
