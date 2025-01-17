@@ -64,8 +64,8 @@
 </script>
 
 <Page>
-	<PageHeader title="Deploy" label="Command" showButtonArea={true}>
-		<svelte:fragment slot="button">
+	<PageHeader title="Deploy" label="Command" buttonText={undefined} show={true}>
+		{#snippet button()}
 			<button
 				class="bg-gray-400/30 dark:bg-gray-800/70 border border-dashed border-slate-200 border-1 pr-0 pl-4 rounded-lg justify-start text-left w-[90%]"
 				onclick={() =>
@@ -74,7 +74,7 @@
 					>{craftCommand(deployment)}</code
 				>
 			</button>
-		</svelte:fragment>
+		{/snippet}
 	</PageHeader>
 
 	<div class="grid grid-cols-12">

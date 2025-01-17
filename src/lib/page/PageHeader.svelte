@@ -11,6 +11,7 @@
 	type PageHeaderProps = {
 		filterString?: string,
 		title: string,
+		label?: string,
 		show?: boolean,
 		layout?: Valued<LayoutStyle>,
 		buttonText?: string,
@@ -20,6 +21,7 @@
 	let {
 		filterString = $bindable(''),
 		title,
+		label = undefined,
 		show = $bindable(false),
 		layout = $bindable(undefined),
 		buttonText = 'Create',
@@ -60,26 +62,28 @@
 	</div>
 	{#if button !== undefined}
 	<!--div class="flex justify-start pt-4 space-x-5 {$$slots.button ? '' : 'invisible'}"-->
-	<div class="flex justify-start pt-4 space-x-5">
-		{#if buttonText}
-			<button
-				type="button"
-				class="btn btn-sm variant-filled-success rounded-sm"
-				onclick={(_) => (show = !show)}
-			>
-				{buttonText}
-			</button>
+	{#if label === undefined}
+		<div class="flex justify-start pt-4 space-x-5">
+			{#if buttonText}
+				<button
+					type="button"
+					class="btn btn-sm variant-filled-success rounded-sm"
+					onclick={(_) => (show = !show)}
+				>
+					{buttonText}
+				</button>
+			{/if}
+			{#if filterString !== undefined}
+				<input
+					type="text"
+					class="input rounded-md text-sm w-64 md:w-96 {regexIsValid ? '' : 'input-error'}"
+					bind:value={filterString}
+					use:focus
+					placeholder="Search..."
+				/>
+			{/if}
+		</div>
 		{/if}
-		{#if filterString !== undefined}
-			<input
-				type="text"
-				class="input rounded-md text-sm w-64 md:w-96 {regexIsValid ? '' : 'input-error'}"
-				bind:value={filterString}
-				use:focus
-				placeholder="Search..."
-			/>
-		{/if}
-	</div>
 	{/if}
 </div>
 {#if button !== undefined && show}
