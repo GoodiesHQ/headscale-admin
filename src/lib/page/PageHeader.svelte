@@ -11,7 +11,6 @@
 	type PageHeaderProps = {
 		filterString?: string,
 		title: string,
-		label?: string,
 		show?: boolean,
 		layout?: Valued<LayoutStyle>,
 		buttonText?: string,
@@ -19,9 +18,8 @@
 	}
 
 	let {
-		filterString = $bindable(''),
+		filterString = $bindable(undefined),
 		title,
-		label = undefined,
 		show = $bindable(false),
 		layout = $bindable(undefined),
 		buttonText = 'Create',
@@ -31,7 +29,11 @@
 	const layoutCurrent = $derived(layout !== undefined ? layout.value : null)
 	const regexIsValid = $derived(validRegex(filterString));
 
-	function validRegex(filterString: string): boolean {
+	function validRegex(filterString?: string): boolean {
+		if (filterString === undefined) {
+			return true
+		}
+
 		try {
 			const r = RegExp(filterString);
 			return true;
@@ -61,10 +63,8 @@
 		{/if}
 	</div>
 	{#if button !== undefined}
-	<!--div class="flex justify-start pt-4 space-x-5 {$$slots.button ? '' : 'invisible'}"-->
-	{#if label === undefined}
 		<div class="flex justify-start pt-4 space-x-5">
-			{#if buttonText}
+			{#if buttonText !== ""}
 				<button
 					type="button"
 					class="btn btn-sm variant-filled-success rounded-sm"
@@ -83,7 +83,6 @@
 				/>
 			{/if}
 		</div>
-		{/if}
 	{/if}
 </div>
 {#if button !== undefined && show}

@@ -64,7 +64,7 @@
 </script>
 
 <Page>
-	<PageHeader title="Deploy" label="Command" buttonText={undefined} show={true}>
+	<PageHeader title="Deploy" buttonText={''} show={true}>
 		{#snippet button()}
 			<button
 				class="bg-gray-400/30 dark:bg-gray-800/70 border border-dashed border-slate-200 border-1 pr-0 pl-4 rounded-lg justify-start text-left w-[90%]"
