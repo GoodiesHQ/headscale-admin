@@ -77,7 +77,7 @@
 						<p.logo />
 						<!--svelte:component this={p.logo} class="mr-4" /-->
 						{#if labels}
-							<span class="text-sm">{p.name}</span>
+							<span class="text-sm ml-2">{p.name}</span>
 						{/if}
 					</span>
 				</a>
