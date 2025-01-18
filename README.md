@@ -181,7 +181,7 @@ services:
     networks:
       - proxy
     env_file:
-	  - ./env/cloudflare.env
+      - ./env/cloudflare.env
     labels:
       traefik.enable: "true"
       traefik.docker.network: proxy
