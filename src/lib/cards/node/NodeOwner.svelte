@@ -57,7 +57,7 @@
 			<label class="label">
 				<select class="select" bind:value={transferUser}>
 					{#each App.users.value as user}
-						<option value={user.name}>{user.name}</option>
+						<option value={user.id}>{user.name}{!user.displayName ? '' : ` (${user.displayName})`}</option>
 					{/each}
 				</select>
 			</label>
