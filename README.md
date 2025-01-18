@@ -391,5 +391,6 @@ Allows a user to save the ACL configuration to the headscale server or load a ne
 
 ### Settings Page
 
-Store API URL and API Key information in the browser's LocalStorage. Set API refresh interval (how frequently users, preauth keys, nodes, and routes are updated).
+Store API URL and API Key information in the browser's LocalStorage. Set API refresh interval (how frequently users, preauth keys, nodes, and routes are updated) and toggle console debugging.
 
+<img width="1000" alt="image" src="./img/HA-Settings.png">
