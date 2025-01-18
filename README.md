@@ -241,7 +241,6 @@ services:
     labels:
       traefik.enable: "true"
       traefik.docker.network: "proxy"
-      
       # Headscale Service Configuration
       traefik.http.services.headscale.loadbalancer.server.port: 8080
       traefik.http.services.headscale.loadbalancer.server.scheme: http
@@ -249,14 +248,12 @@ services:
       traefik.http.routers.headscale.entrypoints: websecure
       traefik.http.routers.headscale.tls.certresolver: myresolver
       traefik.http.routers.headscale.service: headscale
-      
       # CORS Middleware Configuration
       traefik.http.middlewares.headscale-cors.headers.accessControlAllowMethods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
       traefik.http.middlewares.headscale-cors.headers.accessControlAllowHeaders: "Authorization,Content-Type"
       traefik.http.middlewares.headscale-cors.headers.accessControlAllowOriginList: "https://headscale.example.com"
       traefik.http.middlewares.headscale-cors.headers.accessControlMaxAge: 100
       traefik.http.middlewares.headscale-cors.headers.addVaryHeader: true
-      
       # Attach Middleware to Router
       traefik.http.routers.headscale.middlewares: headscale-cors
 
@@ -269,7 +266,6 @@ services:
     labels:
       traefik.enable: "true"
       traefik.docker.network: "proxy"
-      
       # Headscale Admin Service Configuration
       traefik.http.services.headscale-admin.loadbalancer.server.port: 80
       traefik.http.services.headscale-admin.loadbalancer.server.scheme: http
