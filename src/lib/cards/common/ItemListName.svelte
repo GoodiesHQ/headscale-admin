@@ -55,6 +55,7 @@
 										case 'user':
 											if (isUser(item)) {
 												const u = await renameUser(item, newName);
+												await App.populatePreAuthKeys();
 												for (let i = 0; i < App.users.value.length; i++) {
 													if (App.users.value[i].id == u.id) {
 														App.users.value[i].name = u.name;
@@ -91,6 +92,7 @@
 						<button
 							type="button"
 							class="btn-sm btn-icon-sm"
+							disabled={disableRename}
 							onclick={() => { showRename = false; }}
 						>
 							<RawMdiCloseCircleOutline />

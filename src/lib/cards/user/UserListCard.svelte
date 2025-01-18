@@ -27,7 +27,13 @@
 	<svelte:fragment slot="summary">
 		<div class="grid">
 			<CardListEntry title="ID: {user.id}">
-				<span class="font-bold">{user.name}</span>
+				<span class="font-bold">
+					{#if user.displayName !== ""}
+						{`${user.name} (${user.displayName})`}
+					{:else}
+						{user.name}
+					{/if}
+				</span>
 			</CardListEntry>
 		</div>
 	</svelte:fragment>
