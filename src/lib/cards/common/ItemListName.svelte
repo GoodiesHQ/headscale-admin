@@ -54,11 +54,18 @@
 									switch (prefix) {
 										case 'user':
 											if (isUser(item)) {
+												const oldName = item.name
 												const u = await renameUser(item, newName);
-												await App.populatePreAuthKeys();
+												item.name = newName;
 												for (let i = 0; i < App.users.value.length; i++) {
 													if (App.users.value[i].id == u.id) {
 														App.users.value[i].name = u.name;
+														break;
+													}
+												}
+												for (let i = 0; i < App.preAuthKeys.value.length; i++) {
+													if (App.preAuthKeys.value[i].user === oldName) {
+														App.preAuthKeys.value[i].user = u.name;
 														break;
 													}
 												}
@@ -66,6 +73,7 @@
 										case 'node':
 											if (isNode(item)) {
 												const m = await renameNode(item, newName);
+												item.name = newName
 												for (let i = 0; i < App.nodes.value.length; i++) {
 													if (App.nodes.value[i].id == m.id) {
 														App.nodes.value[i].givenName = m.givenName;

@@ -9,7 +9,6 @@
 	import UserListNodes from './UserListNodes.svelte';
 	import UserListPreAuthKeys from './UserListPreAuthKeys.svelte';
 	import UserProvider from './UserProvider.svelte';
-	import UserProviderId from './UserProviderID.svelte';
 	import type { User } from '$lib/common/types';
 
 	type UserInfoProps = {
@@ -21,22 +20,16 @@
 <CardListContainer>
 	<ItemListName bind:item={user} />
 	<CardSeparator />
-	{#if user.displayName !== ""}
+	{#if user.displayName}
 	<UserDisplayName bind:user />
 	<CardSeparator />
 	{/if}
-	{#if user.email !== ""}
+	{#if user.email}
 	<UserEmail bind:user />
 	<CardSeparator />
 	{/if}
-	{#if user.provider !== ""}
 	<UserProvider bind:user />
 	<CardSeparator />
-	{/if}
-	{#if user.providerId !== ""}
-	<UserProviderId bind:user />
-	<CardSeparator />
-	{/if}
 	<ItemCreatedAt bind:item={user} />
 	<CardSeparator />
 	<UserListNodes bind:user />

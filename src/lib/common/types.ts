@@ -42,6 +42,14 @@ export function isUser(item: Named): item is User {
 	return isNamed(item) && !isNode(item);
 }
 
+export function getUserDisplay(user: User): string {
+	if(user.displayName) {
+		return user.name + " (" + user.displayName + ")"
+	} else {
+		return user.name;
+	}
+}
+
 export function getTypeName(item: Named): ItemTypeName {
 	if (isNode(item)) {
 		return 'node';

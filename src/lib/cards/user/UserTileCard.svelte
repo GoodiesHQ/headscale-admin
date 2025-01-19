@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { xxHash32 } from 'js-xxhash';
-	import type { User, Node } from '$lib/common/types';
+	import { type User, type Node, getUserDisplay } from '$lib/common/types';
 	import { dateToStr, openDrawer } from '$lib/common/funcs';
 	import { getDrawerStore } from '@skeletonlabs/skeleton';
 	import CardTileContainer from '../CardTileContainer.svelte';
@@ -33,7 +33,7 @@
 			<span class="ml-2 text-lg font-semibold">ID: {user.id}</span>
 		</div>
 		<div class="flex items-center font-bold">
-			{user.name}
+			{getUserDisplay(user)}
 		</div>
 	</div>
 	<div class="flex justify-between items-center mb-2 mt-2">

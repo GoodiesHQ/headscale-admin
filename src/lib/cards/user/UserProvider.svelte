@@ -10,6 +10,6 @@
 
 </script>
 
-<CardListEntry title="OIDC Provider:">
-	{user.provider}
+<CardListEntry title="Provider:">
+	{user.provider || 'local'}
 </CardListEntry>

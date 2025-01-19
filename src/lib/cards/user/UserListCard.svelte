@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { AccordionItem } from '@skeletonlabs/skeleton';
 
-	import type { User } from '$lib/common/types';
+	import { getUserDisplay, type User } from '$lib/common/types';
 
 	import CardListEntry from '../CardListEntry.svelte';
 	import UserInfo from './UserInfo.svelte';
@@ -28,11 +28,7 @@
 		<div class="grid">
 			<CardListEntry title="ID: {user.id}">
 				<span class="font-bold">
-					{#if user.displayName !== ""}
-						{`${user.name} (${user.displayName})`}
-					{:else}
-						{user.name}
-					{/if}
+					{getUserDisplay(user)}
 				</span>
 			</CardListEntry>
 		</div>
