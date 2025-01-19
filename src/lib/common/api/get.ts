@@ -22,9 +22,11 @@ export async function getPreAuthKeys(
 	let preAuthKeysAll: PreAuthKey[] = [];
 
 	usernames.forEach(async (username: string) => {
-		promises.push(
-			apiGet<ApiPreAuthKeys>(API_URL_PREAUTHKEY + '?user=' + username, init),
-		);
+		if(username != ""){
+			promises.push(
+				apiGet<ApiPreAuthKeys>(API_URL_PREAUTHKEY + '?user=' + username, init),
+			);
+		}
 	});
 
 	promises.forEach(async (p) => {

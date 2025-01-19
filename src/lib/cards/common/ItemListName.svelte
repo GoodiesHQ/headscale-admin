@@ -25,7 +25,7 @@
 	let disableRename = $state(false);
 
 	const fadeDuration = 200;
-	const toastStore = getToastStore();
+	const ToastStore = getToastStore();
 </script>
 
 <CardListEntry title="Name:">
@@ -48,11 +48,16 @@
 							type="submit"
 							class="btn-sm btn-icon-sm"
 							disabled={disableRename}
-							onclick={async () => {
+							onclick={async (event?: Event) => {
+								event?.preventDefault();
 								disableRename = true;
 								try {
 									switch (prefix) {
 										case 'user':
+											if(newName === ''){
+												toastError('User name must not be empty', ToastStore)
+												return
+											}
 											if (isUser(item)) {
 												const oldName = item.name
 												const u = await renameUser(item, newName);
@@ -70,6 +75,10 @@
 												}
 											}
 										case 'node':
+											if(newName === ''){
+												toastError('Node name must not be empty', ToastStore)
+												return
+											}
 											if (isNode(item)) {
 												const m = await renameNode(item, newName);
 												for (let i = 0; i < App.nodes.value.length; i++) {
@@ -83,7 +92,7 @@
 									showRename = false;
 								} catch (error) {
 									if (error instanceof Error) {
-										toastError('', toastStore, error);
+										toastError('', ToastStore, error);
 									} else {
 										debug(error);
 									}

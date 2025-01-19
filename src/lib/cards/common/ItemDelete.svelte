@@ -5,9 +5,10 @@
 	import CardListEntry from '../CardListEntry.svelte';
 
 	import { deleteNode, deleteUser } from '$lib/common/api';
-	import { getToastStore } from '@skeletonlabs/skeleton';
+	import { getDrawerStore, getToastStore } from '@skeletonlabs/skeleton';
 	import { toastError, toastSuccess } from '$lib/common/funcs';
 	import Delete from '$lib/parts/Delete.svelte';
+	import { App } from '$lib/States.svelte';
 
 	type ItemDeleteProps = {
 		item: Named,
@@ -18,7 +19,8 @@
 	let show = false;
 	const prefix: ItemTypeName = getTypeName(item);
 
-	const toastStore = getToastStore();
+	const ToastStore = getToastStore();
+	const DrawerStore = getDrawerStore();
 
 	function titleCase(str: string) {
 		return str.toLowerCase().replace(/\b\w/g, (s) => s.toUpperCase());
@@ -31,16 +33,22 @@
 
 		if (isUser(item)) {
 			if (await deleteUser(item)) {
-				toastSuccess(`Deleted User "${name}" (ID: ${id})`, toastStore);
+				toastSuccess(`Deleted User "${name}" (ID: ${id})`, ToastStore);
+				DrawerStore.close()
 			} else {
-				toastError(`Failed to Delete User "${name}" (${id})`, toastStore);
+				let msg = `Failed to Delete User "${name}" (${id}).`;
+				if(App.nodes.value.some((node) => node.user.id === item.id)){
+					msg += " Still has nodes."
+				}
+				toastError(msg, ToastStore);
 			}
 		}
 		if (isNode(item)) {
 			if (await deleteNode(item)) {
-				toastSuccess(`Deleted machine "${name}" (${id})`, toastStore);
+				toastSuccess(`Deleted machine "${name}" (${id})`, ToastStore);
+				DrawerStore.close()
 			} else {
-				toastError(`Failed to Delete machine "${name}" (${id})`, toastStore);
+				toastError(`Failed to Delete Nachine "${name}" (${id})`, ToastStore);
 			}
 		}
 	}

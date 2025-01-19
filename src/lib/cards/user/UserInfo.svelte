@@ -34,7 +34,9 @@
 	<CardSeparator />
 	<UserListNodes bind:user />
 	<CardSeparator />
+	{#if user.name}
 	<UserListPreAuthKeys bind:user />
 	<CardSeparator />
+	{/if}
 	<ItemDelete bind:item={user} />
 </CardListContainer>
