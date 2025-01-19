@@ -22,7 +22,7 @@ export async function expireApiKey(apiKey: string) {
 
 export async function deleteUser(user: User): Promise<boolean> {
 	try {
-		await apiDelete(`${API_URL_USER}/${user.name}`);
+		await apiDelete(`${API_URL_USER}/${user.id}`);
 		App.users.value = App.users.value.filter((u: User) => u.id != user.id)
 		debug('Deleted User "' + user.name + '"');
 		return true;
