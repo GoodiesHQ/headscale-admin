@@ -36,8 +36,25 @@ export async function getPreAuthKeys(
 	return preAuthKeysAll;
 }
 
-export async function getUsers(init?: RequestInit): Promise<User[]> {
-	const { users } = await apiGet<ApiUsers>(API_URL_USER, init);
+type GetUserOptions = 
+	{id: string, name?: never, email?: never} |
+	{id?: never, name: string, email?: never} |
+	{id?: never, name?: never, email: string}
+
+export async function getUsers(init?: RequestInit, options?: GetUserOptions): Promise<User[]> {
+	let url = API_URL_USER;
+	if (options !== undefined){
+		if(options.id !== undefined) {
+			url += "?id=" + options.id
+		} else if (options.name !== undefined) {
+			url += "?name=" + options.name
+		} else if (options.email !== undefined) {
+			url += "?email=" + options.email
+		} else {
+			throw new Error("Invalid User Parameters")
+		}
+	}
+	const { users } = await apiGet<ApiUsers>(url, init);
 	return users;
 }
 

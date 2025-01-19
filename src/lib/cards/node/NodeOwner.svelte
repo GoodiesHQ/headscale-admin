@@ -57,7 +57,7 @@
 			<label class="label">
 				<select class="select" bind:value={transferUser}>
 					{#each App.users.value as user}
-						<option value={user.name}>{user.name}</option>
+						<option value={user.name}>{user.name}{!user.displayName ? '' : ` (${user.displayName})`}</option>
 					{/each}
 				</select>
 			</label>
@@ -68,11 +68,12 @@
 				onclick={async () => {
 					transferring = true;
 					try {
+						const oldUserName = node.user.name;
 						const n = await changeNodeOwner(node, transferUser);
 						App.updateValue(App.nodes, n);
 						showTransfer = false;
 						toastSuccess(
-							`Changed owner of ${node.givenName} from "${node.user.name}" to "${n.user.name}"`,
+							`Changed owner of ${node.givenName} from "${oldUserName}" to "${n.user.name}"`,
 							ToastStore,
 						);
 					} catch (error) {

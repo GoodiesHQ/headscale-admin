@@ -54,10 +54,17 @@
 									switch (prefix) {
 										case 'user':
 											if (isUser(item)) {
+												const oldName = item.name
 												const u = await renameUser(item, newName);
 												for (let i = 0; i < App.users.value.length; i++) {
 													if (App.users.value[i].id == u.id) {
 														App.users.value[i].name = u.name;
+														break;
+													}
+												}
+												for (let i = 0; i < App.preAuthKeys.value.length; i++) {
+													if (App.preAuthKeys.value[i].user === oldName) {
+														App.preAuthKeys.value[i].user = u.name;
 														break;
 													}
 												}
@@ -91,6 +98,7 @@
 						<button
 							type="button"
 							class="btn-sm btn-icon-sm"
+							disabled={disableRename}
 							onclick={() => { showRename = false; }}
 						>
 							<RawMdiCloseCircleOutline />

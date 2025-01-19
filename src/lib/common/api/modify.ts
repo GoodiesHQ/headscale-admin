@@ -17,7 +17,7 @@ import { expireApiKey } from './delete';
 import { App } from '$lib/States.svelte';
 
 export async function renameUser(u: User, nameNew: string): Promise<User> {
-	const path = `${API_URL_USER}/${u.name}/rename/${nameNew}`;
+	const path = `${API_URL_USER}/${u.id}/rename/${nameNew}`;
 	const { user } = await apiPost<ApiUser>(path, undefined);
 	debug('Renamed User from "' + u.name + '" to "' + nameNew + '"');
 	return user;
@@ -30,10 +30,10 @@ export async function renameNode(n: Node, nameNew: string): Promise<Node> {
 	return node;
 }
 
-export async function changeNodeOwner(n: Node, newUser: string): Promise<Node> {
-	const path = `${API_URL_NODE}/${n.id}/user?user=${newUser}`;
-	const { node } = await apiPost<ApiNode>(path, undefined);
-	debug('Re-assigned Node from "' + n.user.name + '" to "' + newUser + '"');
+export async function changeNodeOwner(n: Node, newUserID: string): Promise<Node> {
+	const path = `${API_URL_NODE}/${n.id}/user`;
+	const { node } = await apiPost<ApiNode>(path, {user: newUserID});
+	debug('Re-assigned Node from "' + n.user.name + '" to "' + node.user.name + '"');
 	return node;
 }
 

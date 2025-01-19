@@ -11,6 +11,11 @@ export type User = {
 	id: string;
 	name: string;
 	createdAt: string;
+	displayName: string;
+	email: string;
+	providerId: string;
+	provider: string;
+	profilePicUrl: string;
 };
 
 export type ExpirationMessage = {
@@ -35,6 +40,14 @@ export function isNode(item: Named): item is Node {
 
 export function isUser(item: Named): item is User {
 	return isNamed(item) && !isNode(item);
+}
+
+export function getUserDisplay(user: User): string {
+	if(user.displayName) {
+		return user.name + " (" + user.displayName + ")"
+	} else {
+		return user.name;
+	}
 }
 
 export function getTypeName(item: Named): ItemTypeName {

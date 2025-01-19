@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { AccordionItem } from '@skeletonlabs/skeleton';
 
-	import type { User } from '$lib/common/types';
+	import { getUserDisplay, type User } from '$lib/common/types';
 
 	import CardListEntry from '../CardListEntry.svelte';
 	import UserInfo from './UserInfo.svelte';
@@ -27,7 +27,9 @@
 	<svelte:fragment slot="summary">
 		<div class="grid">
 			<CardListEntry title="ID: {user.id}">
-				<span class="font-bold">{user.name}</span>
+				<span class="font-bold">
+					{getUserDisplay(user)}
+				</span>
 			</CardListEntry>
 		</div>
 	</svelte:fragment>
