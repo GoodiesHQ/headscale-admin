@@ -111,7 +111,7 @@ docker run -p 8000:80 goodieshq/headscale-admin:latest
 ```
 
 #### Docker Versioning
-Due to the dynamic nature of the headscale API, starting with version `v0.23`, headscale-admin will no longer attempt to maintain compatibility with multiple version of headscale (previously there was a *"Legacy API"* option). Instead, headscale-admin versions will track the major versions of headscale itself. This means that the tag for `goodieshq/headscale-admin:0.23` of headscale-admin will be compatible with version `headscale/headscale:0.23` of headscale. Minor versions will not track headscale as there may be a need for bugfixes outside of headscale's release schedule.
+Due to the dynamic nature of the headscale API, starting with version `v0.24`, headscale-admin will no longer attempt to maintain compatibility with multiple version of headscale (previously there was a *"Legacy API"* option). Instead, headscale-admin versions will track the major versions of headscale itself. This means that the tag for `goodieshq/headscale-admin:0.24` of headscale-admin will be compatible with version `headscale/headscale:0.24` of headscale. Minor versions will not track headscale as there may be a need for bugfixes outside of headscale's release schedule.
 
 The `goodieshq/headscale-admin:latest` tag will only be used for the latest stable release of headscale-admin that is compatible with a recent stable release of headscale. Because these are not guaranteed to track, it is recommended to explicitly tag the major version of headscale that you are using.
 
@@ -227,7 +227,7 @@ And the othr will need **Zone:Read**:
 ```yml
 services:
   headscale:
-    image: headscale/headscale:0.23
+    image: headscale/headscale:0.24
     container_name: headscale
     restart: unless-stopped
     environment:
@@ -258,7 +258,7 @@ services:
       traefik.http.routers.headscale.middlewares: headscale-cors
 
   headscale-admin:
-    image: goodieshq/headscale-admin:0.23
+    image: goodieshq/headscale-admin:0.24
     container_name: headscale-admin
     restart: unless-stopped
     networks:
