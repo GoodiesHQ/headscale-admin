@@ -192,6 +192,18 @@
 				</label>
 			</div>
 
+			<div class="flex items-start justify-between space-x-4">
+				<button type="button" class="btn btn-sm rounded-md variant-ghost-primary w-full" onclick={() => console.log(JSON.stringify(App.users.value, null, 4))}>
+					Log Users
+				</button>
+				<button type="button" class="btn btn-sm rounded-md variant-ghost-primary w-full" onclick={() => console.log(JSON.stringify(App.nodes.value, null, 4))}>
+					Log Nodes
+				</button>
+				<button type="button" class="btn btn-sm rounded-md variant-ghost-primary w-full" onclick={() => console.log(JSON.stringify(App.preAuthKeys.value, null, 4))}>
+					Log PreAuthKeys
+				</button>
+			</div>
+
 			<div>
 				<label for="theme-selector" class="block text-lg font-medium text-gray-700 dark:text-gray-200">Theme</label>
 				<select
