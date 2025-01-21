@@ -47,7 +47,8 @@
 
 	function filter(p: PreAuthKey[], user: User, hideInvalid: boolean): PreAuthKey[] {
 		return p.filter((p) => {
-			return p.user == user.name && (!hideInvalid || (hideInvalid && !isExpiredOrUsed(p)));
+			return (p.user === user.name || p.user === user.email) 
+				&& (!hideInvalid || (hideInvalid && !isExpiredOrUsed(p)));
 		});
 	};
 </script>

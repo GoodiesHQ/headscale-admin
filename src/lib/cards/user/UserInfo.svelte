@@ -34,7 +34,7 @@
 	<CardSeparator />
 	<UserListNodes bind:user />
 	<CardSeparator />
-	{#if user.name}
+	{#if user.name || user.email}
 	<UserListPreAuthKeys bind:user />
 	<CardSeparator />
 	{/if}
