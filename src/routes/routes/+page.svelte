@@ -35,7 +35,7 @@
 </script>
 
 <Page>
-	<PageHeader title="Routes" layout={App.layoutRoute} bind:filterString buttonText={undefined}>
+	<PageHeader title="Routes" layout={App.layoutRoute} bind:filterString buttonText={""}>
 		{#snippet button()}
 			x
 		{/snippet}

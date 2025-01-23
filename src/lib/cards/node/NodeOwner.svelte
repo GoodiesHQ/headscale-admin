@@ -56,7 +56,7 @@
 			<span class="pr-3">New Owner:</span>
 			<label class="label">
 				<select class="select" bind:value={transferUser}>
-					{#each App.users.value as user}
+					{#each App.users.value.filter(u => !!u.name) as user}
 						<option value={user.name}>{user.name}{!user.displayName ? '' : ` (${user.displayName})`}</option>
 					{/each}
 				</select>

@@ -24,6 +24,7 @@
     const selectInputID = $derived(id + '-select-item')
 	const selectOptions = $derived(options === undefined ? undefined : toOptions(options))
 
+
     function selectInputFocus () {
         document.getElementById(selectInputID)?.focus()
     }
@@ -35,7 +36,7 @@
     function addItem(event: Event) {
         event.preventDefault()
         if (options === undefined && !items.includes(selectItem)){ 
-            items.push(selectItem)
+            items.push(selectItem);
         }
         selectItem = ''
     }

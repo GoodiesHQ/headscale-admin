@@ -5,7 +5,7 @@ import type { User, Node, PreAuthKey, Route, ApiKeyInfo, ApiApiKeys, Deployment 
 import { getUsers, getPreAuthKeys, getNodes, getRoutes } from '$lib/common/api/get';
 import type { ToastStore } from '@skeletonlabs/skeleton';
 import { apiGet } from './common/api';
-import { clone, toastError, toastWarning } from './common/funcs';
+import { arraysEqual, clone, toastError, toastWarning } from './common/funcs';
 import { debug } from './common/debug';
 
 export type LayoutStyle = 'tile' | 'list';
@@ -158,6 +158,7 @@ export class HeadscaleAdmin {
         usePreAuthKey: false,
         preAuthKeyUser: '',
         preAuthKey: '',
+        unattended: false,
         // advertise
         advertiseExitNode: false,
         advertiseExitNodeLocalAccess: false,
@@ -172,40 +173,57 @@ export class HeadscaleAdmin {
         acceptExitNodeValue: '',
     })
 
-    async populateUsers(users?: User[]){
+    async populateUsers(users?: User[]): Promise<boolean> {
         if (users === undefined) {
             users = await getUsers()
         }
-        this.users.value = users
+        if(!arraysEqual(this.users.value, users)){
+            this.users.value = users
+            return true
+        }
+        return false
     }
 
-    async populateNodes(nodes?: Node[]){
+    async populateNodes(nodes?: Node[]): Promise<boolean> {
         if (nodes === undefined) {
             nodes = await getNodes()
         }
-        this.nodes.value = nodes
+        if(!arraysEqual(this.nodes.value, nodes)){
+            this.nodes.value = nodes
+            return true
+        }
+        return false
     }
 
-    async populateRoutes(routes?: Route[]){
+    async populateRoutes(routes?: Route[]): Promise<boolean> {
         if (routes === undefined) {
             routes = await getRoutes()
         }
-        this.routes.value = routes
+        if(!arraysEqual(this.routes.value, routes)){
+            this.routes.value = routes
+            return true
+        }
+        return false
     }
 
-    async populatePreAuthKeys(preAuthKeys?: PreAuthKey[]){
+    async populatePreAuthKeys(preAuthKeys?: PreAuthKey[]): Promise<boolean> {
         if (preAuthKeys === undefined) {
             preAuthKeys = await getPreAuthKeys()
         }
-        this.preAuthKeys.value = preAuthKeys
+        if(!arraysEqual(this.preAuthKeys.value, preAuthKeys)){
+            this.preAuthKeys.value = preAuthKeys
+            return true
+        }
+        return false
     }
 
-    async populateApiKeyInfo(){
+    async populateApiKeyInfo(): Promise<boolean> {
         const { apiKeys } = await apiGet<ApiApiKeys>(`/api/v1/apikey`);
         const myKey = apiKeys.filter((key) => this.apiKey.value.startsWith(key.prefix))[0];
         const apiKeyInfo = this.apiKeyInfo.value
         apiKeyInfo.expires = myKey.expiration;
         apiKeyInfo.authorized = true;
+        return true
     }
 
     async populateAll(handler?: (err: unknown) => void, repeat: boolean = true){

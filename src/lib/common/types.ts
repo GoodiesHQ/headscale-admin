@@ -195,6 +195,7 @@ export type Deployment = {
 	usePreAuthKey: boolean;
 	preAuthKeyUser: string;
 	preAuthKey: string;
+	unattended: boolean;
 	// advertise
 	advertiseExitNode: boolean;
 	advertiseExitNodeLocalAccess: boolean;

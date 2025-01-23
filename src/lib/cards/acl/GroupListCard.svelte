@@ -24,8 +24,11 @@
 
 	let {acl = $bindable(), groupName, open = $bindable()}: GroupListCardProps = $props()
 
-	const userNames = $derived(App.users.value.map((u) => u.name).toSorted())
-	const groupMembers = $derived(acl.getGroupMembers(groupName))
+	const groupMembers = $derived(acl.getGroupMembers(groupName));
+	const userNames = $derived(App.users.value.map((u) => {
+		return u.email ? u.email : u.name;
+	}).toSorted())
+	// .filter(n => groupMembers !== undefined && !groupMembers.includes(n)).toSorted())
 
 	let group = $state(makeGroup());
 	let groupNameNew = $state('');

@@ -39,6 +39,7 @@
 		d.forceReauth && cmd.push('--force-reauth');
 		d.sshServer && cmd.push('--ssh');
 		d.usePreAuthKey && d.preAuthKey !== '' && cmd.push('--authkey=' + d.preAuthKey);
+		d.unattended && cmd.push('--unattended')
 
 		// advertise
 		d.advertiseExitNode && cmd.push('--advertise-exit-node');
@@ -137,6 +138,11 @@
 				{/if}
 			</div>
 		</DeployCheck>
+		<DeployCheck
+			bind:checked={deployment.unattended}
+			name="Unattended"
+			help="Run the tailscale client in unattended mode (on startup)"
+		/>
 
 		<p class="text-xl col-span-12 py-4">Advertise:</p>
 		<DeployCheck

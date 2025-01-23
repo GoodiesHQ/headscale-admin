@@ -16,6 +16,30 @@ export function focus(el: HTMLElement | null) {
 	}
 }
 
+export function arraysEqual<T>(a: T[], b: T[]): boolean {
+	return JSON.stringify(a) == JSON.stringify(b)
+
+	if (a === b){
+		return true;
+	}
+
+	if (a == null || b == null){
+		return false;
+	}
+	
+	if (a.length !== b.length) {
+		return false;
+	}
+
+	for (var i = 0; i < a.length; ++i) {
+		if (a[i] !== b[i]){
+			return false;
+		}
+	}
+
+	return true;
+}
+
 const DurationInfiniteString = '0001-01-01T00:00:00Z';
 const DurationInfinite = new Date(DurationInfiniteString);
 const ExpirationColorFuture = 'text-success-800 dark:text-success-400';
