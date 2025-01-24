@@ -77,7 +77,11 @@ export class ACLBuilder implements ACL {
         return new ACLBuilder({}, {}, {}, [], []);
     }
 
-    static fromPolicy(acl: ACL): ACLBuilder {
+    static fromPolicy(acl: ACL | string): ACLBuilder {
+        if (typeof acl === "string"){
+            return this.fromPolicy(JSON.parse(acl) as ACL)
+        }
+
         const ssh = acl.ssh ? [...acl.ssh] : []
 
         return new ACLBuilder(
