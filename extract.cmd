@@ -4,12 +4,14 @@ set VERSION=%~1
 
 if "%VERSION%" == "" if [%VERSION%] == [] goto fail
 
-set VERSIONPATH="%CD%\v%VERSION%"
+set VERSIONPATH="%CD%\build\v%VERSION%"
 
-REM build and run the container
-docker run --rm -d -v %VERSIONPATH%:/mnt --name headscale-tmp -it goodieshq/headscale-admin:%VERSION% /bin/cp -r /app/admin /mnt
+docker run -d -v %VERSIONPATH%:/mnt --name headscale-tmp -it goodieshq/headscale-admin:%VERSION%
 
-mkdir %VERSIONPATH%
+REM copy the build directory
+docker exec -it headscale-tmp /bin/sh -c "cp -r /app/admin /mnt/"
+docker container kill headscale-tmp
+docker container rm headscale-tmp
 
 REM create the .tar.gz, .zip, and .7z files
 7z.exe a -ttar "%VERSIONPATH%\admin.tar" "%VERSIONPATH%\admin\*"
