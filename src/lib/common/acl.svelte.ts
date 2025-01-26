@@ -1,3 +1,4 @@
+import JWCC from 'json5'
 import { isValidCIDR } from "$lib/common/funcs";
 
 export type TagOwners = string[];
@@ -77,7 +78,11 @@ export class ACLBuilder implements ACL {
         return new ACLBuilder({}, {}, {}, [], []);
     }
 
-    static fromPolicy(acl: ACL): ACLBuilder {
+    static fromPolicy(acl: ACL | string): ACLBuilder {
+        if (typeof acl === "string"){
+            return this.fromPolicy(JWCC.parse<ACL>(acl))
+        }
+
         const ssh = acl.ssh ? [...acl.ssh] : []
 
         return new ACLBuilder(
