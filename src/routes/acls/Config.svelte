@@ -30,22 +30,9 @@
     };
 
 	let {acl = $bindable(), loading = $bindable(false)}: {acl: ACLBuilder, loading?: boolean} = $props();
-	const aclJSON = $derived(acl.JSON(4))
+	const aclJSON = $derived(acl.JSON(2))
     let editing = $state(false)
-    let aclEditJSON = $state<TextContent>()
-
-    function makeJson(acl: ACLBuilder){
-        let text = acl.JSON(4)
-        return {
-            get text(){
-                return text
-            },
-            set text(data: string){
-                debug("setting text...")
-                text = data
-            },
-        }
-    }
+    let aclEditJSON = $state<TextContent>({text:""})
 
     function callback(data: string): boolean {
         const policy = JWCC.parse<ACL>(data);
@@ -90,27 +77,39 @@
 
 <CardListPage>
 	<div class="mb-2">
-        {#if !editing}
-		<button disabled={loading} class="btn-sm rounded-md variant-filled-success" onclick={() => { saveConfig() }}>
+		<button disabled={loading || editing} class="btn-sm rounded-md variant-filled-success disabled:opacity-50 w-32" onclick={() => { saveConfig() }}>
 			Save Config
 		</button>
-		<button disabled={loading} class="btn-sm rounded-md variant-filled-warning" onclick={() => { aclEditJSON = makeJson(acl); editing = true; }}>
-			Edit Config
+		<button 
+            disabled={loading}
+            class="btn-sm rounded-md variant-filled-warning w-32 disabled:opacity-50"
+            onclick={() => {
+                if(editing){
+                    applyConfig(aclEditJSON)
+                } else {
+                    aclEditJSON.text = acl.JSON(2); 
+                    editing = true; 
+                }
+            }}
+        >
+            {#if editing}
+                Apply Config
+            {:else}
+                Edit Config
+            {/if}
 		</button>
-		<button disabled={loading} class="btn-sm rounded-md variant-filled-secondary " onclick={() => { loadConfig() }}>
+		<button disabled={loading || editing} class="btn-sm rounded-md variant-filled-secondary disabled:opacity-50 w-32" onclick={() => { loadConfig() }}>
 			Load Config
 		</button>
-        {:else}
-		<button disabled={loading} class="btn-sm rounded-md variant-filled-success" onclick={() => { if(aclEditJSON !== undefined) applyConfig(aclEditJSON) }}>
+		<!--button disabled={loading} class="btn-sm rounded-md variant-filled-success" onclick={() => { if(aclEditJSON !== undefined) applyConfig(aclEditJSON) }}>
 			Apply Config
-		</button>
-        {/if}
+		</button-->
 	</div>
     {#if !editing}
     <CodeBlock language="json" code={aclJSON} />
     {:else}
     <div class={isLightMode ? "" : "jse-theme-dark" }>
-    <JSONEditor mode={Mode.text} bind:content={aclEditJSON} onChange={(updatedContent) => {
+    <JSONEditor parser={JWCC} mode={Mode.text} tabSize={4} bind:content={aclEditJSON} onChange={(updatedContent) => {
         if(isTextContent(updatedContent)){
             aclEditJSON = updatedContent
         }

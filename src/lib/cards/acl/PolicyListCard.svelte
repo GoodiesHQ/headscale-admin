@@ -32,7 +32,9 @@
 		loading = $bindable(false),
 	}: PolicyListCardProps = $props()
 
-	const userNames = $derived(App.users.value.map((u) => u.name).toSorted());
+	const userNames = $derived(App.users.value.map((u) => {
+		return u.email ? u.email : u.name;
+	}).toSorted())
 	const userNamesOptions = $derived(toOptions(userNames))
 	const tagNames = $derived(acl.getTagNames(true))
 	const tagNamesOptions = $derived(toOptions(tagNames))
