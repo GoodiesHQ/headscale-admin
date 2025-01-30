@@ -146,7 +146,7 @@
 		<DeployCheck 
 			bind:checked={deployment.advertiseExitNodeLocalAccess}
 			name="Allow LAN Access"
-			help="Allow local network access while connected to TailScale"
+			help="Allow local network access while connected to the TailNet and using an exit node"
 		/>
 
 		<p class="text-xl col-span-12 py-4">Advertise:</p>
