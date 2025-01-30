@@ -143,15 +143,18 @@
 			name="Unattended"
 			help="Run the tailscale client in unattended mode (on startup)"
 		/>
+		<DeployCheck 
+			bind:checked={deployment.advertiseExitNodeLocalAccess}
+			name="Allow LAN Access"
+			help="Allow local network access while connected to the TailNet and using an exit node"
+		/>
 
 		<p class="text-xl col-span-12 py-4">Advertise:</p>
 		<DeployCheck
 			bind:checked={deployment.advertiseExitNode}
 			name="Advertise Exit Node"
 			help="Allow other nodes on the TailNet to use this node as a gateway"
-		>
-			<DeployCheck bind:checked={deployment.advertiseExitNodeLocalAccess} name="Allow LAN Access" />
-		</DeployCheck>
+		/>
 		<DeployCheck
 			bind:checked={deployment.advertiseTags}
 			name="Advertise Tags"
