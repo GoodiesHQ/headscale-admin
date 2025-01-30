@@ -1,15 +1,30 @@
 @echo off
+SETLOCAL ENABLEDELAYEDEXPANSION
 
-set VERSION=%~1
+REM Check if at least one parameter is provided
+if "%~1"=="" (
+    echo Usage: %~nx0 [version1] [version2] [version3] ...
+    goto fail
+)
 
-if "%VERSION%" == "" if [%VERSION%] == [] goto fail
+REM Initialize variables
+set "VERSION1=%~1"
+set "VERSIONPATH=%CD%\build\v%VERSION1%"
 
-set VERSIONPATH="%CD%\build\v%VERSION%"
+REM Initialize the tags variable
+set "TAGS="
+
+REM Iterate over all provided parameters
+:loop
+if "%~1"=="" goto after_loop
+    set "TAGS=!TAGS! -t goodieshq/headscale-admin:%~1"
+    shift
+    goto loop
+:after_loop
 
 REM build and run the container
-REM docker build --build-arg ENDPOINT=/admin -t goodieshq/headscale-admin:%VERSION% .
-docker buildx build --platform linux/amd64,linux/arm64 --build-arg ENDPOINT=/admin -t goodieshq/headscale-admin:%VERSION% .
-docker run -d -v %VERSIONPATH%:/mnt --name headscale-tmp -it goodieshq/headscale-admin:%VERSION%
+docker buildx build --platform linux/amd64,linux/arm64 --build-arg ENDPOINT=/admin !TAGS! --push .
+docker run -d -v %VERSIONPATH%:/mnt --name headscale-tmp -it goodieshq/headscale-admin:%VERSION1%
 
 REM copy the build directory
 docker exec -it headscale-tmp /bin/sh -c "cp -r /app/admin /mnt/"
@@ -26,4 +41,8 @@ del %VERSIONPATH%\admin.tar
 exit
 
 :fail
-echo "Usage: %~0 <version to build>"
+echo Error: At least one version parameter is required.
+exit /b 1
+
+:end
+ENDLOCAL
