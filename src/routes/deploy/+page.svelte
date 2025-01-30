@@ -43,8 +43,7 @@
 
 		// advertise
 		d.advertiseExitNode && cmd.push('--advertise-exit-node');
-		d.advertiseExitNode &&
-			d.advertiseExitNodeLocalAccess &&
+		d.advertiseExitNodeLocalAccess &&
 			cmd.push('--exit-node-allow-lan-access');
 		d.advertiseRoutes &&
 			d.advertiseRoutesValues.length > 0 &&
