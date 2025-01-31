@@ -1,7 +1,7 @@
 import JWCC from 'json5'
-import { isValidCIDR } from "$lib/common/funcs";
+import { isValidCIDR, isValidIP } from "$lib/common/funcs"
 
-export type TagOwners = string[];
+export type TagOwners = string[]
 export type TagOwnersTyped = { users: string[], groups: string[] }
 
 export type AclGroups = { [key: string]: string[] }
@@ -32,7 +32,7 @@ export type ACL = {
     ssh?: AclSshRules,
 }
 
-export type PrefixType = "group" | "tag";
+export type PrefixType = "group" | "tag"
 
 const Prefixes: Record<PrefixType, string> = {
     "group": "group:",
@@ -75,7 +75,7 @@ export class ACLBuilder implements ACL {
     }
 
     static emptyACL(): ACLBuilder {
-        return new ACLBuilder({}, {}, {}, [], []);
+        return new ACLBuilder({}, {}, {}, [], [])
     }
 
     static fromPolicy(acl: ACL | string): ACLBuilder {
@@ -105,13 +105,13 @@ export class ACLBuilder implements ACL {
 
     // remove the group: prefix if it exists
     private static stripPrefix(name: string): string {
-        const nameLower = name.toLowerCase();
+        const nameLower = name.toLowerCase()
         for (const prefix of Object.values(Prefixes)) {
             if (nameLower.startsWith(prefix)) {
                 return name.substring(prefix.length)
             }
         }
-        return name;
+        return name
     }
 
     private static addPrefix(name: string, type: PrefixType): string {
@@ -154,11 +154,14 @@ export class ACLBuilder implements ACL {
         return name
     }
 
-    static validateHostCIDR(cidr: string): string {
-        if (isValidCIDR(cidr)) {
-            return cidr;
+    static validateHostValue(value: string): string {
+        if(isValidIP(value)) {
+            return value
         }
-        throw new Error("Invalid IP CIDR Notation")
+        if(isValidCIDR(value)) {
+            return value
+        }
+        throw new Error("Invalid Host IP or CIDR")
     }
 
     // deep clone of current ACL
@@ -181,6 +184,9 @@ export class ACLBuilder implements ACL {
 
 
     createHost(name: string, cidr: string) {
+        if(this.getHostCIDR(name) !== undefined) {
+            throw new Error(`host "${name}" already exists`)
+        }
         this.setHost(name, cidr)
     }
 
@@ -188,15 +194,15 @@ export class ACLBuilder implements ACL {
         return this.hosts[name]
     }
 
-    setHost(name: string, cidr: string) {
-        name = ACLBuilder.validateHostName(name);
-        cidr = ACLBuilder.validateHostCIDR(cidr);
-        this.hosts[name] = cidr
+    setHost(name: string, value: string) {
+        name = ACLBuilder.validateHostName(name)
+        value = ACLBuilder.validateHostValue(value)
+        this.hosts[name] = value
     }
 
     renameHost(nameOld: string, nameNew: string) {
-        nameOld = ACLBuilder.validateHostName(nameOld);
-        nameNew = ACLBuilder.validateHostName(nameNew);
+        nameOld = ACLBuilder.validateHostName(nameOld)
+        nameNew = ACLBuilder.validateHostName(nameNew)
         if (this.hosts[nameOld] === undefined) {
             throw new Error(`Host '${nameOld}' does not exist`)
         }
@@ -206,27 +212,27 @@ export class ACLBuilder implements ACL {
 
         const hosts: AclHosts = {}
         Object.entries(this.hosts).forEach(([name, value])=>{
-            hosts[name === nameOld ? nameNew : name] = value;
+            hosts[name === nameOld ? nameNew : name] = value
         })
-        this.hosts = hosts;
+        this.hosts = hosts
 
         this.acls.forEach(acl => {
-            acl.src = acl.src.map(src => (src === nameOld ? nameNew : src));
-            acl.dst = acl.dst.map(dst => (ACLBuilder.getPolicyDstHost(dst) === nameOld ? nameNew + ":" + ACLBuilder.getPolicyDstPorts(dst) : dst));
-        });
+            acl.src = acl.src.map(src => (src === nameOld ? nameNew : src))
+            acl.dst = acl.dst.map(dst => (ACLBuilder.getPolicyDstHost(dst) === nameOld ? nameNew + ":" + ACLBuilder.getPolicyDstPorts(dst) : dst))
+        })
     }
 
     getHostNames(): string[] {
-        return Object.keys(this.hosts);
+        return Object.keys(this.hosts)
     }
 
     getHosts(): [string, string][] {
-        return Object.entries(this.hosts);
+        return Object.entries(this.hosts)
     }
 
     deleteHost(name: string) {
         if (this.hosts[name] !== undefined) {
-            delete this.hosts[name];
+            delete this.hosts[name]
         }
     }
 
@@ -245,13 +251,13 @@ export class ACLBuilder implements ACL {
      */
 
     createTag(name: string) {
-        name = ACLBuilder.validateTagName(name);
+        name = ACLBuilder.validateTagName(name)
         const { prefixed } = ACLBuilder.normalizePrefix(name, 'tag')
-        this.tagOwners[prefixed] = [];
+        this.tagOwners[prefixed] = []
     }
 
     renameTag(nameOld: string, nameNew: string) {
-        nameNew = ACLBuilder.validateTagName(nameNew);
+        nameNew = ACLBuilder.validateTagName(nameNew)
         const { prefixed: prefixedNew } = ACLBuilder.normalizePrefix(nameNew, 'tag')
         const { stripped: strippedOld, prefixed: prefixedOld } = ACLBuilder.normalizePrefix(nameOld, 'tag')
 
@@ -261,19 +267,19 @@ export class ACLBuilder implements ACL {
         }
 
         if (this.tagOwners[prefixedOld] === undefined) {
-            throw new Error(`Tag '${strippedOld}' doesn't exist`);
+            throw new Error(`Tag '${strippedOld}' doesn't exist`)
         }
 
         const tagOwners: AclTagOwners = {}
         Object.entries(this.tagOwners).forEach(([name, owners]) => {
-            tagOwners[name === prefixedOld ? prefixedNew : name] = owners;
+            tagOwners[name === prefixedOld ? prefixedNew : name] = owners
         })
         this.tagOwners = tagOwners
 
         this.acls.forEach(acl => {
-            acl.src = acl.src.map(src => (src === prefixedOld ? prefixedNew : src));
-            acl.dst = acl.dst.map(dst => (ACLBuilder.getPolicyDstHost(dst) === prefixedOld ? prefixedNew + ":" + ACLBuilder.getPolicyDstPorts(dst) : dst));
-        });
+            acl.src = acl.src.map(src => (src === prefixedOld ? prefixedNew : src))
+            acl.dst = acl.dst.map(dst => (ACLBuilder.getPolicyDstHost(dst) === prefixedOld ? prefixedNew + ":" + ACLBuilder.getPolicyDstPorts(dst) : dst))
+        })
         if (this.ssh !== undefined) {
             for (const rule of this.ssh) {
                 rule.src = rule.src.map(src => (src === prefixedOld ? prefixedNew : src))
@@ -291,7 +297,7 @@ export class ACLBuilder implements ACL {
     getTagNames(withPrefix: boolean = false): string[] {
         return Object.keys(this.tagOwners).map(name => {
             let {stripped, prefixed} = ACLBuilder.normalizePrefix(name, 'tag')
-            return withPrefix ? prefixed : stripped;
+            return withPrefix ? prefixed : stripped
         })
     }
 
@@ -299,7 +305,7 @@ export class ACLBuilder implements ACL {
         const { stripped, prefixed } = ACLBuilder.normalizePrefix(name, 'tag')
         const owners = this.tagOwners[prefixed] 
         if (owners === undefined) {
-            throw new Error(`Tag ${stripped} does not exist`);
+            throw new Error(`Tag ${stripped} does not exist`)
         }
         return owners
     }
@@ -308,7 +314,7 @@ export class ACLBuilder implements ACL {
         const ownersTyped: TagOwnersTyped = {
             users: [],
             groups: [],
-        };
+        }
 
         for (const owner of owners) {
             const prefix = ACLBuilder.getPrefix(owner)
@@ -326,21 +332,21 @@ export class ACLBuilder implements ACL {
         const { stripped, prefixed } = ACLBuilder.normalizePrefix(name, 'tag')
         const owners = this.tagOwners[prefixed]
         if (owners === undefined) {
-            throw new Error(`Tag ${stripped} does not exist`);
+            throw new Error(`Tag ${stripped} does not exist`)
         }
         return ACLBuilder.TagOwnersByType(owners)
     }
 
     tagExists(name: string): boolean {
         const { prefixed } = ACLBuilder.normalizePrefix(name, 'tag')
-        return this.tagOwners[prefixed] !== undefined;
+        return this.tagOwners[prefixed] !== undefined
     }
 
     deleteTag(name: string) {
         const { stripped, prefixed } = ACLBuilder.normalizePrefix(name, 'tag')
 
         if (this.tagOwners[prefixed] === undefined) {
-            throw new Error(`Tag '${stripped}' doesn't exist within the ACL`);
+            throw new Error(`Tag '${stripped}' doesn't exist within the ACL`)
         }
 
         delete this.tagOwners[prefixed]
@@ -359,7 +365,7 @@ export class ACLBuilder implements ACL {
      * deleteGroup(name)
      */
     createGroup(name: string) {
-        name = ACLBuilder.validateGroupName(name);
+        name = ACLBuilder.validateGroupName(name)
         const { stripped, prefixed } = ACLBuilder.normalizePrefix(name, 'group')
 
         if (this.groups[prefixed] !== undefined) {
@@ -370,7 +376,7 @@ export class ACLBuilder implements ACL {
     }
 
     renameGroup(nameOld: string, nameNew: string) {
-        nameNew = ACLBuilder.validateGroupName(nameNew);
+        nameNew = ACLBuilder.validateGroupName(nameNew)
         const { prefixed: prefixedNew } = ACLBuilder.normalizePrefix(nameNew, 'group')
         const { stripped: strippedOld, prefixed: prefixedOld } = ACLBuilder.normalizePrefix(nameOld, 'group')
 
@@ -380,24 +386,24 @@ export class ACLBuilder implements ACL {
         }
 
         if (this.groups[prefixedOld] === undefined) {
-            throw new Error(`Group '${strippedOld}' doesn't exist`);
+            throw new Error(`Group '${strippedOld}' doesn't exist`)
         }
 
         const groups: AclGroups = {}
         Object.entries(this.groups).forEach(([name, members]) => {
-            groups[name === prefixedOld ? prefixedNew : name] = members;
+            groups[name === prefixedOld ? prefixedNew : name] = members
         })
         this.groups = groups
 
         this.acls.forEach(acl => {
-            acl.src = acl.src.map(src => (src === prefixedOld ? prefixedNew : src));
-            acl.dst = acl.dst.map(dst => (ACLBuilder.getPolicyDstHost(dst) === prefixedOld ? prefixedNew + ":" + ACLBuilder.getPolicyDstPorts(dst) : dst));
-        });
+            acl.src = acl.src.map(src => (src === prefixedOld ? prefixedNew : src))
+            acl.dst = acl.dst.map(dst => (ACLBuilder.getPolicyDstHost(dst) === prefixedOld ? prefixedNew + ":" + ACLBuilder.getPolicyDstPorts(dst) : dst))
+        })
 
         for (const key in this.tagOwners) {
             this.tagOwners[key] = this.tagOwners[key].map(owner =>
                 owner === prefixedOld ? prefixedNew : owner
-            );
+            )
         }
         if (this.ssh !== undefined) {
             for (const rule of this.ssh) {
@@ -410,7 +416,7 @@ export class ACLBuilder implements ACL {
     setGroupMembers(name: string, members: string[]) {
         const { prefixed } = ACLBuilder.normalizePrefix(name, 'group')
 
-        this.groups[prefixed] = [...members];
+        this.groups[prefixed] = [...members]
     }
 
     getGroupByName(name: string): string[] {
@@ -441,10 +447,10 @@ export class ACLBuilder implements ACL {
         const { stripped, prefixed } = ACLBuilder.normalizePrefix(name, 'group')
 
         if (this.groups[prefixed] === undefined) {
-            throw new Error(`Group '${stripped}' doesn't exist`);
+            throw new Error(`Group '${stripped}' doesn't exist`)
         }
 
-        delete this.groups[prefixed];
+        delete this.groups[prefixed]
     }
     /*
      * POLICIES:

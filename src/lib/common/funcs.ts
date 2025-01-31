@@ -17,6 +17,10 @@ export function focus(el: HTMLElement | null) {
 }
 
 export function arraysEqual<T>(a: T[], b: T[]): boolean {
+	if(a.length !== b.length){
+		return false
+	}
+
 	return JSON.stringify(a) == JSON.stringify(b)
 
 	if (a === b){
@@ -216,6 +220,16 @@ export function getInverseMask4(prefix: number): number[] {
 
 export function getInverseMask6(prefix: number): number[] {
 	return getInverseMask(prefix, 128);
+}
+
+export function isValidIP(addr: string): boolean {
+	try {
+		IPAddr.parse(addr)
+		return true
+	} catch(err) {
+		debug(err)
+		return false
+	}
 }
 
 export function isValidCIDR(cidr: string): boolean {
