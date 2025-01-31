@@ -28,7 +28,6 @@
 	const userNames = $derived(App.users.value.map((u) => {
 		return u.email ? u.email : u.name;
 	}).toSorted())
-	// .filter(n => groupMembers !== undefined && !groupMembers.includes(n)).toSorted())
 
 	let group = $state(makeGroup());
 	let groupNameNew = $state('');

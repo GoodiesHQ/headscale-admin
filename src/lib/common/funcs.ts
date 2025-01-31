@@ -283,6 +283,10 @@ export function toOptions(values: string[]): {label: string, value:string}[] {
 	}))
 }
 
+export function deduplicate<T>(arr: T[]): T[] {
+	return Array.from(new Set(arr))
+}
+
 export function getSortedUsers(users: User[], sortMethod: string, sortDirection: Direction): User[] {
 	if (sortMethod === 'id') {
 		users = users.sort((a: User, b: User) => {

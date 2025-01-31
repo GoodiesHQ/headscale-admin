@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Autocomplete, getToastStore, TabGroup } from '@skeletonlabs/skeleton';
 	import { ACLBuilder, type AclPolicy } from '$lib/common/acl.svelte';
-	import { toastSuccess, toastError, toOptions } from '$lib/common/funcs';
+	import { toastSuccess, toastError, toOptions, deduplicate } from '$lib/common/funcs';
 	import Delete from '$lib/parts/Delete.svelte';
 	import CardListContainer from '$lib/cards/CardListContainer.svelte';
 	import { debug } from '$lib/common/debug';
@@ -45,6 +45,19 @@
 	const policy = $derived(makePolicy(idx));
 
 	let deleting = $state(false);
+
+	function getAllTags(acl: ACLBuilder): string[]{
+		let tags = acl.getTagNames(true)
+		for(const node of App.nodes.value) {
+			const f = (tag: string) => {
+				const {prefixed} = ACLBuilder.normalizeTag(tag)
+				tags.push(prefixed)
+			}
+			node.validTags.forEach(f)
+			node.forcedTags.forEach(f)
+		}
+		return deduplicate(tags)
+	}
 
 	let tabSetSrc = $state(0)
 	let tabSetDst = $state(0)
@@ -211,6 +224,7 @@
 			{/if}
 			<div class="flex flex-row space-x-2">
 				<input
+					autocomplete="off"
 					class="input rounded-md mt-2"
 					placeholder="Src Object..."
 					bind:value={srcNewHost}
@@ -276,11 +290,13 @@
 			{/if}
 			<div class="flex flex-row space-x-2">
 				<input
+					autocomplete="off"
 					class="input rounded-md mt-2"
 					placeholder="Dst Object..."
 					bind:value={dstNewHost}
 					disabled={!dstNewHostEditable} />
 				<input
+					autocomplete="off"
 					class="input rounded-md mt-2"
 					placeholder="Dst Ports..."
 					bind:value={dstNewPorts}

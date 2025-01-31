@@ -169,6 +169,7 @@
 			{/if}
 			<div class="flex flex-row space-x-2">
 				<input
+					autocomplete="off"
 					class="input rounded-md mt-2"
 					placeholder="Src Object..."
 					bind:value={srcNewHost}
@@ -234,6 +235,7 @@
 			{/if}
 			<div class="flex flex-row space-x-2">
 				<input
+					autocomplete="off"
 					class="input rounded-md mt-2"
 					placeholder="Dst Object..."
 					bind:value={dstNewHost}

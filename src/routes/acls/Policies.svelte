@@ -48,6 +48,7 @@
 
 	<div class="flex items-center pb-4 mt-4">
 		<input
+			autocomplete="off"
 			type="text"
 			class="input rounded-md text-sm mb-0"
 			placeholder="Filter Policies..."

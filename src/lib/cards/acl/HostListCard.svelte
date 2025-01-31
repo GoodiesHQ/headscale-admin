@@ -74,7 +74,7 @@
 	function deleteHost() {
 		try {
 			acl.deleteHost(host.name);
-			toastSuccess(`Host '${host}' deleted`, ToastStore);
+			toastSuccess(`Host '${host.name}' deleted`, ToastStore);
 		} catch (e) {
 			debug(e);
 			if (e instanceof Error) {

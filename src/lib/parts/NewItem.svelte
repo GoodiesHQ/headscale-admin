@@ -40,6 +40,7 @@
 	class="flex flex-row w-full my-2 items-center space-x-2"
 >
 	<input
+		autocomplete="off"
 		class="input rounded-md text-sm"
 		type="text"
 		placeholder="New {title} Name..."

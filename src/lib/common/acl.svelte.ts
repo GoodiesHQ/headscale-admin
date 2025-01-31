@@ -124,6 +124,14 @@ export class ACLBuilder implements ACL {
         return { prefixed, stripped }
     }
 
+    static normalizeTag(tag: string): {prefixed: string, stripped: string} {
+        return ACLBuilder.normalizePrefix(tag, "tag")
+    }
+
+    static normalizeGroup(group: string): {prefixed: string, stripped: string} {
+        return ACLBuilder.normalizePrefix(group, "group")
+    }
+
     // throws an error if the name is invalid, otherwise returns the normalized group name
     static validateGroupName(name: string): string {
         name = this.stripPrefix(name)
@@ -231,8 +239,24 @@ export class ACLBuilder implements ACL {
     }
 
     deleteHost(name: string) {
-        if (this.hosts[name] !== undefined) {
-            delete this.hosts[name]
+        if (this.hosts[name] === undefined) {
+            throw new Error(`Host '${name}' doesn't exist`)
+        }
+
+        delete this.hosts[name]
+
+        // delete host from ACLs
+        for (const acl of this.acls) {
+            acl.src = acl.src.filter(s => s !== name)
+            acl.dst = acl.dst.filter(d => d !== name)
+        }
+
+        // remove group from SSH
+        if (this.ssh !== undefined){
+            for (const ssh of this.ssh) {
+                ssh.src = ssh.src.filter(s => s !== name)
+                ssh.dst = ssh.dst.filter(d => d !== name)
+            }
         }
     }
 
@@ -349,6 +373,20 @@ export class ACLBuilder implements ACL {
             throw new Error(`Tag '${stripped}' doesn't exist within the ACL`)
         }
 
+        // remove tag from ACLs
+        for (const acl of this.acls){
+            acl.src = acl.src.filter(s => s !== prefixed);
+            acl.dst = acl.dst.filter(d => d !== prefixed);
+        }
+
+        // remove tag from SSH
+        if (this.ssh !== undefined){
+            for (const ssh of this.ssh) {
+                ssh.src = ssh.src.filter(s => s !== prefixed)
+                ssh.dst = ssh.dst.filter(d => d !== prefixed)
+            }
+        }
+
         delete this.tagOwners[prefixed]
     }
 
@@ -446,8 +484,27 @@ export class ACLBuilder implements ACL {
     deleteGroup(name: string) {
         const { stripped, prefixed } = ACLBuilder.normalizePrefix(name, 'group')
 
+        // verify group's existence
         if (this.groups[prefixed] === undefined) {
             throw new Error(`Group '${stripped}' doesn't exist`)
+        }
+
+        // remove group from tag owners
+        for (const tag of Object.keys(this.tagOwners)) {
+            this.tagOwners[tag] = this.tagOwners[tag].filter(t => t !== prefixed)
+        }
+
+        // remove group from ACLs
+        for (const acl of this.acls) {
+            acl.src = acl.src.filter(s => s !== prefixed)
+            acl.dst = acl.dst.filter(d => d !== prefixed)
+        }
+
+        // remove group from SSH policies
+        if (this.ssh !== undefined){
+            for (const ssh of this.ssh) {
+                ssh.src = ssh.src.filter(s => s !== prefixed)
+            }
         }
 
         delete this.groups[prefixed]
