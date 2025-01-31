@@ -130,7 +130,7 @@
 			bind:value={host.name}
 			bind:valueNew={hostNameNew}
 			submit={() => { host.name = hostNameNew; return true }}
-			class="font-extralight rounded-md"
+			classes="font-extralight rounded-md"
 			showRenameIcon={false}
 		/>
 	</div>
@@ -139,7 +139,7 @@
 			bind:value={host.cidr}
 			bind:valueNew={hostCIDRNew}
 			submit={() => { host.cidr = hostCIDRNew; return true }}
-			class="text-sm font-mono rounded-md text-primary-500 dark:text-primary-300"
+			classes="text-sm font-mono rounded-md text-primary-500 dark:text-primary-300"
 			showRenameIcon={false}
 		/>
 	</div>

@@ -6,20 +6,29 @@
 	import RawMdiCloseCircleOutline from '~icons/mdi/close-circle-outline';
 	import { slide } from 'svelte/transition';
 
-	export let value: string;
-	export let valueNew: string;
-	export let submit: EventHandler<SubmitEvent, HTMLFormElement>;
-	let classes = '';
-	export { classes as class };
-	export let showRenameIcon = false;
+	type TextProps = {
+		value: string,
+		valueNew: string,
+		submit: EventHandler<SubmitEvent, HTMLFormElement>,
+		showRenameIcon?: boolean,
+		classes?: string,
+	}
 
-	let showModify = false;
+	let {
+		value = $bindable(),
+		valueNew = $bindable(),
+		submit,
+		showRenameIcon = false,
+		classes,
+	}: TextProps = $props()
+
+	let showModify = $state(false);
 </script>
 
 {#if !showModify}
 	<button
 		class="flex flex-row ml-2"
-		on:click={() => {
+		onclick={() => {
 			valueNew = value;
 			showModify = true;
 		}}
@@ -32,17 +41,15 @@
 {:else}
 	<form
         class="flex flex-row ml-2"
-		on:submit|preventDefault={(x) => {
-			if (submit(x)) {
-				showModify = false;
+		onsubmit={(x) => {
+			x.preventDefault()
+			if(submit(x)) {
+				showModify = false
 			}
 		}}
 	>
 		<input
 			use:focus
-			on:blur={() => {
-				showModify = false;
-			}}
 			type="text"
 			class="input {classes} p-0 m-0 text-sm"
 			bind:value={valueNew}
@@ -53,7 +60,7 @@
 			</button>
 			<button
 				type="button"
-				on:click={() => {
+				onclick={() => {
 					showModify = false;
 				}}
 			>

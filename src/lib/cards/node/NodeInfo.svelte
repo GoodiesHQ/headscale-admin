@@ -14,7 +14,6 @@
 	import NodeOwner from './NodeOwner.svelte';
 	import NodeLastSeen from './NodeLastSeen.svelte';
 
-	// export let node: Node;
 	type NodeInfoProps = {
 		node: Node,
 		loading?: boolean,

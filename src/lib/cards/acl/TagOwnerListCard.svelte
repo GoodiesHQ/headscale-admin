@@ -108,7 +108,7 @@
 				bind:value={tag.name}
 				bind:valueNew={tagNameNew}
 				submit={() => { tag.name = tagNameNew; return true}}
-				class="font-extralight text-secondary-500 dark:text-secondary-300 rounded-md"
+				classes="font-extralight text-secondary-500 dark:text-secondary-300 rounded-md"
 				showRenameIcon={true}
 			/>
 		</h3>
