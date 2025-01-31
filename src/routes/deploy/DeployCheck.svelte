@@ -3,14 +3,19 @@
 	import { slide } from 'svelte/transition';
 	import { type PopupSettings, popup } from '@skeletonlabs/skeleton';
 	import { xxHash32 } from 'js-xxhash';
-	import { onMount } from 'svelte';
+	import { type Snippet } from 'svelte';
 
-	export let name: string;
-	export let help: string | undefined = undefined;
-	export let checked: boolean;
+	type DeployCheckTypes = {
+		name: string,
+		help?: string,
+		checked: boolean,
+		children?: Snippet,
+	}
+
+	let { name, help, checked = $bindable(), children = undefined }: DeployCheckTypes = $props()
 
 	const popupId = xxHash32(name).toString();
-	$: popupShow = false;
+	let popupShow = $state(false);
 
 	let timerInfo: ReturnType<typeof setTimeout>;
 
@@ -41,23 +46,23 @@
 </div>
 
 <div class="flex flex-col col-span-12 md:col-span-6 xl:col-span-4 pb-4 mx-4">
-	<label class="flex items-center space-x-2">
+	<div class="flex items-center space-x-2">
 		{#if help !== undefined}
 			<button
 				class="btn p-0 btn-icon variant-soft-secondary w-6 h-6 [&>*]:pointer-events-none"
 				use:popup={popupInfo}
-				on:mouseenter={handleMouseEnter}
-				on:mouseleave={handleMouseLeave}
+				onmouseenter={handleMouseEnter}
+				onmouseleave={handleMouseLeave}
 			>
 				<RawMdiInfo />
 			</button>
 		{/if}
-		<input class="checkbox" type="checkbox" bind:checked />
-		<p>{name}</p>
-	</label>
-	{#if $$slots.default && checked}
+		<input id={"checkbox-" + name} class="checkbox" type="checkbox" bind:checked />
+		<label for={"checkbox-" + name}>{name}</label>
+	</div>
+	{#if children != undefined && checked}
 		<div transition:slide class="pt-4">
-			<slot />
+			{@render children()}
 		</div>
 	{/if}
 </div>
