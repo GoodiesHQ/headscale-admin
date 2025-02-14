@@ -11,7 +11,20 @@ export type AclPolicies = AclPolicy[]
 export type AclSshRules = AclSshRule[]
 export type AclPoliciesIndexed = {policy: AclPolicy, idx: number}[]
 export type AclSshRulesIndexed = {rule: AclSshRule, idx: number}[]
+
+// metadata for ACL policy entries
+export type HAMeta = {
+    name: string,
+    open: boolean,
+}
+
+export const HAMetaDefault = {
+    name: "",
+    open: true,
+}
+
 export type AclPolicy = {
+    "#ha-meta"?: HAMeta,
     action: 'accept',
     proto?: string,
     src: string[],
@@ -76,6 +89,13 @@ export class ACLBuilder implements ACL {
 
     static emptyACL(): ACLBuilder {
         return new ACLBuilder({}, {}, {}, [], [])
+    }
+
+    static addPolicyMeta(policy: AclPolicy): boolean {
+		if (policy["#ha-meta"] === undefined){
+			policy["#ha-meta"] = HAMetaDefault
+		}
+        return policy["#ha-meta"] !== undefined
     }
 
     static fromPolicy(acl: ACL | string): ACLBuilder {
@@ -534,6 +554,10 @@ export class ACLBuilder implements ACL {
 
 
     createPolicy(policy: AclPolicy) {
+        if (policy["#ha-meta"] === undefined) {
+            policy["#ha-meta"] = HAMetaDefault
+        }
+
         this.acls.push(policy)
     }
 
@@ -552,12 +576,23 @@ export class ACLBuilder implements ACL {
         }
     }
 
-    public static DefaultPolicy(): AclPolicy {
+    public static EmptyPolicy(): AclPolicy {
         return {
+            "#ha-meta": HAMetaDefault,
             action: "accept",
             proto: undefined,
             src: [],
             dst: [],
+        }
+    }
+
+    public static DefaultPolicy(): AclPolicy {
+        return {
+            "#ha-meta": HAMetaDefault,
+            action: "accept",
+            proto: undefined,
+            src: [ "*" ],
+            dst: [ "*:*" ],
         }
     }
 
