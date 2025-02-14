@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Autocomplete, getToastStore, TabGroup } from '@skeletonlabs/skeleton';
-	import { ACLBuilder, type AclPolicy } from '$lib/common/acl.svelte';
+	import { ACLBuilder, HAMetaDefault, type AclPolicy } from '$lib/common/acl.svelte';
 	import { toastSuccess, toastError, toOptions, deduplicate } from '$lib/common/funcs';
 	import Delete from '$lib/parts/Delete.svelte';
 	import CardListContainer from '$lib/cards/CardListContainer.svelte';
@@ -15,6 +15,7 @@
 	import ListEntry from './ListEntry.svelte';
 	import Tabbed from '$lib/parts/Tabbed.svelte';
 	import { App } from '$lib/States.svelte';
+	import Text from '$lib/parts/Text.svelte';
 
 	const ToastStore = getToastStore();
 
@@ -28,7 +29,6 @@
 	let {
 		acl = $bindable(),
 		idx,
-		open = $bindable(),
 		loading = $bindable(false),
 	}: PolicyListCardProps = $props()
 
@@ -43,24 +43,14 @@
 	const hostNames = $derived(acl.getHostNames())
 	const hostNamesOptions = $derived(toOptions(hostNames));
 	const policy = $derived(makePolicy(idx));
+	const opener = $derived(makeOpener())
+	let policyName = $state(getPolicyName())
 
 	let deleting = $state(false);
 
-	function getAllTags(acl: ACLBuilder): string[]{
-		let tags = acl.getTagNames(true)
-		for(const node of App.nodes.value) {
-			const f = (tag: string) => {
-				const {prefixed} = ACLBuilder.normalizeTag(tag)
-				tags.push(prefixed)
-			}
-			node.validTags.forEach(f)
-			node.forcedTags.forEach(f)
-		}
-		return deduplicate(tags)
-	}
-
 	let tabSetSrc = $state(0)
 	let tabSetDst = $state(0)
+
 	const tabs = [
 		{ name: "custom", title: "Custom", logo: RawMdiPencil },
 		{ name: "user", title: "User", logo: RawMdiTag },
@@ -72,7 +62,6 @@
 	const srcNewType = $derived(tabs[tabSetSrc].name)
 	let srcNewHost = $state('')
 	const srcNewHostEditable = $derived(srcNewType == "custom")
-
 	const dstNewType = $derived(tabs[tabSetDst].name)
 	let dstNewHost = $state('')
 	const dstNewHostEditable = $derived(dstNewType == "custom")
@@ -94,6 +83,22 @@
 		dstNewType == "tag" ? tagNamesOptions:
 		undefined
 	)
+
+	function makeOpener() {
+		return {
+			get open() {
+				ACLBuilder.addPolicyMeta(policy.policy)
+				return policy.policy["#ha-meta"] !== undefined 
+					&& policy.policy["#ha-meta"].open
+			},
+			set open(open: boolean) {
+				ACLBuilder.addPolicyMeta(policy.policy)
+				if (policy.policy["#ha-meta"] !== undefined) {
+					policy.policy["#ha-meta"].open = open
+				}
+			},
+		}
+	}
 
 	function makePolicy(idx: number) {
 		return {
@@ -168,12 +173,41 @@
 		policy.dst.push(host + ":" + ports)
 	}
 
+	function getPolicyTitle(pol: AclPolicy, idx: number): string {
+		if (pol["#ha-meta"] === undefined || pol["#ha-meta"].name === "") {
+			return "Policy #" + (idx + 1)
+		}
+		return pol["#ha-meta"].name
+	}
+
+	function getPolicyName(): string {
+		return policy.policy["#ha-meta"]?.name ?? ""
+	}
+
+	function setPolicyName(name: string) {
+		if(policy.policy["#ha-meta"] === undefined) {
+			policy.policy["#ha-meta"] = HAMetaDefault
+		}
+		debug("CHANING NAME")
+		policy.policy["#ha-meta"].name = name
+	}
 </script>
 
-<ListEntry id={idx.toString()} name={"Policy #" + (idx + 1)} logo={RawMdiSecurity} bind:open>
+<ListEntry id={idx.toString()} name={getPolicyTitle(policy.policy, idx)} logo={RawMdiSecurity} bind:open={opener.open}>
 	{#snippet children()}
 	<CardListContainer>
 		<div class="mb-6">
+			<h3 class="font-mono mb-2 flex flex-row items-center">
+				<label for="policy-name">Name:</label>
+				<input
+					type="text" 
+					name="policy-name"
+					class="input text-xs rounded-md ml-4"
+					autocomplete="off"
+					bind:value={policyName}
+					oninput={() => { setPolicyName(policyName)}}
+				/>
+			</h3>
 			<h3 class="font-mono mb-2 flex flex-row items-center">
 				<span>Protocol:</span>
 			</h3>

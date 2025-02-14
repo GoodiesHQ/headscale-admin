@@ -3,20 +3,21 @@
 	import { ACLBuilder, type ACL } from "$lib/common/acl.svelte";
     import { isTextContent, JSONEditor, Mode, type TextContent } from 'svelte-jsoneditor'
     import 'svelte-jsoneditor/themes/jse-theme-dark.css'
-	import { setPolicy } from "$lib/common/api";
+	import { getPolicy, setPolicy } from "$lib/common/api";
 	import { debug } from "$lib/common/debug";
 	import { toastError, toastSuccess } from "$lib/common/funcs";
-	import { CodeBlock, getModalStore, getToastStore, modeCurrent, type ModalSettings } from "@skeletonlabs/skeleton";
+	import { CodeBlock, /*getModalStore,*/ getToastStore, modeCurrent, type ModalSettings } from "@skeletonlabs/skeleton";
     
-	import LoaderModal from "$lib/parts/LoaderModal.svelte";
+	// import LoaderModal from "$lib/parts/LoaderModal.svelte";
     import JWCC from 'json5'
 	import { onMount } from "svelte";
 	import { get } from "svelte/store";
 
     const ToastStore = getToastStore()
-    const ModalStore = getModalStore()
     let isLightMode = $state(get(modeCurrent))
+    //const ModalStore = getModalStore()
 
+    /*
     const modal: ModalSettings = {
         type: "component",
         component: {
@@ -28,17 +29,20 @@
             }
         },
     };
+    */
 
 	let {acl = $bindable(), loading = $bindable(false)}: {acl: ACLBuilder, loading?: boolean} = $props();
 	const aclJSON = $derived(acl.JSON(2))
     let editing = $state(false)
     let aclEditJSON = $state<TextContent>({text:""})
 
+    /*
     function callback(data: string): boolean {
         const policy = JWCC.parse<ACL>(data);
         acl = ACLBuilder.fromPolicy(policy)
         return true
     }
+    */
 
     async function saveConfig() {
         loading = true
@@ -60,8 +64,21 @@
         editing = false
     }
 
+    function resetConfig() {
+        acl = ACLBuilder.defaultACL()
+    }
+
     function loadConfig() {
-        ModalStore.trigger(modal)
+        loading = true
+		getPolicy().then(policy => {
+			acl = ACLBuilder.fromPolicy(JWCC.parse<ACL>(policy))
+		}).catch(reason => {
+			debug("failed to get policy:", reason)
+			toastError(`Unable to get policy from server.`, ToastStore, reason)
+		}).finally(() => {
+            loading = false
+        })
+        // ModalStore.trigger(modal)
     }
 
     onMount(()=>{
@@ -79,6 +96,9 @@
 	<div class="mb-2">
 		<button disabled={loading || editing} class="btn-sm rounded-md variant-filled-success disabled:opacity-50 w-32" onclick={() => { saveConfig() }}>
 			Save Config
+		</button>
+		<button disabled={loading || editing} class="btn-sm rounded-md variant-filled-secondary disabled:opacity-50 w-32" onclick={() => { loadConfig() }}>
+			Load Config
 		</button>
 		<button 
             disabled={loading}
@@ -98,8 +118,8 @@
                 Edit Config
             {/if}
 		</button>
-		<button disabled={loading || editing} class="btn-sm rounded-md variant-filled-secondary disabled:opacity-50 w-32" onclick={() => { loadConfig() }}>
-			Load Config
+		<button disabled={loading || editing} class="btn-sm rounded-md variant-filled-error disabled:opacity-50 w-32" onclick={() => { resetConfig() }}>
+			Reset Config
 		</button>
 		<!--button disabled={loading} class="btn-sm rounded-md variant-filled-success" onclick={() => { if(aclEditJSON !== undefined) applyConfig(aclEditJSON) }}>
 			Apply Config

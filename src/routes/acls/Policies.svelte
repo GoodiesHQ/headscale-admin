@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Accordion, getToastStore } from '@skeletonlabs/skeleton';
-	import { ACLBuilder, type AclPolicies, type AclPoliciesIndexed } from '$lib/common/acl.svelte';
+	import { ACLBuilder, HAMetaDefault, type AclPolicies, type AclPoliciesIndexed } from '$lib/common/acl.svelte';
 	import { debug } from '$lib/common/debug';
 	import { toastSuccess } from '$lib/common/funcs';
 	import CardListPage from '$lib/cards/CardListPage.svelte';
@@ -14,7 +14,10 @@
 	const filteredPolicies = $derived(filterPolicies(acl.getAllPolicies(), policyFilterString));
 
 	function newPolicy() {
-		acl.createPolicy(ACLBuilder.DefaultPolicy())
+		const policy = ACLBuilder.EmptyPolicy()
+		ACLBuilder.addPolicyMeta(policy)
+
+		acl.createPolicy(policy)
 		debug("created new policy at index " + (acl.acls.length - 1).toString())
 		toastSuccess('Created Policy #' + acl.acls.length, ToastStore)
 	}
@@ -30,7 +33,8 @@
 			return policiesIndexed.filter(({policy}) => {
 				return policy.src.some(src => r.test(src)) ||
 				policy.dst.some(dst => r.test(dst)) ||
-				(policy.proto !== undefined && r.test(policy.proto))
+				(policy.proto !== undefined && r.test(policy.proto)) ||
+				(policy["#ha-meta"] !== undefined && r.test(policy["#ha-meta"].name))
 			})
 		} catch {
 			debug(`Policy Regex "${filter}" is invalid`);
