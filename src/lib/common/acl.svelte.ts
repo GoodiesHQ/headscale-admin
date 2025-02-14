@@ -91,6 +91,15 @@ export class ACLBuilder implements ACL {
         return new ACLBuilder({}, {}, {}, [], [])
     }
 
+    static defaultACL(): ACLBuilder {
+        return new ACLBuilder({}, {}, {}, [{
+            "#ha-meta": HAMetaDefault,
+            action: "accept",
+            src: ["*"],
+            dst: ["*:*"],
+        }], [])
+    }
+
     static addPolicyMeta(policy: AclPolicy): boolean {
 		if (policy["#ha-meta"] === undefined){
 			policy["#ha-meta"] = HAMetaDefault

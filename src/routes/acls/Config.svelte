@@ -3,7 +3,7 @@
 	import { ACLBuilder, type ACL } from "$lib/common/acl.svelte";
     import { isTextContent, JSONEditor, Mode, type TextContent } from 'svelte-jsoneditor'
     import 'svelte-jsoneditor/themes/jse-theme-dark.css'
-	import { setPolicy } from "$lib/common/api";
+	import { getPolicy, setPolicy } from "$lib/common/api";
 	import { debug } from "$lib/common/debug";
 	import { toastError, toastSuccess } from "$lib/common/funcs";
 	import { CodeBlock, getModalStore, getToastStore, modeCurrent, type ModalSettings } from "@skeletonlabs/skeleton";
@@ -60,8 +60,21 @@
         editing = false
     }
 
+    function resetConfig() {
+        acl = ACLBuilder.defaultACL()
+    }
+
     function loadConfig() {
-        ModalStore.trigger(modal)
+        loading = true
+		getPolicy().then(policy => {
+			acl = ACLBuilder.fromPolicy(JWCC.parse<ACL>(policy))
+		}).catch(reason => {
+			debug("failed to get policy:", reason)
+			toastError(`Unable to get policy from server.`, ToastStore, reason)
+		}).finally(() => {
+            loading = false
+        })
+        // ModalStore.trigger(modal)
     }
 
     onMount(()=>{
@@ -100,6 +113,9 @@
 		</button>
 		<button disabled={loading || editing} class="btn-sm rounded-md variant-filled-secondary disabled:opacity-50 w-32" onclick={() => { loadConfig() }}>
 			Load Config
+		</button>
+		<button disabled={loading || editing} class="btn-sm rounded-md variant-filled-error disabled:opacity-50 w-32" onclick={() => { resetConfig() }}>
+			Reset Config
 		</button>
 		<!--button disabled={loading} class="btn-sm rounded-md variant-filled-success" onclick={() => { if(aclEditJSON !== undefined) applyConfig(aclEditJSON) }}>
 			Apply Config

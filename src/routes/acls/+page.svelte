@@ -26,7 +26,7 @@
 
 	const ToastStore = getToastStore()
 
-	let acl = $state(ACLBuilder.emptyACL());
+	let acl = $state(ACLBuilder.defaultACL());
 	let loading = $state(false)
 
 	// Navigation tabs
