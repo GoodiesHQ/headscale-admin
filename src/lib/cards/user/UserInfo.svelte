@@ -18,7 +18,7 @@
 </script>
 
 <CardListContainer>
-	<ItemListName bind:item={user} />
+	<ItemListName bind:item={user} allowed={user.provider.toLocaleLowerCase() !== "oidc"} />
 	<CardSeparator />
 	{#if user.displayName}
 	<UserDisplayName bind:user />
