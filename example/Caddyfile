@@ -1,0 +1,32 @@
+(cors) {
+        @cors_preflight method OPTIONS
+
+        header {
+                Access-Control-Allow-Origin "{args[0]}"
+                Access-Control-Allow-Headers "*"
+                Vary Origin
+                Access-Control-Expose-Headers "Authorization"
+                Access-Control-Allow-Credentials "true"
+        }
+
+        handle @cors_preflight {
+                header {
+                        Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE"
+                        Access-Control-Max-Age "3600"
+                }
+                respond "" 204
+        }
+}
+
+headscale.example.com {
+    ### Use this line if you need CORS for another domain, for example:
+    # import cors https://headscale-admin.example.com
+
+    # /admin endpoint maps to headscale-admin
+    reverse_proxy /admin* headscale-admin:80 {
+        header_up Host {http.request.host}
+    }
+
+    # all other endpoints go to headscale API
+    reverse_proxy /* headscale:8080
+}
