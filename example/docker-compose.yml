@@ -1,0 +1,48 @@
+services:
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - ./caddy-data:/data
+      - ./caddy-conf:/config
+    networks:
+      - proxy
+
+  headscale:
+    image: headscale/headscale:0.25
+    container_name: headscale
+    restart: unless-stopped
+    environment:
+      - TZ=America/Los_Angeles
+    volumes:
+      - ./headscale-conf:/etc/headscale
+      - ./headscale-data:/var/lib/headscale
+    entrypoint: headscale serve
+    ports:
+      - 3478:3478/udp
+    networks:
+      - proxy
+
+  headscale-admin:
+    image: goodieshq/headscale-admin:0.25
+    container_name: headscale-admin
+    restart: unless-stopped
+    networks:
+      - proxy
+
+  watchtower:
+    container_name: watchtower
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      WATCHTOWER_INTERVAL: 300
+    restart: unless-stopped
+
+networks:
+  proxy:

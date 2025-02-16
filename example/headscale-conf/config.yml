@@ -1,0 +1,97 @@
+---
+server_url: https://headscale.example.com
+
+listen_addr: 0.0.0.0:8080
+metrics_listen_addr: 0.0.0.0:9090
+grpc_listen_addr: 0.0.0.0:50443
+grpc_allow_insecure: false
+noise:
+  private_key_path: /var/lib/headscale/noise_private.key
+
+prefixes:
+  v4: 100.70.0.0/16
+  v6: fd7a:115c:a1e0:0070::/64
+
+derp:
+  server:
+    enabled: true
+    region_id: 999
+    region_code: "headscale-server"
+    region_name: "HeadScale"
+    stun_listen_addr: "0.0.0.0:3478"
+    automatically_add_embedded_derp_region: true
+    private_key_path: /var/lib/headscale/private.key
+  auto_update_enabled: true
+  update_frequency: 4h
+  # ipv4: 7.7.7.7  # optional: public IP forwarded to the DERP server on port 3478
+
+disable_check_updates: false
+ephemeral_node_inactivity_timeout: 30m
+node_update_check_interval: 10s
+
+database:
+  type: sqlite3
+
+  sqlite:
+    path: /var/lib/headscale/hsdb.sqlite
+    write_ahead_log: true
+    wal_autocheckpoint: 1000
+
+acme_url: https://acme-v02.api.letsencrypt.org/directory
+acme_email: ""
+tls_letsencrypt_hostname: ""
+tls_letsencrypt_cache_dir: /var/lib/headscale/cache
+tls_letsencrypt_challenge_type: HTTP-01
+tls_letsencrypt_listen: ":http"
+
+tls_cert_path: ""
+tls_key_path: ""
+
+### Log level and format, change as needed
+log:
+  format: text
+  level: info
+
+### Policy must be in database mode for ACL builder
+policy:
+  mode: "database"
+
+### DNS settings, uncomment and modify as needed
+# dns:
+#   override_local_dns: true
+#   nameservers:
+#     global:
+#       - 1.1.1.2
+#       - 1.0.0.2
+#     split:
+#       example.com:
+#         - 10.1.1.100
+#   search_domains:
+#     - example.com
+#   magic_dns: true
+#   base_domain: ts.example.com
+
+unix_socket: /var/run/headscale/headscale.sock
+unix_socket_permission: "0770"
+
+### OIDC setup. Enable as needed, example setup below:
+# oidc:
+#   only_start_if_oidc_is_available: true
+#   issuer: "https://login.microsoftonline.com/f113741c-606c-4247-9507-f46028b63b75/v2.0"
+#   client_id: "94451126-69c9-43ab-9c6f-7cfaa5a42813"
+#   client_secret: "RMe15YewU16q6UWXOCGNULpYdAEf39E8oDf8AtB7"
+#   expiry: 7d
+#   scope: ["openid", "profile", "email"]
+#   strip_email_domain: true
+#   extra_params:
+#     domain_hint: example.com
+#     prompt: select_account
+#   allowed_domains:
+#     - example.com
+#   allowed_groups:
+#     - fd151f4f-3a1a-4edb-895b-cc8b04ca49da
+
+logtail:
+  enabled: false
+
+randomize_client_port: false # 41641
