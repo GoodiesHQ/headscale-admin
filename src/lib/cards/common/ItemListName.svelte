@@ -14,9 +14,13 @@
 
 	type ItemListNameProps = {
 		item: Named,
+		allowed?: boolean,
 	}
 
-	let { item = $bindable() }: ItemListNameProps = $props()
+	let {
+		item = $bindable(),
+		allowed = false,
+	}: ItemListNameProps = $props()
 
 	const prefix: ItemTypeName = getTypeName(item);
 
@@ -122,6 +126,7 @@
 			>
 				<div>
 					{item.givenName ?? item.name}
+					{#if allowed}
 					<button
 						class="btn-sm btn-icon-sm"
 						onclick={() => {
@@ -131,6 +136,7 @@
 					>
 						<RawMdiRename />
 					</button>
+					{/if}
 				</div>
 			</div>
 		{/if}
