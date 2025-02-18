@@ -40,11 +40,11 @@
 		theme: App.theme.value,
 	});
 
-	let apiKeyInfo = $state(App.apiKeyInfo.value);
+	let apiKeyInfo = $derived(App.apiKeyInfo.value);
 	let apiKeyShow = $state(false);
 	let loading = $state(false);
 
-	const apiKeyExpirationMessage: ExpirationMessage = $derived(createMessage(App.apiKeyInfo.value));
+	const apiKeyExpirationMessage: ExpirationMessage = $derived(createMessage(apiKeyInfo));
 
 	const ToastStore = getToastStore();
 
@@ -201,6 +201,9 @@
 				</button>
 				<button type="button" class="btn btn-sm rounded-md variant-ghost-primary w-full" onclick={() => console.log(JSON.stringify(App.preAuthKeys.value, null, 4))}>
 					Log PreAuthKeys
+				</button>
+				<button type="button" class="btn btn-sm rounded-md variant-ghost-primary w-full" onclick={() => console.log(JSON.stringify(App.apiKeyInfo.value, null, 4))}>
+					Log ApiKey Info
 				</button>
 			</div>
 
