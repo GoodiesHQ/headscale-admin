@@ -24,7 +24,7 @@
 </script>
 
 <CardListContainer>
-	<ItemListName item={node} />
+	<ItemListName item={node} allowed={true} />
 	<CardSeparator />
 	<ItemCreatedAt item={node} />
 	<CardSeparator />
