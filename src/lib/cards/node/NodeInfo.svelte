@@ -19,12 +19,12 @@
 		loading?: boolean,
 	}
 
-	let { node, loading = $bindable(false)} = $props()
+	let { node, loading = $bindable(false)}: NodeInfoProps = $props()
 
 </script>
 
 <CardListContainer>
-	<ItemListName item={node} />
+	<ItemListName item={node} allowed={true} />
 	<CardSeparator />
 	<ItemCreatedAt item={node} />
 	<CardSeparator />
