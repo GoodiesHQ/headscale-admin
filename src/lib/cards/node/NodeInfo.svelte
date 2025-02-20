@@ -19,7 +19,7 @@
 		loading?: boolean,
 	}
 
-	let { node, loading = $bindable(false)} = $props()
+	let { node, loading = $bindable(false)}: NodeInfoProps = $props()
 
 </script>
 
