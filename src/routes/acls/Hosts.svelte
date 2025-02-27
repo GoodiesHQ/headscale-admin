@@ -1,12 +1,13 @@
 <script lang="ts">
 	import CardListPage from '$lib/cards/CardListPage.svelte';
-	import type { ACLBuilder } from '$lib/common/acl.svelte';
+	import { saveConfig, type ACLBuilder } from '$lib/common/acl.svelte';
 	import { toastError, toastSuccess } from '$lib/common/funcs';
 	import { getToastStore } from '@skeletonlabs/skeleton';
 	import NewItem from '$lib/parts/NewItem.svelte';
 	import HostListCard from '$lib/cards/acl/HostListCard.svelte';
 	import { debug } from '$lib/common/debug';
 	import { App } from '$lib/States.svelte';
+	import RawMdiSave from '~icons/mdi/content-save-outline'
 
 	const ToastStore = getToastStore();
 
@@ -42,26 +43,35 @@
 		}
 	}
 
+	const filteredHosts = $derived.by(() => {
+		const hosts = acl.getHosts()
+		if (hostsFilter === '') {
+			return hosts
+		}
 
-	function filterHosts(hosts: [string, string][], filter: string): [string, string][] {
 		try {
-			const r = RegExp(filter);
+			const r = RegExp(hostsFilter);
 			return hosts.filter(([k, _]) => r.test(k))
 		} catch {
-			debug(`Host Regex "${filter}" is invalid`);
+			debug(`Host Regex "${hostsFilter}" is invalid`);
 			return hosts;
 		}
-	}
-
-	const filteredHosts = $derived(filterHosts(acl.getHosts(), hostsFilter));
+	});
 </script>
 
 
 <CardListPage>
 	<div class="mb-2">
-		<button class="btn-sm rounded-md variant-filled-success" onclick={toggleShowCreateHost}>
-			Create Host
-		</button>
+		<div class="flex flex-row space-x-2">
+			<button disabled={loading} class="btn-icon rounded-md variant-filled-success disabled:opacity-50 w-8 text-xl" onclick={() => { 
+				saveConfig(acl, ToastStore, {setLoadingTrue: () => { loading = true}, setLoadingFalse: ()=> { loading = false }})
+			}}>
+				<RawMdiSave />
+			</button>
+			<button class="btn-sm rounded-md variant-filled-success" onclick={toggleShowCreateHost}>
+				Create Host
+			</button>
+		</div>
 		{#if showCreateHost}
 			<NewItem
 				title="Host"
