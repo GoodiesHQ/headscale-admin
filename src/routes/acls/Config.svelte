@@ -57,9 +57,10 @@
         loading = true
 		getPolicy().then(policy => {
 			acl = ACLBuilder.fromPolicy(JWCC.parse<ACL>(policy))
+            toastSuccess("Loaded ACL policy from server", ToastStore)
 		}).catch(reason => {
 			debug("failed to get policy:", reason)
-			toastError(`Unable to get policy from server.`, ToastStore, reason)
+			toastError(`Unable to get ACL policy from server.`, ToastStore, reason)
 		}).finally(() => {
             loading = false
         })
@@ -105,9 +106,15 @@
                 Edit Config
             {/if}
 		</button>
-		<button disabled={loading || editing} class="btn-sm rounded-md variant-filled-error disabled:opacity-50 w-32" onclick={() => { resetConfig() }}>
-			Reset Config
-		</button>
+        {#if editing}
+            <button disabled={loading} class="btn-sm rounded-md variant-filled-error disabled:opacity-50 w-32" onclick={() => { editing = false }}>
+                Cancel Editing
+            </button>
+        {:else}
+            <button disabled={loading || editing} class="btn-sm rounded-md variant-filled-error disabled:opacity-50 w-32" onclick={() => { resetConfig() }}>
+                Reset Config
+            </button>
+        {/if}
 		<!--button disabled={loading} class="btn-sm rounded-md variant-filled-success" onclick={() => { if(aclEditJSON !== undefined) applyConfig(aclEditJSON) }}>
 			Apply Config
 		</button-->

@@ -6,8 +6,8 @@
 	import CardListContainer from '$lib/cards/CardListContainer.svelte';
 	import { debug } from '$lib/common/debug';
 
-	import RawMdiArrowUp from '~icons/mdi/arrow-up-left';
-	import RawMdiArrowDown from '~icons/mdi/arrow-down-right';
+	import RawMdiArrowUp from '~icons/mdi/arrow-up';
+	import RawMdiArrowDown from '~icons/mdi/arrow-down';
 	import RawMdiGroups from '~icons/mdi/account-group';
 	import RawMdiPencil from '~icons/mdi/pencil';
 	import RawMdiTag from '~icons/mdi/tag';
@@ -181,14 +181,6 @@
 		policy.dst.push(host + ":" + ports)
 	}
 
-	function getPolicyTitle(pol: AclPolicy, idx: number): string {
-		const pfx = "#" + (idx + 1) + ": "
-		if (pol["#ha-meta"] === undefined || pol["#ha-meta"].name === "") {
-			return pfx + "Policy #" + (idx + 1)
-		}
-		return pfx + pol["#ha-meta"].name
-	}
-
 	function setPolicyName(name: string) {
 		if(policy.policy["#ha-meta"] === undefined) {
 			policy.policy["#ha-meta"] = HAMetaDefault
@@ -213,13 +205,13 @@
 		class="flex flex-row h-8 items-center space-x-0 text-secondary-700 dark:text-secondary-300 text-xl mr-2 w-auto"
 	>
 		<button 
-			class={`mt-3 pt-0 pb-3 btn-sm btn-icon rounded-md text-xl p-0 ${idx === 0 ? 'invisible' : ''}`}
+			class={`mt-3 pt-0 pb-3 px-0 btn-xs w-7 btn-icon rounded-md text-xl p-0 ${idx === 0 ? 'invisible' : ''}`}
 			onclick={reorderUp}
 		>
 			<RawMdiArrowUp />
 		</button>
 		<button
-			class={`mt-3 pt-3 pb-0 btn-sm btn-icon rounded-md text-xl p-0 ${idx === (acl.acls.length - 1) ? 'invisible' : ''}`}
+			class={`mt-3 pt-3 pb-0 px-0 btn-xs w-7 btn-icon rounded-md text-xl p-0 ${idx === (acl.acls.length - 1) ? 'invisible' : ''}`}
 			onclick={reorderDown}
 		>
 			<RawMdiArrowDown />
@@ -227,7 +219,7 @@
 	</div>
 	{/if}
 	<div class="flex-1 min-w-0">
-	<ListEntry id={idx.toString()} name={getPolicyTitle(policy.policy, idx)} logo={RawMdiSecurity} bind:open={opener.open}>
+	<ListEntry id={idx.toString()} name={ACLBuilder.getPolicyTitle(policy.policy, idx)} logo={RawMdiSecurity} bind:open={opener.open}>
 		{#snippet children()}
 		<CardListContainer>
 			<div class="mb-6">

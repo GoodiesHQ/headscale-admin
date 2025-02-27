@@ -22,11 +22,11 @@
 			}
 
 			const r = RegExp(policyFilterString.toLowerCase())
-			return policiesIndexed.filter(({policy}) => {
+			return policiesIndexed.filter(({policy, idx}) => {
 				return policy.src.some(src => r.test(src)) ||
 				policy.dst.some(dst => r.test(dst)) ||
 				(policy.proto !== undefined && r.test(policy.proto)) ||
-				(policy["#ha-meta"] !== undefined && r.test(policy["#ha-meta"].name.toLowerCase()))
+				(r.test(ACLBuilder.getPolicyTitle(policy, idx).toLowerCase()))
 			})
 		} catch {
 			debug(`Policy Regex "${policyFilterString}" is invalid`);
