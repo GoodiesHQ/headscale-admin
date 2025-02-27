@@ -28,12 +28,20 @@
 		open = $bindable(true),
 	}: TagOwnerListCardProps = $props()
 
-	let tag = $state(MakeTag())
 	const tagOwners = $derived(acl.tagExists(tagName) ? acl.getTagOwners(tagName) : []);
+	let tag = $state(MakeTag())
 	let tagNameNew = $state('');
 	let loading = $state(false);
 	let deleting = $state(false);
-	const options = $derived(makeOptions(acl, App.users.value))
+	const options = $derived.by(() => {
+		const us = App.users.value.map(u => u.name)
+		us.sort()
+
+		const gs = acl.getGroupNames(true)
+		gs.sort()
+
+		return us.concat(gs)
+	});
 
 	function MakeTag() {
 		return {
@@ -42,16 +50,6 @@
 			get owners() { return tagOwners },
 			set owners(o: string[]) { setTagOwners(o) }
 		}
-	}
-
-	function makeOptions(acl: ACLBuilder, users: User[]): string[] {
-		const us = users.map(u => u.name)
-		us.sort()
-
-		const gs = acl.getGroupNames(true)
-		gs.sort()
-
-		return us.concat(gs)
 	}
 
 	function renameTag(tagNameNew: string) {

@@ -1,5 +1,8 @@
 import JWCC from 'json5'
-import { isValidCIDR, isValidIP } from "$lib/common/funcs"
+import { isValidCIDR, isValidIP, toastError, toastSuccess } from "$lib/common/funcs"
+import { setPolicy } from './api'
+import type { ToastStore } from '@skeletonlabs/skeleton'
+import { debug } from './debug'
 
 export type TagOwners = string[]
 export type TagOwnersTyped = { users: string[], groups: string[] }
@@ -16,6 +19,14 @@ export type AclSshRulesIndexed = {rule: AclSshRule, idx: number}[]
 export type HAMeta = {
     name: string,
     open: boolean,
+}
+
+export function normHAMeta(meta: Partial<HAMeta>): HAMeta {
+    let def = HAMetaDefault
+    return {
+        name: meta.name ?? def.name,
+        open: meta.open ?? def.open,
+    }
 }
 
 export const HAMetaDefault = {
@@ -682,6 +693,14 @@ export class ACLBuilder implements ACL {
         }
     }
 
+    public static getPolicyTitle(pol: AclPolicy, idx: number): string {
+		const pfx = "#" + (idx + 1) + ": "
+		if (pol["#ha-meta"] === undefined || pol["#ha-meta"].name === "") {
+			return pfx + "Policy #" + (idx + 1)
+		}
+		return pfx + pol["#ha-meta"].name
+	}
+
     setSshRuleSrc(idx: number, src: string[]) {
         this.validateSshRuleIndex(idx)
         if (this.ssh != undefined) {
@@ -719,6 +738,30 @@ export class ACLBuilder implements ACL {
         this.validateSshRuleIndex(idx)
         if (this.ssh !== undefined) {
             this.ssh.splice(idx, 1)
+        }
+    }
+}
+
+export async function saveConfig(acl: ACLBuilder, ToastStore: ToastStore, loading?: {setLoadingTrue: ()=>void, setLoadingFalse: ()=>void}) {
+    if(loading !== undefined){
+        loading.setLoadingTrue()
+    }
+    //loading = true
+    try {
+        await setPolicy(acl)
+        if(ToastStore !== undefined){
+            toastSuccess('Saved ACL Configuration', ToastStore)
+        }
+    } catch(err) {
+        if (err instanceof Error){
+            if(ToastStore !== undefined){
+                toastError('', ToastStore, err)
+            }
+        }
+        debug(err)
+    } finally {
+        if(loading !== undefined){
+            loading.setLoadingFalse()
         }
     }
 }

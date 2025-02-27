@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { Accordion, getToastStore } from '@skeletonlabs/skeleton';
-	import type { ACLBuilder } from '$lib/common/acl.svelte';
+	import { saveConfig, type ACLBuilder } from '$lib/common/acl.svelte';
 	import { debug } from '$lib/common/debug';
 	import { toastError, toastSuccess } from '$lib/common/funcs';
 	import CardListPage from '$lib/cards/CardListPage.svelte';
 	import GroupListCard from '$lib/cards/acl/GroupListCard.svelte';
+	import RawMdiSave from '~icons/mdi/content-save-outline'
 
 	import NewItem from '$lib/parts/NewItem.svelte';
 
@@ -16,7 +17,21 @@
 	let newGroupName = $state('');
 	let groupsFilterString = $state('');
 
-	const filteredGroups = $derived(filterGroups(acl.getGroupNames(), groupsFilterString))
+	const filteredGroups = $derived.by(() => {
+		const groups = acl.getGroupNames()
+
+		try {
+			if (groupsFilterString === '') {
+				return groups;
+			}
+
+			const r = RegExp(groupsFilterString);
+			return groups.filter((g) => r.test(g));
+		} catch {
+			debug(`Group Regex "${groupsFilterString}" is invalid`);
+			return groups;
+		}
+	});
 
 	function newGroup() {
 		loading = true;
@@ -34,20 +49,6 @@
 		}
 	}
 
-	function filterGroups(groups: string[], filter: string): string[] {
-		try {
-			if (filter === '') {
-				return groups;
-			}
-
-			const r = RegExp(filter);
-			return groups.filter((g) => r.test(g));
-		} catch {
-			debug(`Group Regex "${filter}" is invalid`);
-			return groups;
-		}
-	}
-
 	function toggleShowCreateGroup() {
 		showCreateGroup = !showCreateGroup;
 	}
@@ -56,9 +57,16 @@
 
 <CardListPage>
 	<div class="mb-2">
-		<button class="btn-sm rounded-md variant-filled-success" onclick={toggleShowCreateGroup}>
-			Create Group
-		</button>
+		<div class="flex flex-row space-x-2">
+			<button disabled={loading} class="btn-icon rounded-md variant-filled-success disabled:opacity-50 w-8 text-xl" onclick={() => { 
+				saveConfig(acl, ToastStore, {setLoadingTrue: () => { loading = true}, setLoadingFalse: ()=> { loading = false }})
+			}}>
+				<RawMdiSave />
+			</button>
+			<button class="btn-sm rounded-md variant-filled-success" onclick={toggleShowCreateGroup}>
+				Create Group
+			</button>
+		</div>
 		{#if showCreateGroup}
 			<NewItem
 				title="Group"

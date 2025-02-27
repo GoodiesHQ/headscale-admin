@@ -10,18 +10,19 @@
 		user: User,
 		title?: string,
 	}
-	let { user = $bindable(), title = 'Nodes:'}: UserListNodesProps = $props();
+	let {
+		user = $bindable(),
+		title = 'Nodes:',
+	}: UserListNodesProps = $props();
 
 	const drawerStore = getDrawerStore();
 
-	const filteredNodes = $derived(filter(App.users.value, user, App.nodes.value));
-
-	function filter(us: User[], user: User, ns: Node[]): Node[] {
-		if (us.filter((u) => u.id == user.id).length == 1) {
-			return ns.filter((ns) => ns.user.id == user.id);
+	const filteredNodes = $derived.by(() => {
+		if (App.users.value.filter((u) => u.id == user.id).length == 1) {
+			return App.nodes.value.filter((n) => n.user.id == user.id);
 		}
 		return [];
-	}
+	});
 </script>
 
 <CardListEntry {title}>

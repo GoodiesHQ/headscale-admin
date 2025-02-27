@@ -27,9 +27,7 @@
 	}: PageHeaderProps = $props()
 
 	const layoutCurrent = $derived(layout !== undefined ? layout.value : null)
-	const regexIsValid = $derived(validRegex(filterString));
-
-	function validRegex(filterString?: string): boolean {
+	const regexIsValid = $derived.by(() => {
 		if (filterString === undefined) {
 			return true
 		}
@@ -40,7 +38,7 @@
 		} catch (err) {
 			return false;
 		}
-	}
+	});
 </script>
 
 <div class="py-5">
