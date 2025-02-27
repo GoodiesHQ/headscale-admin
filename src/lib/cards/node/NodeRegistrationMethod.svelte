@@ -7,20 +7,18 @@
 	}
 
 	let { node }: NodeRegistrationMethodProps = $props()
-	const nodeRegMethod = $derived(getRegMethod(node))
-
-	function getRegMethod(n: Node): string {
-		if (n.registerMethod == 'REGISTER_METHOD_AUTH_KEY') {
-			return 'Auth Key';
+	const nodeRegMethod = $derived.by(() => {
+		switch (node.registerMethod) {
+			case 'REGISTER_METHOD_AUTH_KEY':
+				return 'PreAuthKey';
+			case 'REGISTER_METHOD_CLI':
+				return 'CLI';
+			case 'REGISTER_METHOD_OIDC':
+				return "OIDC";
+			default:
+				return "Unspecified"
 		}
-		if (n.registerMethod == 'REGISTER_METHOD_CLI') {
-			return 'CLI';
-		}
-		if (n.registerMethod == 'REGISTER_METHOD_OIDC') {
-			return 'OIDC';
-		}
-		return 'Unspecified';
-	};
+	});
 </script>
 
 <CardListEntry title="Register Method:">

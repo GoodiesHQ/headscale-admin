@@ -23,14 +23,9 @@
 		childBottom = undefined,
 	}: NodeRoutesProps = $props()
 
-	let routes = $state(getNodeRoutes(App.routes.value, node.id));
-	$effect(() => {
-		routes = getNodeRoutes(App.routes.value, node.id)
-	})
-
-	function getNodeRoutes(routes: Route[], nodeID: string): Route[] {
-		return routes.filter((r) => (r.node ?? r.machine).id == nodeID);
-	}
+	const routes = $derived.by(() => {
+		return App.routes.value.filter((r) => (r.node ?? r.machine).id == node.id)
+	});
 
 	async function toggleAll(routes: Route[], state: 'on' | 'off') {
 		const toggle = state === 'on' ? enableRoute : disableRoute;

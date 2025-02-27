@@ -15,15 +15,23 @@
 		user: User,
 		title?: string,
 	}
-	let { user = $bindable(), title = 'PreAuth Keys:'}: UserListPreAuthKeysProps = $props();
+	let {
+		user = $bindable(),
+		title = 'PreAuth Keys:',
+	}: UserListPreAuthKeysProps = $props();
 
 	let hideInvalid = $state(true);
 
 	let showCreate = $state(false);
 	let disableCreate = $state(false);
-	const preAuthKeys = $derived(filter(App.preAuthKeys.value, user, hideInvalid));
 	let checked = $state(defaultChecked());
 	let expires = $state(defaultExpires());
+	const preAuthKeys = $derived(
+		App.preAuthKeys.value.filter((p) => {
+			return (p.user === user.name || p.user === user.email) 
+				&& (!hideInvalid || (hideInvalid && !isExpiredOrUsed(p)));
+		})
+	);
 
 	function defaultExpires(hours: number = 1, minutes: number = 0) {
 		const tzOffset = new Date().getTimezoneOffset() * 60 * 1000;
@@ -43,13 +51,6 @@
 
 	function isExpiredOrUsed(p: PreAuthKey): boolean {
 		return new Date() > new Date(p.expiration) || (p.used && !p.reusable);
-	};
-
-	function filter(p: PreAuthKey[], user: User, hideInvalid: boolean): PreAuthKey[] {
-		return p.filter((p) => {
-			return (p.user === user.name || p.user === user.email) 
-				&& (!hideInvalid || (hideInvalid && !isExpiredOrUsed(p)));
-		});
 	};
 </script>
 

@@ -12,14 +12,9 @@
 	}
 	let { user = $bindable() }: UserTileCardProps = $props()
 
-	const nodeCount = $derived(getNodeCount(user, App.nodes.value)); // react on user or node change
+	const nodeCount = $derived(App.nodes.value.filter((n) => n.user.id === user.id).length);
 	const drawerStore = getDrawerStore();
-
-	function getNodeCount(user: User, nodes: Node[]): number {
-		return nodes.filter((n) => n.user.id === user.id).length;
-	}
-
-	let color = $state(
+	const color = $derived(
 		(xxHash32(user.id + ':' + user.name, 0xbeefbabe) & 0xff_ff_ff)
 		.toString(16)
 		.padStart(6, '0')
