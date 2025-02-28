@@ -6,8 +6,8 @@
 	import CardListContainer from '$lib/cards/CardListContainer.svelte';
 	import { debug } from '$lib/common/debug';
 
-	import RawMdiArrowUp from '~icons/mdi/arrow-up';
-	import RawMdiArrowDown from '~icons/mdi/arrow-down';
+	import RawMdiArrowUp from '~icons/mdi/chevron-up';
+	import RawMdiArrowDown from '~icons/mdi/chevron-down';
 	import RawMdiGroups from '~icons/mdi/account-group';
 	import RawMdiPencil from '~icons/mdi/pencil';
 	import RawMdiTag from '~icons/mdi/tag';
@@ -25,7 +25,6 @@
 		acl: ACLBuilder,
 		idx: number,
 		loading?: boolean,
-		reorder: boolean,
 		reorderUp: () => void,
 		reorderDown: ()=> void,
 	}
@@ -34,7 +33,6 @@
 		acl = $bindable(),
 		idx,
 		loading = $bindable(false),
-		reorder = false,
 		reorderUp,
 		reorderDown,
 	}: PolicyListCardProps = $props()
@@ -199,25 +197,25 @@
 </script>
 
 <div class="flex flex-row w-full">
-	{#if reorder}
 	<div 
-		transition:slideX
-		class="flex flex-row h-8 items-center space-x-0 text-secondary-700 dark:text-secondary-300 text-xl mr-2 w-auto"
-	>
-		<button 
-			class={`mt-3 pt-0 pb-3 px-0 btn-xs w-7 btn-icon rounded-md text-xl p-0 ${idx === 0 ? 'invisible' : ''}`}
-			onclick={reorderUp}
-		>
-			<RawMdiArrowUp />
-		</button>
-		<button
-			class={`mt-3 pt-3 pb-0 px-0 btn-xs w-7 btn-icon rounded-md text-xl p-0 ${idx === (acl.acls.length - 1) ? 'invisible' : ''}`}
-			onclick={reorderDown}
-		>
-			<RawMdiArrowDown />
-		</button>
-	</div>
-	{/if}
+        transition:slideX
+        class="flex flex-col items-center space-y-0.5 text-secondary-700 dark:text-secondary-300 mr-2 w-auto"
+    >
+        <button 
+            class={`btn-xs w-6 h-6 btn-icon rounded-md p-0 pt-1.5 leading-none text-xl`}
+			disabled={idx === 0}
+            onclick={reorderUp}
+        >
+            <RawMdiArrowUp class="w-5 h-5" />
+        </button>
+        <button
+            class={`btn-xs w-6 h-6 btn-icon rounded-md p-0 pb-1.5 leading-none`}
+			disabled={idx === acl.acls.length - 1}
+            onclick={reorderDown}
+        >
+            <RawMdiArrowDown class="w-5 h-5" />
+        </button>
+    </div>
 	<div class="flex-1 min-w-0">
 	<ListEntry id={idx.toString()} name={ACLBuilder.getPolicyTitle(policy.policy, idx)} logo={RawMdiSecurity} bind:open={opener.open}>
 		{#snippet children()}
