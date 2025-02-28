@@ -40,13 +40,23 @@
 		theme: App.theme.value,
 	});
 
+	const ToastStore = getToastStore();
+
 	let apiKeyInfo = $derived(App.apiKeyInfo.value);
 	let apiKeyShow = $state(false);
 	let loading = $state(false);
 
-	const apiKeyExpirationMessage: ExpirationMessage = $derived(createMessage(apiKeyInfo));
-
-	const ToastStore = getToastStore();
+	const apiKeyExpirationMessage: ExpirationMessage = $derived.by(() => {
+		if (apiKeyInfo.expires !== ''){
+			const td = getTimeDifference(getTime(apiKeyInfo.expires));
+			return {
+				message: td.message,
+				color: getTimeDifferenceColor(td),
+			};
+		} else {
+			return { message: '', color: '' };
+		}
+	});
 
 	async function saveSettings(event?: Event) {
 		event?.preventDefault()
@@ -76,18 +86,6 @@
 			debug(err);
 		} finally {
 			loading = false;
-		}
-	}
-
-	function createMessage(apiKeyInfo: ApiKeyInfo): {message: string, color: string} {
-		if (apiKeyInfo.expires !== ''){
-			const td = getTimeDifference(getTime(apiKeyInfo.expires));
-			return {
-				message: td.message,
-				color: getTimeDifferenceColor(td),
-			};
-		} else {
-			return { message: '', color: '' };
 		}
 	}
 </script>

@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { Accordion, getToastStore } from '@skeletonlabs/skeleton';
-	import type { ACLBuilder } from '$lib/common/acl.svelte';
+	import { saveConfig, type ACLBuilder } from '$lib/common/acl.svelte';
 	import { debug } from '$lib/common/debug';
 	import { toastError, toastSuccess } from '$lib/common/funcs';
 	import CardListPage from '$lib/cards/CardListPage.svelte';
 	import TagOwnerListCard from '$lib/cards/acl/TagOwnerListCard.svelte';
 	import NewItem from '$lib/parts/NewItem.svelte';
+	import RawMdiSave from '~icons/mdi/content-save-outline'
 
 	const ToastStore = getToastStore();
 
@@ -32,17 +33,16 @@
 		}
 	}
 
-	function filterTags(tags: string[], filter: string) {
+	const filteredTags = $derived.by(() => {
+		const tags = acl.getTagNames()
 		try {
-			const r = RegExp(filter);
+			const r = RegExp(tagsFilter);
 			return tags.filter((g) => r.test(g));
 		} catch {
-			debug(`Tag Regex "${filter}" is invalid`);
+			debug(`Tag Regex "${tagsFilter}" is invalid`);
 			return tags;
 		}
-	}
-
-	const filteredTags = $derived(filterTags(acl.getTagNames(), tagsFilter))
+	})
 
 	function toggleShowCreateTag() {
 		showCreateTag = !showCreateTag;
@@ -52,9 +52,16 @@
 
 <CardListPage>
 	<div class="mb-2">
-		<button class="btn-sm rounded-md variant-filled-success" onclick={toggleShowCreateTag}>
-			Create Tag
-		</button>
+		<div class="flex flex-row space-x-2">
+			<button disabled={loading} class="btn-icon rounded-md variant-filled-success disabled:opacity-50 w-8 text-xl" onclick={() => { 
+				saveConfig(acl, ToastStore, {setLoadingTrue: () => { loading = true}, setLoadingFalse: ()=> { loading = false }})
+			}}>
+				<RawMdiSave />
+			</button>
+			<button class="btn-sm rounded-md variant-filled-success" onclick={toggleShowCreateTag}>
+				Create Tag
+			</button>
+		</div>
 		{#if showCreateTag}
 			<NewItem
 				title="Tag"

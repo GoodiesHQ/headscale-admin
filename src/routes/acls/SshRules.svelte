@@ -1,17 +1,50 @@
 <script lang="ts">
 	import { Accordion, getToastStore } from '@skeletonlabs/skeleton';
-	import { ACLBuilder, type AclSshRules, type AclSshRulesIndexed } from '$lib/common/acl.svelte';
+	import { ACLBuilder, saveConfig, type AclSshRules, type AclSshRulesIndexed } from '$lib/common/acl.svelte';
 	import { debug } from '$lib/common/debug';
 	import { toastSuccess } from '$lib/common/funcs';
 	import CardListPage from '$lib/cards/CardListPage.svelte';
+	import RawMdiSave from '~icons/mdi/content-save-outline'
 
 	import SshRuleListCard from '$lib/cards/acl/SshRuleListCard.svelte';
 
 	const ToastStore = getToastStore();
 
-	let {acl = $bindable(), loading = $bindable(false)}: {acl: ACLBuilder, loading?: boolean} = $props();
+	type SshRuleProps = {
+		acl: ACLBuilder,
+		loading?: boolean,
+	}
+
+	let {
+		acl = $bindable(),
+		loading = $bindable(false)
+	}: SshRuleProps = $props();
+
 	let sshRuleFilterString = $state('')
-	const filteredSshRules = $derived(filterSshRules(acl.getAllSshRules(), sshRuleFilterString));
+	const filteredSshRules = $derived.by(() => {
+		const rules = acl.getAllSshRules()
+
+		if (rules === undefined) {
+			return []
+		}
+
+		const rulesIndexed = rules.map((rule, idx) => ({rule, idx}))
+		try{
+			if (sshRuleFilterString === '') {
+				return rulesIndexed
+			}
+
+			const r = RegExp(sshRuleFilterString)
+			return rulesIndexed.filter(({rule}) => {
+				return rule.src.some(src => r.test(src)) ||
+				rule.dst.some(dst => r.test(dst)) ||
+				rule.users.some(user => r.test(user))
+			})
+		} catch {
+			debug(`SSH Rule Regex "${sshRuleFilterString}" is invalid`);
+			return rulesIndexed;
+		}
+	});
 
 	function newSshRule() {
 		acl.createSshRule(ACLBuilder.DefaultSshRule())
@@ -20,36 +53,20 @@
 			toastSuccess('Created SSH Rule #' + acl.acls.length, ToastStore)
 		}
 	}
-
-	function filterSshRules(rules: AclSshRules | undefined, filter: string): AclSshRulesIndexed {
-		if (rules === undefined) {
-			return []
-		}
-
-		const rulesIndexed = rules.map((rule, idx) => ({rule, idx}))
-		try{
-			if (filter === '') {
-				return rulesIndexed
-			}
-
-			const r = RegExp(filter)
-			return rulesIndexed.filter(({rule}) => {
-				return rule.src.some(src => r.test(src)) ||
-				rule.dst.some(dst => r.test(dst)) ||
-				rule.users.some(user => r.test(user))
-			})
-		} catch {
-			debug(`SSH Rule Regex "${filter}" is invalid`);
-			return rulesIndexed;
-		}
-	}
 </script>
 
 <CardListPage>
 	<div class="mb-2">
-		<button class="btn-sm rounded-md variant-filled-success" onclick={newSshRule}>
-			Create SSH Rule
-		</button>
+		<div class="flex flex-row space-x-2">
+			<button disabled={loading} class="btn-icon rounded-md variant-filled-success disabled:opacity-50 w-8 text-xl" onclick={() => { 
+				saveConfig(acl, ToastStore, {setLoadingTrue: () => { loading = true}, setLoadingFalse: ()=> { loading = false }})
+			}}>
+				<RawMdiSave />
+			</button>
+			<button class="btn-sm rounded-md variant-filled-success" onclick={newSshRule}>
+				Create SSH Rule
+			</button>
+		</div>
 	</div>
 
 	<div class="flex items-center pb-4 mt-4">

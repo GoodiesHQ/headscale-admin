@@ -23,18 +23,16 @@
 	let { node = $bindable() }: NodeTileCardProps = $props()
 
 	let lastSeen = $state(getTimeDifferenceMessage(getTime(node.lastSeen)));
-	const routeCount = $derived(getRouteCount(App.routes.value, node));
+	const routeCount = $derived(
+		App.routes.value.filter((r) => (r.node ?? r.machine).id == node.id).length
+	);
 	const drawerStore = getDrawerStore();
 
-	let color = $state(
+	let color = $derived(
 		(xxHash32(node.id + ':' + node.givenName, 0xbeefbabe) & 0xff_ff_ff)
 		.toString(16)
 		.padStart(6, '0')
 	);
-
-	function getRouteCount(routes: Route[], node: Node) {
-		return routes.filter((r) => (r.node ?? r.machine).id == node.id).length;
-	}
 
 	onMount(() => {
 		const lastSeenInterval = setInterval(() => {

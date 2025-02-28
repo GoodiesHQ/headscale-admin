@@ -39,7 +39,18 @@
 	const tagNamesOptions = $derived(toOptions(tagNames))
 	const groupNames = $derived(acl.getGroupNames(true));
 	const groupNamesOptions = $derived(toOptions(groupNames));
-	const rule = $derived(makeSshRule(idx));
+	const rule = $derived.by(() => {
+		return {
+			get rule() { return acl.getSshRule(idx) },
+			set rule(rule: AclSshRule) { acl.setSshRule(idx, rule); },
+			get src() { return acl.getSshRule(idx).src },
+			set src(src: string[]) { acl.setSshRuleSrc(idx, src) },
+			get dst() { return acl.getSshRule(idx).dst },
+			set dst(dst: string[]) { acl.setSshRuleDst(idx, dst) },
+			get users() { return acl.getSshRule(idx).users },
+			set users(users: string[]) { acl.setSshRuleUsers(idx, users) },
+		}
+	});
 
 	let deleting = $state(false);
 
@@ -78,19 +89,6 @@
 		dstNewType == "tag" ? tagNamesOptions:
 		undefined
 	)
-
-	function makeSshRule(idx: number) {
-		return {
-			get rule() { return acl.getSshRule(idx) },
-			set rule(rule: AclSshRule) { acl.setSshRule(idx, rule); },
-			get src() { return acl.getSshRule(idx).src },
-			set src(src: string[]) { acl.setSshRuleSrc(idx, src) },
-			get dst() { return acl.getSshRule(idx).dst },
-			set dst(dst: string[]) { acl.setSshRuleDst(idx, dst) },
-			get users() { return acl.getSshRule(idx).users },
-			set users(users: string[]) { acl.setSshRuleUsers(idx, users) },
-		}
-	}
 
 	function deleteSshRule() {
 		deleting = true;
