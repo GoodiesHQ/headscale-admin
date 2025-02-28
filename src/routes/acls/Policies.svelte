@@ -12,7 +12,6 @@
 
 	let {acl = $bindable(), loading = $bindable(false)}: {acl: ACLBuilder, loading?: boolean} = $props();
 	let policyFilterString = $state('')
-	let showReorderControls = $state(false)
 
 	const filteredPolicies = $derived.by(() => {
 		const policiesIndexed = acl.getAllPolicies().map((policy, idx) => ({policy, idx}))
@@ -71,13 +70,6 @@
 			<button class="btn-sm rounded-md variant-filled-success" onclick={newPolicy}>
 				Create Policy
 			</button>
-			<button class="btn-sm rounded-md variant-filled-secondary" onclick={() => { showReorderControls = showReorderControls ? false : true}}>
-				{#if showReorderControls}
-				Hide Reordering
-				{:else}
-				Show Reordering
-				{/if}
-			</button>
 		</div>
 	</div>
 
@@ -95,7 +87,6 @@
 		<PolicyListCard 
 			bind:acl
 			bind:loading
-			reorder={showReorderControls}
 			{idx}
 			reorderUp={makeReorderFunc(idx, 'up')}
 			reorderDown={makeReorderFunc(idx, 'down')}
