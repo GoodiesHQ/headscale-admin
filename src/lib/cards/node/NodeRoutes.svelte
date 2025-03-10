@@ -55,7 +55,7 @@
 	{#if childBottom === undefined}
 		{#each routes as _, i}
 			<div class="grid grid-cols-12 col-span-12 font-thin">
-				<NodeRoute bind:route={routes[i]} bind:showDelete {node} />
+				<NodeRoute route={routes[i]} bind:showDelete {node} />
 			</div>
 		{/each}
 	{:else}
