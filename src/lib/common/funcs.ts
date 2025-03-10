@@ -68,9 +68,14 @@ export function getTime(
 	msg?: string | null | Date,
 	fallback: string = DurationInfiniteString,
 ): number {
+	if (msg === null) {
+		return DurationInfinite.getTime()
+	}
+
 	if (msg === undefined) {
 		msg = new Date();
 	}
+
 	if (msg instanceof Date) {
 		return msg.getTime();
 	}
