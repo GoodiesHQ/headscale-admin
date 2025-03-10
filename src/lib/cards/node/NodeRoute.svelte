@@ -16,7 +16,7 @@
 		loading?: boolean,
 	}
 	let {
-		route = $bindable(),
+		route,
 		node = $bindable(),
 		showDelete = $bindable(false),
 		loading = $bindable(false),
