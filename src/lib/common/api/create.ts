@@ -28,9 +28,12 @@ export async function createUser(username: string): Promise<User> {
 }
 
 export async function createNode(key: string, username: string): Promise<Node> {
+	/*
+	// mkey prefix is no longer required
 	if (!key.startsWith('mkey:')) {
 		key = 'mkey:' + key;
 	}
+	*/
 
 	const data = '?user=' + username + '&key=' + key;
 	const { node } = await apiPost<ApiNode>(API_URL_NODE + '/register' + data)
