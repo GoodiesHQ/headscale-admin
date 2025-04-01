@@ -1,6 +1,6 @@
 import { App } from "$lib/States.svelte";
 
-export const version = '0.25.5';
+export const version = '0.25.6';
 
 export function debug(...data: unknown[]) {
 	// output if console debugging is enabled
