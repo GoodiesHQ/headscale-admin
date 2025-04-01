@@ -21,6 +21,9 @@ export async function createApiKey() {
 }
 
 export async function createUser(username: string): Promise<User> {
+	if (username.length === 0) {
+		throw new Error("Username cannot be empty")
+	}
 	const data = { name: username };
 	const { user } = await apiPost<ApiUser>(API_URL_USER, data);
 	debug('Created user "' + username + '"');
@@ -28,13 +31,6 @@ export async function createUser(username: string): Promise<User> {
 }
 
 export async function createNode(key: string, username: string): Promise<Node> {
-	/*
-	// mkey prefix is no longer required
-	if (!key.startsWith('mkey:')) {
-		key = 'mkey:' + key;
-	}
-	*/
-
 	const data = '?user=' + username + '&key=' + key;
 	const { node } = await apiPost<ApiNode>(API_URL_NODE + '/register' + data)
 	debug('Created Node "' + node.givenName + '" for user "' + username + '"');
