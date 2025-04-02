@@ -63,6 +63,14 @@ PowerShell:
 $env:ENDPOINT=/admin
 ```
 
+#### Install Prerequisits
+
+You can install these by running:
+
+```
+npm install
+```
+
 #### Build
 
 You can create the production build by running:
