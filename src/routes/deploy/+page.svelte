@@ -38,7 +38,7 @@
 		d.operator && d.operatorValue != '' && cmd.push('--operator=' + d.operatorValue);
 		d.forceReauth && cmd.push('--force-reauth');
 		d.sshServer && cmd.push('--ssh');
-		d.usePreAuthKey && d.preAuthKey !== '' && cmd.push('--authkey=' + d.preAuthKey);
+		d.usePreAuthKey && d.preAuthKey !== '' && cmd.push('--auth-key=' + d.preAuthKey);
 		d.unattended && cmd.push('--unattended')
 
 		// advertise
@@ -142,7 +142,7 @@
 			name="Unattended"
 			help="Run the tailscale client in unattended mode (on startup)"
 		/>
-		<DeployCheck 
+		<DeployCheck
 			bind:checked={deployment.advertiseExitNodeLocalAccess}
 			name="Allow LAN Access"
 			help="Allow local network access while connected to the TailNet and using an exit node"
