@@ -1,15 +1,14 @@
 <script lang="ts">
 	import { xxHash32 } from 'js-xxhash';
-	import type { Node, Route } from '$lib/common/types';
+	import type { Node } from '$lib/common/types';
 	import { onMount } from 'svelte';
 	import {
 		dateToStr,
-		getTimeDifference,
 		getTime,
 		getTimeDifferenceMessage,
 		openDrawer,
 	} from '$lib/common/funcs';
-	import { getDrawerStore, type DrawerSettings } from '@skeletonlabs/skeleton';
+	import { getDrawerStore } from '@skeletonlabs/skeleton';
 	import CardTileContainer from '../CardTileContainer.svelte';
 	import CardTileEntry from '../CardTileEntry.svelte';
 	import OnlineNodeIndicator from '$lib/parts/OnlineNodeIndicator.svelte';
@@ -23,9 +22,7 @@
 	let { node = $bindable() }: NodeTileCardProps = $props()
 
 	let lastSeen = $state(getTimeDifferenceMessage(getTime(node.lastSeen)));
-	const routeCount = $derived(
-		App.routes.value.filter((r) => (r.node ?? r.machine).id == node.id).length
-	);
+	const routeCount = $derived(node.availableRoutes.length);
 	const drawerStore = getDrawerStore();
 
 	let color = $derived(

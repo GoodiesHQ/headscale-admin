@@ -11,5 +11,5 @@
 </script>
 
 <CardListContainer>
-	<NodeRoutes showTitle={true} showDelete={false} bind:node />
+	<NodeRoutes showTitle={true} bind:node />
 </CardListContainer>

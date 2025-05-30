@@ -72,8 +72,8 @@
 													}
 												}
 												for (let i = 0; i < App.preAuthKeys.value.length; i++) {
-													if (App.preAuthKeys.value[i].user === oldName) {
-														App.preAuthKeys.value[i].user = u.name;
+													if (App.preAuthKeys.value[i].user.name === oldName) {
+														App.preAuthKeys.value[i].user.name = u.name;
 														break;
 													}
 												}
