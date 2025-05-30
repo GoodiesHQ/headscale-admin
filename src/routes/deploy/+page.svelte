@@ -38,7 +38,7 @@
 		d.operator && d.operatorValue != '' && cmd.push('--operator=' + d.operatorValue);
 		d.forceReauth && cmd.push('--force-reauth');
 		d.sshServer && cmd.push('--ssh');
-		d.usePreAuthKey && d.preAuthKey !== '' && cmd.push('--authkey=' + d.preAuthKey);
+		d.usePreAuthKey && d.preAuthKey !== '' && cmd.push('--auth-key=' + d.preAuthKey);
 		d.unattended && cmd.push('--unattended')
 
 		// advertise
