@@ -1,30 +1,29 @@
-import { API_URL_NODE, API_URL_POLICY, API_URL_PREAUTHKEY, API_URL_ROUTES, API_URL_USER, apiGet } from '$lib/common/api';
+import { API_URL_NODE, API_URL_POLICY, API_URL_PREAUTHKEY, API_URL_USER, apiGet } from '$lib/common/api';
 import type {
 	ApiNodes,
 	ApiPolicy,
 	ApiPreAuthKeys,
-	ApiRoutes,
 	ApiUsers,
 	Node,
 	PreAuthKey,
-	Route,
 	User,
 } from '$lib/common/types';
+import { debug } from '../debug';
 
 export async function getPreAuthKeys(
-	usernames?: string[],
+	user_ids?: string[],
 	init?: RequestInit,
 ): Promise<PreAuthKey[]> {
-	if (usernames == undefined) {
-		usernames = (await getUsers(init)).map((u) => u.name);
+	if (user_ids == undefined) {
+		user_ids = (await getUsers(init)).map((u) => u.id);
 	}
 	const promises: Promise<ApiPreAuthKeys>[] = [];
 	let preAuthKeysAll: PreAuthKey[] = [];
 
-	usernames.forEach(async (username: string) => {
-		if(username != ""){
+	user_ids.forEach(async (user_id: string) => {
+		if(user_id != ""){
 			promises.push(
-				apiGet<ApiPreAuthKeys>(API_URL_PREAUTHKEY + '?user=' + username, init),
+				apiGet<ApiPreAuthKeys>(API_URL_PREAUTHKEY + '?user=' + user_id, init),
 			);
 		}
 	});
@@ -63,11 +62,6 @@ export async function getUsers(init?: RequestInit, options?: GetUserOptions): Pr
 export async function getNodes(): Promise<Node[]> {
 	const { nodes } = await apiGet<ApiNodes>(API_URL_NODE);
 	return nodes;
-}
-
-export async function getRoutes(): Promise<Route[]> {
-	const { routes } = await apiGet<ApiRoutes>(API_URL_ROUTES);
-	return routes;
 }
 
 export async function getPolicy(): Promise<string> {

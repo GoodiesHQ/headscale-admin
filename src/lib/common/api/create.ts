@@ -44,7 +44,7 @@ export async function createPreAuthKey(
 	expiration: Date | string,
 ) {
 	const data = {
-		user: user.name,
+		user: user.id,
 		reusable,
 		ephemeral,
 		expiration: new Date(expiration).toISOString(),

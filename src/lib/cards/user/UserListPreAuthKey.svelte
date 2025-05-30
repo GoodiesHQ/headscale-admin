@@ -46,7 +46,7 @@
 			<Delete
 				func={async () => {
 					await expirePreAuthKey(preAuthKey);
-					const keys = await getPreAuthKeys([preAuthKey.user]);
+					const keys = await getPreAuthKeys([preAuthKey.user.id]);
 					keys.forEach((pak) => {
 						App.updateValue(App.preAuthKeys, pak)
 					});

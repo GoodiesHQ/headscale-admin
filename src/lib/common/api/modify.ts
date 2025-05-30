@@ -1,20 +1,19 @@
 import type {
 	ApiNode,
 	ApiPolicy,
-	ApiRoute,
 	ApiUser,
 	Node,
 	PreAuthKey,
-	Route,
 	User,
 } from '$lib/common/types';
 import { debug } from '../debug';
 import { apiPost, apiPut } from './base';
 import type { ACLBuilder } from '../acl.svelte';
-import { API_URL_NODE, API_URL_POLICY, API_URL_PREAUTHKEY, API_URL_ROUTES, API_URL_USER } from './url';
+import { API_URL_NODE, API_URL_POLICY, API_URL_PREAUTHKEY, API_URL_USER } from './url';
 import { createApiKey } from './create';
 import { expireApiKey } from './delete';
 import { App } from '$lib/States.svelte';
+import { setsEqual } from '../funcs';
 
 export async function renameUser(u: User, nameNew: string): Promise<User> {
 	const path = `${API_URL_USER}/${u.id}/rename/${nameNew}`;
@@ -39,7 +38,7 @@ export async function changeNodeOwner(n: Node, newUserID: string): Promise<Node>
 
 export async function expirePreAuthKey(pak: PreAuthKey) {
 	const path = `${API_URL_PREAUTHKEY}/expire`;
-	const data = { user: pak.user, key: pak.key };
+	const data = { user: pak.user.id, key: pak.key };
 	await apiPost(path, data);
 }
 
@@ -58,18 +57,42 @@ export async function setNodeTags(n: Node, tags: string[]): Promise<Node> {
 	return node;
 }
 
-export async function enableRoute(r: Route): Promise<Route> {
-	const path = `${API_URL_ROUTES}/${r.id}/enable`;
-	const { route } = await apiPost<ApiRoute>(path);
-	debug('Enabled Route "' + r.prefix + '"');
-	return route;
+export async function enableRoutes(node: Node, ...routes: string[]): Promise<string[]> {
+	const path = `${API_URL_NODE}/${node.id}/approve_routes`;
+	const currentRoutes = new Set(node.approvedRoutes);
+	const newRoutes = new Set(node.approvedRoutes.concat(routes));
+
+	if (setsEqual(currentRoutes, newRoutes)) {
+		return node.approvedRoutes; // No change needed
+	}
+
+	// fix headscale bug #2637
+	const currentStatus = node.online;
+
+	const { node: nodeNew } = await apiPost<ApiNode>(path, { routes: [...newRoutes] });
+	debug(`Enabled Routes ${routes.join(', ')} for Node "${node.givenName}"`);
+	nodeNew.online = currentStatus; // Preserve online status, #2637
+	App.updateValue(App.nodes, nodeNew);
+	return nodeNew.approvedRoutes;
 }
 
-export async function disableRoute(r: Route): Promise<Route> {
-	const path = `${API_URL_ROUTES}/${r.id}/disable`;
-	const { route } = await apiPost<ApiRoute>(path);
-	debug('Disabled Route "' + r.prefix + '"');
-	return route;
+export async function disableRoutes(node: Node, ...routes: string[]): Promise<string[]> {
+	const path = `${API_URL_NODE}/${node.id}/approve_routes`;
+	const currentRoutes = new Set(node.approvedRoutes);
+	const newRoutes = new Set(node.approvedRoutes.filter((r) => !routes.includes(r)));
+
+	if (setsEqual(currentRoutes, newRoutes)) {
+		return node.approvedRoutes; // No change needed
+	}
+
+	// fix headscale bug #2637
+	const currentStatus = node.online;
+
+	const { node: nodeNew } = await apiPost<ApiNode>(path, { routes: [...newRoutes] });
+	debug(`Disabled Routes ${routes.join(', ')} for Node "${node.givenName}"`);
+	nodeNew.online = currentStatus; // Preserve online status, #2637
+	App.updateValue(App.nodes, nodeNew);
+	return nodeNew.approvedRoutes;
 }
 
 export async function setPolicy(acl: ACLBuilder) {

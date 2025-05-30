@@ -1,8 +1,8 @@
 import { Mutex } from 'async-mutex';
 
 import { browser } from '$app/environment';
-import type { User, Node, PreAuthKey, Route, ApiKeyInfo, ApiApiKeys, Deployment } from '$lib/common/types';
-import { getUsers, getPreAuthKeys, getNodes, getRoutes } from '$lib/common/api/get';
+import type { User, Node, PreAuthKey, ApiKeyInfo, ApiApiKeys, Deployment } from '$lib/common/types';
+import { getUsers, getPreAuthKeys, getNodes } from '$lib/common/api/get';
 import type { ToastStore } from '@skeletonlabs/skeleton';
 import { apiGet } from './common/api';
 import { arraysEqual, clone, toastError, toastWarning } from './common/funcs';
@@ -103,7 +103,7 @@ export class StateLocal<T> {
 export class HeadscaleAdmin {
     users = new State<User[]>([]);
     nodes = new State<Node[]>([]);
-    routes = new State<Route[]>([]);
+    // routes = new State<Route[]>([]);
     preAuthKeys = new State<PreAuthKey[]>([]);
 
     // debugging status
@@ -195,6 +195,7 @@ export class HeadscaleAdmin {
         return false
     }
 
+    /*
     async populateRoutes(routes?: Route[]): Promise<boolean> {
         if (routes === undefined) {
             routes = await getRoutes()
@@ -205,13 +206,14 @@ export class HeadscaleAdmin {
         }
         return false
     }
+    */
 
     async populatePreAuthKeys(preAuthKeys?: PreAuthKey[]): Promise<boolean> {
         if (preAuthKeys === undefined) {
             preAuthKeys = await getPreAuthKeys()
         }
         if(!arraysEqual(this.preAuthKeys.value, preAuthKeys)){
-            this.preAuthKeys.value = preAuthKeys
+            this.preAuthKeys.value = [...preAuthKeys]
             return true
         }
         return false
@@ -223,7 +225,8 @@ export class HeadscaleAdmin {
         const apiKeyInfo = this.apiKeyInfo.value
         apiKeyInfo.expires = myKey.expiration;
         apiKeyInfo.authorized = true;
-        return true
+        this.apiKeyInfo.value = {...apiKeyInfo};
+        return true;
     }
 
     async populateAll(handler?: (err: unknown) => void, repeat: boolean = true){
@@ -232,7 +235,7 @@ export class HeadscaleAdmin {
             promises.push(this.populateUsers());
             promises.push(this.populateNodes());
             promises.push(this.populatePreAuthKeys());
-            promises.push(this.populateRoutes());
+            // promises.push(this.populateRoutes());
             promises.push(this.populateApiKeyInfo());
             await Promise.allSettled(promises);
             promises.forEach((p) => p.catch(handler));
@@ -264,11 +267,12 @@ export class HeadscaleAdmin {
     }
 }
 
-export const App = new HeadscaleAdmin()
+export const App = $state<HeadscaleAdmin>(new HeadscaleAdmin())
 
 
 function isInitialized(): boolean {
-    return typeof window !== 'undefined';
+    return true
+    // return typeof window !== 'undefined';
 }
 
 interface Identified {

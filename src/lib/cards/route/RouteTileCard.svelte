@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Node, Route } from '$lib/common/types';
+	import type { Node } from '$lib/common/types';
 	import { onMount } from 'svelte';
 	import {
 		getTime,

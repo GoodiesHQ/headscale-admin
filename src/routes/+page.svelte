@@ -68,7 +68,10 @@
 				title: 'Total Routes',
 				border: 'border-warning-600 dark:border-warning-600',
 				icon: RawMdiRouter,
-				value: App.routes.value.length,
+				value: App.nodes.value.reduce(
+					(acc, node) => acc + (node.availableRoutes ? node.availableRoutes.length : 0),
+					0,
+				),
 				path: '/routes',
 			},
 		]

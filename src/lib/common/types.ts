@@ -78,7 +78,7 @@ export type ApiPreAuthKey = {
 
 export class PreAuthKey {
 	constructor(
-		public user: string,
+		public user: User,
 		public id: string,
 		public key: string,
 		public reusable: boolean,
@@ -97,6 +97,7 @@ export class PreAuthKeys {
 	constructor(public preAuthKeys: PreAuthKey[]) { }
 }
 
+/*
 export type Route = {
 	id: string;
 	createdAt: string;
@@ -116,6 +117,7 @@ export type ApiRoute = {
 export type ApiRoutes = {
 	routes: Route[];
 };
+*/
 
 export type ApiPolicy = {
 	policy: string;
@@ -145,6 +147,9 @@ export type Node = {
 	validTags: string[];
 	givenName: string;
 	online: boolean;
+	approvedRoutes: string[];
+	availableRoutes: string[];
+	subnetRoutes: string[];
 };
 
 export type ApiNodes = {

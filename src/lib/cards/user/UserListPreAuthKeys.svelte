@@ -28,7 +28,7 @@
 	let expires = $state(defaultExpires());
 	const preAuthKeys = $derived(
 		App.preAuthKeys.value.filter((p) => {
-			return (p.user === user.name || p.user === user.email) 
+			return (p.user.id === user.id) 
 				&& (!hideInvalid || (hideInvalid && !isExpiredOrUsed(p)));
 		})
 	);

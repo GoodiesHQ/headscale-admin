@@ -58,6 +58,20 @@ export function isExpired(expiry: string): boolean {
 	return date.getTime() - now.getTime() < 0;
 }
 
+export function setsEqual<T>(set1: Set<T>, set2: Set<T>): boolean {
+	if (set1.size !== set2.size) {
+		return false;
+	}
+
+	for (const item of set1) {
+		if (!set2.has(item)) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 interface TimeDifference {
 	future: boolean;
 	finite: boolean;
@@ -431,7 +445,7 @@ export function getSortedFilteredNodes(
 	)
 	if(ignoreRouteless === true){
 		return nodesSortedFiltered.filter((n) => {
-			return App.routes.value.some((r) => r.node.id === n.id)
+			return n.availableRoutes.length > 0;
 		})
 	}
 	return nodesSortedFiltered

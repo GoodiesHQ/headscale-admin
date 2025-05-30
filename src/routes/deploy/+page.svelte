@@ -19,9 +19,9 @@
 
 	const ToastStore = getToastStore();
 
-	function createFilter(username: string) {
+	function createFilter(user_id: string) {
 		return (pak: PreAuthKey) => {
-			return pak.user === username && !(pak.used && !pak.reusable) && !isExpired(pak.expiration);
+			return pak.user.id === user_id && !(pak.used && !pak.reusable) && !isExpired(pak.expiration);
 		};
 	}
 
@@ -120,7 +120,7 @@
 				<select bind:value={deployment.preAuthKeyUser} class="input rounded-md">
 					<option value=""></option>
 					{#each App.users.value as user}
-						<option value={user.name}>{user.name}</option>
+						<option value={user.id}>{user.name}</option>
 					{/each}
 				</select>
 				{#if deployment.preAuthKeyUser}
