@@ -97,7 +97,6 @@ export class PreAuthKeys {
 	constructor(public preAuthKeys: PreAuthKey[]) { }
 }
 
-/*
 export type Route = {
 	id: string;
 	createdAt: string;
@@ -117,7 +116,6 @@ export type ApiRoute = {
 export type ApiRoutes = {
 	routes: Route[];
 };
-*/
 
 export type ApiPolicy = {
 	policy: string;
@@ -147,9 +145,10 @@ export type Node = {
 	validTags: string[];
 	givenName: string;
 	online: boolean;
-	approvedRoutes: string[];
-	availableRoutes: string[];
-	subnetRoutes: string[];
+	// Route fields for newer Headscale versions (v0.26.1+)
+	approvedRoutes?: string[];
+	availableRoutes?: string[];
+	subnetRoutes?: string[];
 };
 
 export type ApiNodes = {
@@ -213,4 +212,18 @@ export type Deployment = {
 	acceptRoutes: boolean;
 	acceptExitNode: boolean;
 	acceptExitNodeValue: string;
+};
+
+export type GrpcConfig = {
+	serverAddress: string;
+	enableTls: boolean;
+	port: number;
+	timeoutMs: number;
+	apiKey: string;
+};
+
+export type GrpcConnectionStatus = {
+	connected: boolean;
+	lastTested: string | null;
+	error: string | null;
 };

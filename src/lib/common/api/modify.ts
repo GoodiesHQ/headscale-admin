@@ -1,9 +1,11 @@
 import type {
 	ApiNode,
 	ApiPolicy,
+  ApiRoute,
 	ApiUser,
 	Node,
 	PreAuthKey,
+  Route,
 	User,
 } from '$lib/common/types';
 import { debug } from '../debug';
@@ -13,7 +15,7 @@ import { API_URL_NODE, API_URL_POLICY, API_URL_PREAUTHKEY, API_URL_USER } from '
 import { createApiKey } from './create';
 import { expireApiKey } from './delete';
 import { App } from '$lib/States.svelte';
-import { setsEqual } from '../funcs';
+import { getUsers } from './get';
 
 export async function renameUser(u: User, nameNew: string): Promise<User> {
 	const path = `${API_URL_USER}/${u.id}/rename/${nameNew}`;
@@ -38,7 +40,25 @@ export async function changeNodeOwner(n: Node, newUserID: string): Promise<Node>
 
 export async function expirePreAuthKey(pak: PreAuthKey) {
 	const path = `${API_URL_PREAUTHKEY}/expire`;
-	const data = { user: pak.user.id, key: pak.key };
+
+	// Convert username to user ID for the API call
+	// First try to find the user in the current App.users state
+	let userId = '';
+	const user = App.users.value.find(u => u.name === pak.user || u.email === pak.user);
+	if (user) {
+		userId = user.id;
+	} else {
+		// If not found in current state, fetch users to find the ID
+		const users = await getUsers();
+		const foundUser = users.find(u => u.name === pak.user || u.email === pak.user);
+		if (foundUser) {
+			userId = foundUser.id;
+		} else {
+			throw new Error(`User not found for preauth key: ${pak.user}`);
+		}
+	}
+
+	const data = { user: userId, key: pak.key };
 	await apiPost(path, data);
 }
 

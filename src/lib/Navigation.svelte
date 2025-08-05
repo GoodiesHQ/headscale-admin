@@ -9,6 +9,7 @@
 	import RawMdiRouter from '~icons/mdi/router';
 	import RawMdiSecurity from '~icons/mdi/security';
 	import RawMdiSettings from '~icons/mdi/settings';
+	import RawMdiBug from '~icons/mdi/bug';
 
 	// import { ApiKeyInfoStore, ApiKeyStore, hasValidApi } from './Stores';
 	import { onMount, type Component } from 'svelte';
@@ -49,6 +50,7 @@
 		{ path: '/routes', name: 'Routes', logo: RawMdiRouter },
 		{ path: '/acls', name: 'ACLs', logo: RawMdiSecurity },
 		{ path: '/settings', name: 'Settings', logo: RawMdiSettings },
+		{ path: '/grpc-debug', name: 'gRPC Debug', logo: RawMdiBug },
 	].filter((p) => p != undefined);
 
 	const pages = $derived.by(() => App.hasValidApi ? allPages : allPages.slice(-1));

@@ -1,8 +1,8 @@
 import { Mutex } from 'async-mutex';
 
 import { browser } from '$app/environment';
-import type { User, Node, PreAuthKey, ApiKeyInfo, ApiApiKeys, Deployment } from '$lib/common/types';
-import { getUsers, getPreAuthKeys, getNodes } from '$lib/common/api/get';
+import type { User, Node, PreAuthKey, Route, ApiKeyInfo, ApiApiKeys, Deployment, GrpcConfig, GrpcConnectionStatus } from '$lib/common/types';
+import { getUsers, getPreAuthKeys, getNodes, getRoutes } from '$lib/common/api/get';
 import type { ToastStore } from '@skeletonlabs/skeleton';
 import { apiGet } from './common/api';
 import { arraysEqual, clone, toastError, toastWarning } from './common/funcs';
@@ -173,6 +173,22 @@ export class HeadscaleAdmin {
         acceptExitNodeValue: '',
     })
 
+    // gRPC configuration
+    grpcConfig = new StateLocal<GrpcConfig>('grpcConfig', {
+        serverAddress: '',
+        enableTls: false,
+        port: 8080, // Default to Envoy proxy port
+        timeoutMs: 10000,
+        apiKey: '',
+    });
+
+    // gRPC connection status
+    grpcConnectionStatus = new State<GrpcConnectionStatus>({
+        connected: false,
+        lastTested: null,
+        error: null,
+    });
+
     async populateUsers(users?: User[]): Promise<boolean> {
         if (users === undefined) {
             users = await getUsers()
@@ -264,6 +280,11 @@ export class HeadscaleAdmin {
 
     updateValue(valued: Valued<Identified[]>, item: Identified) {
         valued.value = valued.value.map((itemOld) => (itemOld.id === item.id ? item : itemOld));
+    }
+
+    get isGrpcConfigured(): boolean {
+        const config = this.grpcConfig.value;
+        return config.serverAddress.trim() !== '' && config.apiKey.trim() !== '';
     }
 }
 

@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package headscale.v1;
+
+option go_package = "github.com/juanfont/headscale/gen/go/v1";
+
+import "google/protobuf/timestamp.proto";
+
+service HeadscaleService {
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {}
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse) {}
+  rpc GetUser(GetUserRequest) returns (GetUserResponse) {}
+  rpc RenameUser(RenameUserRequest) returns (RenameUserResponse) {}
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {}
+}
+
+message User {
+  string id = 1;                              // 字符串 ID（根据 Headscale v0.26.1 实际定义）
+  string name = 2;                            // 用户名
+  google.protobuf.Timestamp created_at = 3;   // 创建时间
+  string display_name = 4;                    // 显示名称
+  string email = 5;                           // 邮箱（可选）
+  string provider_id = 6;                     // 提供商 ID（可选）
+  string provider = 7;                        // 提供商（可选）
+  string profile_pic_url = 8;                 // 头像 URL（可选）
+}
+
+message GetUserRequest {
+  string name = 1;
+}
+
+message GetUserResponse {
+  User user = 1;
+}
+
+message CreateUserRequest {
+  string name = 1;
+  string display_name = 2;  // 命名空间字段，对应 Headscale v0.26.1 的 display_name
+}
+
+message CreateUserResponse {
+  User user = 1;
+}
+
+message RenameUserRequest {
+  string old_name = 1;
+  string new_name = 2;
+}
+
+message RenameUserResponse {
+  User user = 1;
+}
+
+message DeleteUserRequest {
+  string name = 1;
+}
+
+message DeleteUserResponse {
+}
+
+message ListUsersRequest {
+}
+
+message ListUsersResponse {
+  repeated User users = 1;
+}

@@ -310,6 +310,7 @@ An overview of all headscale Users with a List or Tile layout.
 - Create, Rename, and Delete Users
 - Create, View, and Expire PreAuth Keys
 - List User's Nodes with Online Indicators
+- Create User with DisplayName via gRpc api
 
 <img width="1000" alt="image" src="./img/HA-Users-List.png">
 
@@ -394,3 +395,10 @@ Allows a user to save the ACL configuration to the headscale server or load a ne
 Store API URL and API Key information in the browser's LocalStorage. Set API refresh interval (how frequently users, preauth keys, nodes, and routes are updated) and toggle console debugging.
 
 <img width="1000" alt="image" src="./img/HA-Settings.png">
+
+
+### gRPC Debug Page
+
+A diagnostic page to test the gRPC connection and configuration.
+
+<img width="1000" alt="image" src="./img/HA-gRpc-Debug.png">

@@ -2,6 +2,14 @@ import { App } from '$lib/States.svelte';
 import { ApiAuthErrorUnauthorized } from '../errors';
 import { debug } from '../debug';
 
+// Custom error for 404 responses
+export class ApiNotFoundError extends Error {
+	constructor(message: string = 'Resource not found') {
+		super(message);
+		this.name = 'ApiNotFoundError';
+	}
+}
+
 // errors received from headscale
 export type ApiError = {
 	code: number;
@@ -18,6 +26,12 @@ function isApiError<T>(response: ApiResponse<T>): response is ApiError {
 async function toApiResponse<T>(response: Response): Promise<T> {
 	if (!response.ok) {
 		const text = await response.text();
+
+		// Handle 404 errors specifically
+		if (response.status === 404) {
+			throw new ApiNotFoundError(`Resource not found: ${response.url}`);
+		}
+
 		if (text === 'Unauthorized') {
 			throw new ApiAuthErrorUnauthorized();
 		}

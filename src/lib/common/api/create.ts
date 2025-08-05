@@ -50,6 +50,6 @@ export async function createPreAuthKey(
 		expiration: new Date(expiration).toISOString(),
 	};
 	const { preAuthKey } = await apiPost<ApiPreAuthKey>(API_URL_PREAUTHKEY, data);
-	debug('Created PreAuthKey for user "' + user.name + '"');
+	debug('Created PreAuthKey for user "' + user.name + '" (ID: ' + user.id + ')');
 	return preAuthKey;
 }

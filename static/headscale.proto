@@ -1,0 +1,181 @@
+syntax = "proto3";
+
+package headscale.v1;
+
+option go_package = "github.com/juanfont/headscale/gen/go/headscale/v1";
+
+import "google/protobuf/timestamp.proto";
+
+// HeadscaleService is the gRPC service for Headscale
+service HeadscaleService {
+  // User management
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+  rpc RenameUser(RenameUserRequest) returns (RenameUserResponse);
+
+  // PreAuthKey management
+  rpc CreatePreAuthKey(CreatePreAuthKeyRequest) returns (CreatePreAuthKeyResponse);
+  rpc ListPreAuthKeys(ListPreAuthKeysRequest) returns (ListPreAuthKeysResponse);
+  rpc ExpirePreAuthKey(ExpirePreAuthKeyRequest) returns (ExpirePreAuthKeyResponse);
+
+  // Node management
+  rpc ListNodes(ListNodesRequest) returns (ListNodesResponse);
+  rpc GetNode(GetNodeRequest) returns (GetNodeResponse);
+  rpc DeleteNode(DeleteNodeRequest) returns (DeleteNodeResponse);
+  rpc ExpireNode(ExpireNodeRequest) returns (ExpireNodeResponse);
+  rpc RenameNode(RenameNodeRequest) returns (RenameNodeResponse);
+}
+
+// User message definition matching actual Headscale v0.26.1
+message User {
+  string id = 1;                              // 字符串 ID
+  string name = 2;                            // 用户名
+  google.protobuf.Timestamp created_at = 3;   // 创建时间
+  string display_name = 4;                    // 显示名称
+  string email = 5;                           // 邮箱（可选）
+  string provider_id = 6;                     // 提供商 ID（可选）
+  string provider = 7;                        // 提供商（可选）
+  string profile_pic_url = 8;                 // 头像 URL（可选）
+}
+
+message GetUserRequest {
+  string name = 1;
+}
+
+message GetUserResponse {
+  User user = 1;
+}
+
+message CreateUserRequest {
+  string name = 1;
+  string display_name = 2;  // 命名空间字段，对应 Headscale v0.26.1 的 display_name
+}
+
+message CreateUserResponse {
+  User user = 1;
+}
+
+message RenameUserRequest {
+  string old_name = 1;
+  string new_name = 2;
+}
+
+message RenameUserResponse {
+  User user = 1;
+}
+
+message DeleteUserRequest {
+  string name = 1;
+}
+
+message DeleteUserResponse {
+}
+
+message ListUsersRequest {}
+
+message ListUsersResponse {
+  repeated User users = 1;
+}
+
+// PreAuthKey messages
+message PreAuthKey {
+  uint64 id = 1;
+  string key = 2;
+  uint64 user_id = 3;
+  bool reusable = 4;
+  bool ephemeral = 5;
+  bool used = 6;
+  google.protobuf.Timestamp expiration = 7;
+  google.protobuf.Timestamp created_at = 8;
+  repeated string acl_tags = 9;
+}
+
+message CreatePreAuthKeyRequest {
+  string user = 1;
+  bool reusable = 2;
+  bool ephemeral = 3;
+  google.protobuf.Timestamp expiration = 4;
+  repeated string acl_tags = 5;
+}
+
+message CreatePreAuthKeyResponse {
+  PreAuthKey pre_auth_key = 1;
+}
+
+message ListPreAuthKeysRequest {
+  string user = 1;
+}
+
+message ListPreAuthKeysResponse {
+  repeated PreAuthKey pre_auth_keys = 1;
+}
+
+message ExpirePreAuthKeyRequest {
+  string user = 1;
+  string key = 2;
+}
+
+message ExpirePreAuthKeyResponse {}
+
+// Node messages
+message Node {
+  uint64 id = 1;
+  string machine_key = 2;
+  string node_key = 3;
+  string disco_key = 4;
+  repeated string ip_addresses = 5;
+  string name = 6;
+  User user = 7;
+  google.protobuf.Timestamp last_seen = 8;
+  google.protobuf.Timestamp last_successful_update = 9;
+  google.protobuf.Timestamp expiry = 10;
+  PreAuthKey pre_auth_key = 11;
+  google.protobuf.Timestamp created_at = 12;
+  bool register_method = 13;
+  bool forced_tags = 14;
+  repeated string invalid_tags = 15;
+  repeated string valid_tags = 16;
+  string given_name = 17;
+  bool online = 18;
+}
+
+message ListNodesRequest {
+  string user = 1;
+}
+
+message ListNodesResponse {
+  repeated Node nodes = 1;
+}
+
+message GetNodeRequest {
+  uint64 node_id = 1;
+}
+
+message GetNodeResponse {
+  Node node = 1;
+}
+
+message DeleteNodeRequest {
+  uint64 node_id = 1;
+}
+
+message DeleteNodeResponse {}
+
+message ExpireNodeRequest {
+  uint64 node_id = 1;
+}
+
+message ExpireNodeResponse {
+  Node node = 1;
+}
+
+message RenameNodeRequest {
+  uint64 node_id = 1;
+  string new_name = 2;
+}
+
+message RenameNodeResponse {
+  Node node = 1;
+}
