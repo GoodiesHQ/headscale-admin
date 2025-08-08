@@ -142,7 +142,7 @@
 			name="Unattended"
 			help="Run the tailscale client in unattended mode (on startup)"
 		/>
-		<DeployCheck 
+		<DeployCheck
 			bind:checked={deployment.advertiseExitNodeLocalAccess}
 			name="Allow LAN Access"
 			help="Allow local network access while connected to the TailNet and using an exit node"
