@@ -6,7 +6,7 @@
 		<meta name="viewport" content="width=device-width" />
 		%sveltekit.head%
 	</head>
-	<body data-sveltekit-preload-data="hover" data-theme="skeleton">
+	<body data-sveltekit-preload-data="hover" data-theme="skeleton" class="overflow-hidden">
 		<script>
             document.body.dataset['theme'] = localStorage.getItem('theme') ?? 'skeleton';
 		</script>
