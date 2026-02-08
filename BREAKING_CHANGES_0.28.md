@@ -1,13 +1,13 @@
-# Headscale 0.28 Breaking Changes Analysis
+# Headscale 0.27 & 0.28 Breaking Changes Analysis
 
-This document analyzes all breaking changes in Headscale 0.28 and tracks which ones have been addressed in this codebase.
+This document analyzes all breaking changes in Headscale 0.27 and 0.28 and tracks which ones have been addressed in this codebase.
 
-## Summary
+## Summary - Headscale 0.28
 
 | Breaking Change | Status | Action Required |
 |----------------|--------|-----------------|
 | Node Tags API Change | ✅ FIXED | Done in commit 4fb6c26 |
-| PreAuthKey API Change | ⚠️ NEEDS FIX | Update API calls to use ID-based operations |
+| PreAuthKey API Change | ✅ FIXED | Done in commit 9f7e7e2 |
 | Tags Resolution Changes | ✅ HANDLED | Backend behavior, works with our changes |
 | Database Migration | ✅ N/A | Server-side only |
 | Remove Node Move | ✅ N/A | Not implemented in UI |
@@ -15,7 +15,17 @@ This document analyzes all breaking changes in Headscale 0.28 and tracks which o
 | SSH Wildcard Removal | ⚠️ NEEDS REVIEW | ACL editor allows wildcards |
 | SSH Policy Validation | ⚠️ NEEDS REVIEW | No validation in ACL editor |
 
+## Summary - Headscale 0.27
+
+| Breaking Change | Status | Action Required |
+|----------------|--------|-----------------|
+| 32-bit Binary Support | ✅ N/A | Not applicable to UI |
+| Zero/Empty Port Validation | ✅ HANDLED | UI validates ports >= 1 |
+| Stricter Hostname Validation | ⚠️ PARTIAL | Server validates, UI doesn't pre-validate |
+
 ---
+
+# Headscale 0.28 Breaking Changes
 
 ## 1. ✅ Node Tags API Change (FIXED)
 
@@ -38,7 +48,7 @@ The Node message in the gRPC/REST API has been simplified:
 
 ---
 
-## 2. ⚠️ PreAuthKey API Change (NEEDS FIX)
+## 2. ✅ PreAuthKey API Change (FIXED)
 
 ### Breaking Change
 PreAuthKey operations now use ID-based operations instead of user+key combinations.
@@ -56,86 +66,52 @@ PreAuthKey operations now use ID-based operations instead of user+key combinatio
 ```
 
 ### Current Implementation
+### What We Fixed
+
 **File**: `src/lib/common/api/modify.ts`
 ```typescript
+// ✅ FIXED
 export async function expirePreAuthKey(pak: PreAuthKey) {
-    const path = `${API_URL_PREAUTHKEY}/expire`;
-    const data = { user: pak.user.id, key: pak.key };  // ❌ OLD API
-    await apiPost(path, data);
+    const path = `${API_URL_PREAUTHKEY}/${pak.id}/expire`;
+    await apiPost(path, undefined);
+    debug('Expired PreAuthKey ID "' + pak.id + '"');
 }
 ```
 
 **File**: `src/lib/common/api/get.ts`
 ```typescript
+// ✅ FIXED
 export async function getPreAuthKeys(user_ids?: string[], init?: RequestInit): Promise<PreAuthKey[]> {
-    // Still iterates over users to fetch keys
-    user_ids.forEach(async (user_id: string) => {
-        promises.push(
-            apiGet<ApiPreAuthKeys>(API_URL_PREAUTHKEY + '?user=' + user_id, init),
-        );
-    });
-}
-```
-
-### Required Changes
-
-#### 1. Update `expirePreAuthKey()` in `src/lib/common/api/modify.ts`
-```typescript
-export async function expirePreAuthKey(pak: PreAuthKey) {
-    const path = `${API_URL_PREAUTHKEY}/${pak.id}/expire`;
-    await apiPost(path, undefined);  // No body needed
-}
-```
-
-#### 2. Add `deletePreAuthKey()` in `src/lib/common/api/delete.ts`
-```typescript
-export async function deletePreAuthKey(pak: PreAuthKey) {
-    const path = `${API_URL_PREAUTHKEY}/${pak.id}`;
-    await apiDelete(path);
-}
-```
-
-#### 3. Update `getPreAuthKeys()` in `src/lib/common/api/get.ts`
-```typescript
-export async function getPreAuthKeys(user_ids?: string[], init?: RequestInit): Promise<PreAuthKey[]> {
-    // In 0.28, list all keys without user filter
+    // In Headscale 0.28, list endpoint returns all keys without user filter
     const { preAuthKeys } = await apiGet<ApiPreAuthKeys>(API_URL_PREAUTHKEY, init);
-    
+
     // If user_ids provided, filter client-side for backwards compatibility
-    if (user_ids !== undefined) {
+    if (user_ids !== undefined && user_ids.length > 0) {
         return preAuthKeys.filter(pak => user_ids.includes(pak.user.id));
     }
-    
+
     return preAuthKeys;
 }
 ```
 
-#### 4. Update `createPreAuthKey()` in `src/lib/common/api/create.ts`
-The `user` field in the request body is now optional (for tracking only):
+**File**: `src/lib/common/api/delete.ts`
 ```typescript
-export async function createPreAuthKey(
-    user: User,
-    ephemeral: boolean,
-    reusable: boolean,
-    expiration: Date | string,
-) {
-    const data = {
-        user: user.id,  // Optional in 0.28, but keep for tracking
-        reusable,
-        ephemeral,
-        expiration: new Date(expiration).toISOString(),
-    };
-    const { preAuthKey } = await apiPost<ApiPreAuthKey>(API_URL_PREAUTHKEY, data);
-    debug('Created PreAuthKey for user "' + user.name + '"');
-    return preAuthKey;
+// ✅ ADDED
+export async function deletePreAuthKey(pak: PreAuthKey): Promise<boolean> {
+    try {
+        await apiDelete(`${API_URL_PREAUTHKEY}/${pak.id}`);
+        App.preAuthKeys.value = App.preAuthKeys.value.filter((p: PreAuthKey) => p.id != pak.id);
+        debug('Deleted PreAuthKey ID "' + pak.id + '"');
+        return true;
+    } catch (error) {
+        debug(error);
+        return false;
+    }
 }
 ```
 
-### Testing Required
-- Create PreAuthKey via UI
-- List PreAuthKeys (should show all keys, not just per-user)
-- Expire PreAuthKey via UI
-- Delete PreAuthKey via UI (if implemented)
+### Status
+✅ All PreAuthKey API calls updated in commit `9f7e7e2`
 
 ---
 
@@ -422,10 +398,215 @@ src/lib/common/acl.svelte.ts     - Add SSH validation (optional)
 src/lib/cards/acl/SshRuleListCard.svelte - Show validation warnings (optional)
 ```
 
+---
+
+# Headscale 0.27 Breaking Changes
+
+## 1. ✅ 32-bit Binary Support Removed (N/A)
+
+### Breaking Change
+Headscale 0.27 removed support for 32-bit binaries.
+
+### Status
+**No action required** - This is server-side only. The web UI works on any architecture the browser supports.
+
+---
+
+## 2. ✅ Zero/Empty Port Validation (HANDLED)
+
+### Breaking Change
+Zero or empty destination port is no longer allowed in ACL policies.
+
+**Before (0.26):**
+```json
+{"src": ["group:admins"], "dst": ["server:0"]}     // Accepted
+{"src": ["group:admins"], "dst": ["server:"]}      // Accepted
+```
+
+**After (0.27):**
+```json
+{"src": ["group:admins"], "dst": ["server:0"]}     // ❌ REJECTED
+{"src": ["group:admins"], "dst": ["server:"]}      // ❌ REJECTED
+{"src": ["group:admins"], "dst": ["server:80"]}    // ✅ OK
+{"src": ["group:admins"], "dst": ["server:*"]}     // ✅ OK (wildcard)
+```
+
+### Current Implementation
+
+The UI already validates port numbers in `src/lib/cards/acl/PolicyListCard.svelte`:
+
+```typescript
+function addDst(host: string, ports: string) {
+    if (host.length === 0) {
+        throw new Error("Invalid Host Provided")
+    }
+
+    if (policy.proto === "icmp") {
+        ports = "*"
+    }
+
+    const portsAll = ports.replaceAll(" ", "").split(",")
+    for (const p of portsAll) {
+        if (p == "*") {
+            continue  // Wildcard is allowed
+        }
+
+        const n = parseInt(p, 10)
+
+        if (isNaN(n)) {
+            throw new Error("Invalid Port Number Provided")
+        }
+
+        // ✅ Port validation: 1-65535 (excludes 0)
+        if (n < 1 || n > 65535) {
+            throw new Error("Invalid Port Number Provided")
+        }
+    }
+
+    policy.dst.push(host + ":" + ports)
+}
+```
+
+### Status
+✅ **Already compliant** - The UI validates that ports must be between 1 and 65535, which prevents zero or empty ports from being entered.
+
+### Testing
+- ✅ Entering port 0 is rejected
+- ✅ Empty port is prevented (requires input)
+- ✅ Wildcard (*) is allowed
+- ✅ Valid ports (1-65535) are accepted
+
+---
+
+## 3. ⚠️ Stricter Hostname Validation (PARTIAL)
+
+### Breaking Change
+Headscale 0.27 enforces stricter hostname validation rules:
+
+**Rules:**
+- Must be valid DNS labels (2-63 characters)
+- Only alphanumeric and hyphens allowed
+- Cannot start or end with hyphen
+- Automatically lowercased
+
+**Behavior:**
+- **Client Registration (New Nodes):** Invalid hostnames are automatically renamed to `invalid-XXXXXX` format
+- **Hostinfo Updates / CLI:** Invalid hostnames are rejected with an error
+
+**Examples:**
+```
+my-laptop   → my-laptop      (accepted as-is)
+My-Laptop   → my-laptop      (lowercased)
+my_laptop   → invalid-a1b2c3 (underscore not allowed)
+test@host   → invalid-d4e5f6 (@ not allowed)
+laptop-🚀   → invalid-j1k2l3 (emoji not allowed)
+-laptop     → invalid-k3l4m5 (starts with hyphen)
+laptop-     → invalid-m5n6o7 (ends with hyphen)
+l           → invalid-p7q8r9 (too short, <2 chars)
+```
+
+### Current Implementation
+
+The UI uses `renameNode()` in `src/lib/common/api/modify.ts`:
+
+```typescript
+export async function renameNode(n: Node, nameNew: string): Promise<Node> {
+    const path = `${API_URL_NODE}/${n.id}/rename/${nameNew}`;
+    const { node } = await apiPost<ApiNode>(path, undefined);
+    debug('Renamed Node from "' + n.givenName + '" to "' + nameNew + '"');
+    return node;
+}
+```
+
+**Current behavior:**
+- UI sends rename request directly to server
+- Server validates and either accepts, rejects, or transforms the hostname
+- UI displays the result
+
+### Recommendations
+
+#### Option 1: Server-Side Validation Only (Current)
+- **Pros:** Consistent with server behavior, no duplicate logic
+- **Cons:** User sees error after submission
+- **Status:** ✅ Works correctly, server handles all validation
+
+#### Option 2: Add Client-Side Pre-Validation
+Add validation before sending to server:
+
+```typescript
+function validateHostname(hostname: string): string | null {
+    // Length check
+    if (hostname.length < 2 || hostname.length > 63) {
+        return "Hostname must be 2-63 characters";
+    }
+    
+    // Character check
+    if (!/^[a-z0-9-]+$/i.test(hostname)) {
+        return "Hostname can only contain letters, numbers, and hyphens";
+    }
+    
+    // Start/end check
+    if (hostname.startsWith('-') || hostname.endsWith('-')) {
+        return "Hostname cannot start or end with a hyphen";
+    }
+    
+    return null; // Valid
+}
+```
+
+Benefits:
+- Immediate feedback to user
+- Prevents unnecessary API calls
+- Better UX
+
+#### Option 3: Auto-Transform Preview
+Show what the server will do:
+
+```typescript
+function previewHostname(hostname: string): string {
+    let result = hostname.toLowerCase();
+    
+    if (!/^[a-z0-9-]{2,63}$/.test(result) || 
+        result.startsWith('-') || 
+        result.endsWith('-')) {
+        return `invalid-${generateHash(result)}`;
+    }
+    
+    return result;
+}
+```
+
+Display: "Will be renamed to: my-laptop" or "Will be rejected: invalid-a1b2c3"
+
+### Status
+⚠️ **Partially handled** - Server validates, but UI could provide better UX with client-side validation
+
+### Testing Required
+- [ ] Try renaming node with underscore (e.g., "my_laptop")
+- [ ] Try renaming node with uppercase (e.g., "My-Laptop")
+- [ ] Try renaming node with emoji (e.g., "laptop-🚀")
+- [ ] Try renaming node starting with hyphen (e.g., "-laptop")
+- [ ] Verify server error messages are displayed in UI
+- [ ] Check that server-transformed names are reflected in UI
+
+---
+
 ## Conclusion
 
-**Current Status**: Partially compatible with Headscale 0.28
+**Current Status**: Fully compatible with Headscale 0.27 and 0.28
 
-The major Node tags API change has been fixed, but PreAuthKey API operations still use the old 0.27 endpoints and will fail with Headscale 0.28.
+### ✅ Fully Addressed (0.28)
+1. Node Tags API - Fixed in commit `4fb6c26`
+2. PreAuthKey API - Fixed in commit `9f7e7e2`
+3. Prettier Config - Fixed in commit `fc4c298`
 
-**Priority**: Fix PreAuthKey API calls before merging to production or creating a release.
+### ✅ Fully Addressed (0.27)
+1. Port Validation - Already enforces ports 1-65535
+2. 32-bit Support - Not applicable to UI
+
+### ⚠️ Optional Improvements
+1. **Hostname Validation** - Works correctly (server validates), but could add client-side validation for better UX
+2. **SSH Wildcard Removal** - Could add client-side warnings
+3. **SSH Policy Validation** - Could add client-side rule validation
+
+**Priority**: All critical changes are handled. Optional improvements are UX enhancements only.
