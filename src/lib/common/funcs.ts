@@ -30,7 +30,7 @@ export function arraysEqual<T>(a: T[], b: T[]): boolean {
 	if (a == null || b == null){
 		return false;
 	}
-	
+
 	if (a.length !== b.length) {
 		return false;
 	}
@@ -408,8 +408,7 @@ export function filterNode(node: Node, filterString: string, onlineStatus: Onlin
 		return (
 			r.test(node.name) ||
 			r.test(node.givenName) ||
-			node.forcedTags.map(getTag).some((tag) => r.test(tag)) ||
-			node.validTags.map(getTag).some((tag) => r.test(tag))
+			node.tags.map(getTag).some((tag) => r.test(tag))
 		);
 	} catch (err) {
 		return true;

@@ -142,9 +142,7 @@ export type Node = {
 	| 'REGISTER_METHOD_AUTH_KEY'
 	| 'REGISTER_METHOD_CLI'
 	| 'REGISTER_METHOD_OIDC';
-	forcedTags: string[];
-	invalidTags: string[];
-	validTags: string[];
+	tags: string[];
 	givenName: string;
 	online: boolean;
 	approvedRoutes: string[];
