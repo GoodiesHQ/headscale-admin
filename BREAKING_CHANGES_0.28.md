@@ -121,8 +121,28 @@ export async function deletePreAuthKey(pak: PreAuthKey): Promise<boolean> {
 ### Breaking Change
 In Headscale 0.28, tags and user ownership are **mutually exclusive**. This is a fundamental architectural change:
 
-**Official Documentation (from Headscale docs):**
+**Official Tailscale Documentation:**
 > Tags are parallel to user authentication. They serve the same role as a user account, except they're intended for service-based devices, such as a web server or an app connector. As a result, it's impossible for a user account identity and a tag identity to exist on the same device. **Applying a tag to a device previously authenticated with a user account removes the user account.** Similarly, **authenticating a device with a user account removes all tags from the device.**
+
+**Key Limitations from Official Docs:**
+- ❌ **Cannot remove all tags from a tagged device** - Must have at least one tag for identity
+- ❌ **Cannot use tags for end-user devices** - Tags are for servers/services only
+- ❌ **Tagged devices cannot SSH to user devices** - SSH only works between same identity types
+- ❌ **Cannot remove tags using --advertise-tags if device uses auth key** - Must generate new auth key
+- ✅ **Multiple tags per device allowed** - A device can have many tags for multiple purposes
+- ✅ **Tag owners defined in ACL policy** - Controlled via tagOwners section
+
+**Use Cases (What Tags ARE For):**
+- ✅ Service-based devices (web servers, databases, app connectors)
+- ✅ Exit nodes and subnet routers
+- ✅ Devices managed by multiple users (via tag ownership)
+- ✅ Infrastructure that shouldn't be tied to individual users
+
+**What Tags Are NOT For:**
+- ❌ End-user devices (laptops, phones, tablets)
+- ❌ Annotating user-owned devices
+- ❌ Substituting for user accounts
+- ❌ Individual user identity management
 
 **Key Changes:**
 - Devices can be EITHER user-owned OR tagged (not both)
@@ -403,12 +423,31 @@ const onlineUserNodes = App.nodes.value
 ### Migration Path for Users
 
 Users upgrading to this version need to know:
+
+**Identity Model Changes:**
 1. Tagged nodes will no longer show a user owner (displays tags instead)
-2. **WARNING:** Applying tags to user-owned nodes removes user ownership (destructive)
+2. **WARNING:** Applying tags to user-owned nodes removes user ownership (destructive, irreversible via UI)
 3. **WARNING:** Assigning a user to tagged nodes removes all tags (destructive)
-4. Tags are now the primary identity for service/infrastructure nodes
-5. User accounts are for end-user devices (laptops, phones)
-6. The UI will show confirmation modals for destructive operations
+4. **CRITICAL:** Cannot remove all tags from a tagged device - must have at least one tag for identity
+
+**Best Practices (from Official Tailscale Docs):**
+5. Use tags **ONLY** for service devices (servers, databases, infrastructure)
+6. Use user accounts **ONLY** for end-user devices (laptops, phones, tablets)
+7. Tagged devices can only SSH to other tagged devices (not to user devices)
+8. If you need to change tags on a device authenticated with an auth key, generate a new auth key
+
+**UI Improvements:**
+9. The UI will show confirmation modals for destructive operations
+10. Warning messages explain the mutual exclusivity model
+11. Post-operation toasts confirm what was removed
+
+**Common Tagged Device Examples:**
+- Web servers, application servers
+- Database servers (PostgreSQL, MySQL, etc.)
+- Exit nodes and subnet routers
+- CI/CD infrastructure
+- App connectors
+- Internal service endpoints
 
 ---
 
@@ -632,6 +671,42 @@ Let Headscale server validate and return errors. Show error in toast when save f
 3. Test UI error handling
 
 ---
+
+## Official Tailscale Tags Documentation Summary
+
+**From Tailscale Docs - Key Concepts:**
+
+**What Are Tags?**
+> "Tailscale tags are how you authenticate and identify non-user devices, such as servers and ephemeral nodes. They serve two primary purposes: to provide an identity to non-user devices and to let you manage access control policies based on purpose."
+
+**Tags as Service Accounts:**
+> "Tags are essentially service accounts, but with more flexibility—you can assign multiple tags to a device to account for multiple purposes. For example, you might have a device that runs a PostgreSQL database and serves as a web server for internal access. In such a scenario, you could assign the device the following tags: tag:postgresql, tag:internal-access, and tag:web-server."
+
+**Critical Limitations:**
+1. **Cannot remove all tags from a device** - "You cannot remove all tags from a device. A device with a tag-based identity must have at least one tag."
+2. **Auth key restriction** - "You cannot remove tags using the --advertise-tags flag if the device uses an auth key. Instead, generate a new auth key with the latest set of tags."
+3. **No IP sets support** - "IP sets do not support tags."
+4. **SSH limitation** - "Devices with a tag-based identity can only SSH into other tagged devices; they cannot SSH into devices with a user-based identity."
+
+**Best Practices from Tailscale:**
+- Define clear naming conventions (e.g., tag:prod-postgresql-server)
+- Use composite tags for complex segmentation (e.g., tag:prod-emea-app-support-console)
+- Don't use tags to authenticate user-owned devices
+- Document tag ownership hierarchies
+- Use auth keys with pre-assigned tags for automation
+
+**Common Tag Naming Patterns:**
+- Server role: tag:database, tag:app-server, tag:queue
+- Environment: tag:prod, tag:staging, tag:dev
+- Location: tag:americas, tag:emea, tag:asiasouth
+- Application: tag:finance-reporting, tag:support-console
+- Composite: tag:prod-db, tag:nonprod-app, tag:prod-emea-app-finance
+
+**Tag Ownership:**
+- Defined in `tagOwners` section of ACL policy
+- Owners can be users, groups, or other tags (hierarchies possible)
+- Tags implicitly own themselves unless owned by another tag
+- Owner/Admin/Network admin can apply any tag
 
 ## Recommended Action Plan
 
