@@ -52,6 +52,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
             type=raw,value=0.28,enable={{is_default_branch}}
+            type=raw,value=0.28.1,enable={{is_default_branch}}
             type=raw,value=latest,enable={{is_default_branch}}
           labels: |
             org.opencontainers.image.title=Headscale Admin

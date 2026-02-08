@@ -80,7 +80,7 @@ export class StateLocal<T> {
             } else {
                 this.#value = valueDefault;
             }
-        
+
             // how do I clean this up?
             $effect.root(()=>{
                 $effect(()=>{
@@ -302,8 +302,7 @@ export function informUserExpiringSoon(toastStore: ToastStore) {
 		if (App.apiKeyInfo.value.informedExpiringSoon === true) {
 			return;
 		}
-		App.apiKeyInfo.value.informedUnauthorized = true;
-		App.apiKeyInfo.value.authorized = false;
+		App.apiKeyInfo.value.informedExpiringSoon = true;
 		toastWarning('API Key Expires Soon', toastStore);
 	});
 }

@@ -288,10 +288,10 @@ export class ACLBuilder implements ACL {
         // delete host from ACLs
         for (const acl of this.acls) {
             acl.src = acl.src.filter(s => s !== name)
-            acl.dst = acl.dst.filter(d => d !== name)
+            acl.dst = acl.dst.filter(d => ACLBuilder.getPolicyDstHost(d) !== name)
         }
 
-        // remove group from SSH
+        // remove host from SSH
         if (this.ssh !== undefined){
             for (const ssh of this.ssh) {
                 ssh.src = ssh.src.filter(s => s !== name)
@@ -367,7 +367,7 @@ export class ACLBuilder implements ACL {
 
     getTagOwners(name: string): string[]{
         const { stripped, prefixed } = ACLBuilder.normalizePrefix(name, 'tag')
-        const owners = this.tagOwners[prefixed] 
+        const owners = this.tagOwners[prefixed]
         if (owners === undefined) {
             throw new Error(`Tag ${stripped} does not exist`)
         }
@@ -498,8 +498,8 @@ export class ACLBuilder implements ACL {
     }
 
     getGroupByName(name: string): string[] {
-        const { stripped, prefixed } = ACLBuilder.normalizePrefix(name, 'group')
-        return this.groups[name]
+        const { prefixed } = ACLBuilder.normalizePrefix(name, 'group')
+        return this.groups[prefixed]
     }
 
     getGroupNames(withPrefix: boolean = false): string[] {

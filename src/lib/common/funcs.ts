@@ -395,7 +395,7 @@ export function filterNode(node: Node, filterString: string, onlineStatus: Onlin
 		const r = RegExp(filterString);
 		const getTag = (tag: string) => {
 			if (tag.startsWith('tag:')) {
-				return tag.substring(0, 4);
+				return tag.substring(4);
 			}
 			return tag;
 		};
