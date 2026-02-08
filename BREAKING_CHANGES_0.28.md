@@ -8,9 +8,10 @@ This document analyzes all breaking changes in Headscale 0.27 and 0.28 and track
 |----------------|--------|-----------------|
 | Node Tags API Change | ✅ FIXED | Done in commit 4fb6c26 |
 | PreAuthKey API Change | ✅ FIXED | Done in commit 9f7e7e2 |
+| **Tags as Identity** | 🚨 CRITICAL | Node.user must be optional, UI assumes user exists |
 | Tags Resolution Changes | ✅ HANDLED | Backend behavior, works with our changes |
 | Database Migration | ✅ N/A | Server-side only |
-| Remove Node Move | ✅ N/A | Not implemented in UI |
+| Remove Node Move | ⚠️ VERIFY | changeNodeOwner() may not work with tagged nodes |
 | OIDC Email Verification | ✅ N/A | Server config only |
 | SSH Wildcard Removal | ⚠️ NEEDS REVIEW | ACL editor allows wildcards |
 | SSH Policy Validation | ⚠️ NEEDS REVIEW | No validation in ACL editor |
@@ -115,7 +116,248 @@ export async function deletePreAuthKey(pak: PreAuthKey): Promise<boolean> {
 
 ---
 
-## 3. ✅ Tags Resolution Changes (HANDLED)
+## 3. 🚨 Tags as Identity (CRITICAL - NEEDS FIX)
+
+### Breaking Change
+In Headscale 0.28, tags and user ownership are **mutually exclusive**. This is a fundamental architectural change:
+
+**Key Changes:**
+- Devices can be EITHER user-owned OR tagged (not both)
+- Tagged devices receive identity from tags, not users
+- Applying tags to a node **removes user ownership**
+- Tagged nodes authenticated via tagged PreAuthKeys have no user
+- User-owned nodes can request tags via `--advertise-tags` (validated against tagOwners)
+
+**Examples:**
+```typescript
+// User-owned node
+{
+  id: "123",
+  givenName: "laptop",
+  user: { id: "user-1", name: "alice" },
+  tags: []  // No tags
+}
+
+// Tagged node (no user!)
+{
+  id: "456", 
+  givenName: "server",
+  user: null,  // ❌ No user!
+  tags: ["tag:server", "tag:production"]
+}
+```
+
+### Current Implementation Issues
+
+**Problem 1: Node type requires user**
+
+`src/lib/common/types.ts`:
+```typescript
+export type Node = {
+    // ...
+    user: User;  // ❌ WRONG - should be User | null
+    // ...
+}
+```
+
+**Problem 2: UI assumes node.user exists**
+
+Found **16 locations** that access `node.user` without null checks:
+
+1. `src/lib/cards/common/ItemDelete.svelte` - Checks if user has nodes
+2. `src/lib/cards/node/NodeOwner.svelte` - Displays node owner (3 references)
+3. `src/lib/cards/node/NodeTileCard.svelte` - Shows user name
+4. `src/lib/cards/user/UserListNodes.svelte` - Filters nodes by user
+5. `src/lib/cards/user/UserTileCard.svelte` - Counts user's nodes
+6. `src/lib/common/api/modify.ts` - changeNodeOwner() logs user name
+7. `src/lib/common/funcs.ts` - filterUser() checks online status
+8. `src/lib/parts/OnlineUserIndicator.svelte` - Shows user online status
+9. `src/routes/+page.svelte` - Dashboard stats
+10. And more...
+
+All of these will **crash with null pointer errors** when encountering tagged nodes.
+
+### Required Changes
+
+#### 1. Update Node Type Definition
+
+`src/lib/common/types.ts`:
+```typescript
+export type Node = {
+    id: string;
+    machineKey: string;
+    nodeKey: string;
+    discoKey: string;
+    ipAddresses: string[];
+    name: string;
+    user: User | null;  // ✅ FIXED - user is optional for tagged nodes
+    lastSeen: string | null;
+    lastSuccessfulUpdate: string | null;
+    expiry: string | null;
+    preAuthKey: string | null;
+    createdAt: string;
+    registerMethod:
+    | 'REGISTER_METHOD_UNSPECIFIED'
+    | 'REGISTER_METHOD_AUTH_KEY'
+    | 'REGISTER_METHOD_CLI'
+    | 'REGISTER_METHOD_OIDC';
+    tags: string[];
+    givenName: string;
+    online: boolean;
+    approvedRoutes: string[];
+    availableRoutes: string[];
+    subnetRoutes: string[];
+};
+```
+
+#### 2. Add Helper Functions
+
+Add to `src/lib/common/types.ts`:
+```typescript
+export function isTaggedNode(node: Node): boolean {
+    return node.user === null && node.tags.length > 0;
+}
+
+export function isUserOwnedNode(node: Node): boolean {
+    return node.user !== null;
+}
+
+export function getNodeOwnerDisplay(node: Node): string {
+    if (node.user) {
+        return node.user.name;
+    }
+    if (node.tags.length > 0) {
+        return node.tags.map(t => t.replace('tag:', '')).join(', ');
+    }
+    return 'Unknown';
+}
+```
+
+#### 3. Update All Components to Handle Null User
+
+**Critical files requiring null checks:**
+
+`src/lib/cards/node/NodeOwner.svelte`:
+```typescript
+// Before
+{node.user.name}
+
+// After
+{#if node.user}
+    {node.user.name}
+{:else if node.tags.length > 0}
+    <span class="badge variant-soft-secondary">
+        Tagged: {node.tags.map(t => t.replace('tag:', '')).join(', ')}
+    </span>
+{:else}
+    <span class="text-gray-500">No Owner</span>
+{/if}
+```
+
+`src/lib/cards/node/NodeTileCard.svelte`:
+```typescript
+<CardTileEntry title="User:">
+    <div class="flex flex-row gap-3 items-center">
+        {#if node.user}
+            {node.user.name}
+            <OnlineUserIndicator bind:user={node.user} />
+        {:else}
+            <span class="badge variant-soft-secondary">Tagged Node</span>
+        {/if}
+    </div>
+</CardTileEntry>
+```
+
+`src/lib/cards/user/UserListNodes.svelte`:
+```typescript
+const filteredNodes = $derived.by(() => {
+    if (App.users.value.filter((u) => u.id == user.id).length == 1) {
+        return App.nodes.value.filter((n) => n.user?.id == user.id);  // Add ?. operator
+    }
+    return [];
+});
+```
+
+`src/lib/common/funcs.ts`:
+```typescript
+function filterUser(user: User, filterString: string, onlineStatus: OnlineStatus): boolean {
+    // ...
+    if (
+        (onlineStatus === 'online' && !App.nodes.value.filter((n) => n.user?.id === user.id).some((n) => n.online)) ||
+        (onlineStatus === 'offline' && App.nodes.value.filter((n) => n.user?.id === user.id).some((n) => n.online))
+    ) {
+        return false;
+    }
+    // ...
+}
+```
+
+#### 4. Update changeNodeOwner Function
+
+`src/lib/common/api/modify.ts`:
+```typescript
+export async function changeNodeOwner(n: Node, newUserID: string): Promise<Node> {
+    const path = `${API_URL_NODE}/${n.id}/user`;
+    const { node } = await apiPost<ApiNode>(path, {user: newUserID});
+    const oldOwner = n.user ? n.user.name : 'tagged node';
+    const newOwner = node.user ? node.user.name : 'tagged node';
+    debug('Re-assigned Node from "' + oldOwner + '" to "' + newOwner + '"');
+    return node;
+}
+```
+
+**Note:** This function may not work for tagged nodes in Headscale 0.28. Need to verify if the endpoint exists and what it does.
+
+#### 5. Update Dashboard Stats
+
+`src/routes/+page.svelte`:
+```typescript
+// Count only user-owned nodes that are online
+const onlineUserNodes = App.nodes.value
+    .filter((node) => node.online && node.user !== null)
+    .reduce((acc, node) => {
+        return acc || App.users.value.some(
+            (user) => user.id === node.user?.id
+        );
+    }, false);
+```
+
+### Impact Assessment
+
+**Severity:** 🚨 **CRITICAL** - Application will crash when displaying tagged nodes
+
+**Affected Features:**
+- ❌ Node list/tile display
+- ❌ Node detail pages
+- ❌ User node counts
+- ❌ Dashboard statistics
+- ❌ Node ownership display
+- ❌ Online status indicators
+- ❌ Node filtering by user
+
+**Risk:** High - Any installation with tagged nodes will experience crashes
+
+### Testing Required
+
+- [ ] Create a tagged node via PreAuthKey with tags
+- [ ] Verify node list displays correctly
+- [ ] Verify node detail page shows tags instead of user
+- [ ] Verify dashboard doesn't crash
+- [ ] Verify user page doesn't show tagged nodes
+- [ ] Test changing tags on a user-owned node (should remove user)
+- [ ] Test removing all tags from tagged node (behavior unclear)
+- [ ] Verify changeNodeOwner() with tagged nodes
+
+### Migration Path for Users
+
+Users upgrading to this version need to know:
+1. Tagged nodes will no longer show a user owner
+2. Applying tags to user-owned nodes removes user ownership
+3. Tags are now the primary identity for infrastructure nodes
+
+---
+
+## 4. ✅ Tags Resolution Changes (HANDLED)
 
 ### Breaking Change
 - Tags now resolved from node's stored `tags` field only
@@ -127,7 +369,7 @@ export async function deletePreAuthKey(pak: PreAuthKey): Promise<boolean> {
 
 ---
 
-## 4. ✅ Database Migration (N/A)
+## 5. ✅ Database Migration (N/A)
 
 ### Breaking Change
 Database migration support removed for pre-0.25.0 databases.
@@ -137,7 +379,7 @@ Database migration support removed for pre-0.25.0 databases.
 
 ---
 
-## 5. ✅ Remove Node Move Functionality (N/A)
+## 6. ⚠️ Remove Node Move Functionality (VERIFY)
 
 ### Breaking Change
 - `headscale nodes move` CLI command removed
@@ -160,11 +402,20 @@ export async function changeNodeOwner(n: Node, newUserID: string): Promise<Node>
 }
 ```
 
-**VERIFY**: Check if this endpoint still exists in Headscale 0.28. If not, this function should be removed.
+**CRITICAL QUESTIONS:**
+1. Does this endpoint still exist in Headscale 0.28?
+2. Can you change owner of a tagged node? (Probably not - tags are identity)
+3. Can you change owner of a user-owned node? (Probably yes)
+4. What happens when you set tags on a user-owned node? (User becomes null)
+
+**Recommendation:** 
+- Keep function but add warning if node is tagged
+- Update to handle null user in debug message (see Section 3)
+- Consider disabling in UI for tagged nodes
 
 ---
 
-## 6. ✅ OIDC Email Verification (N/A)
+## 7. ✅ OIDC Email Verification (N/A)
 
 ### Breaking Change
 New `oidc.email_verified_required` config option controls email verification.
@@ -174,7 +425,7 @@ New `oidc.email_verified_required` config option controls email verification.
 
 ---
 
-## 7. ⚠️ SSH Wildcard Removal (NEEDS REVIEW)
+## 8. ⚠️ SSH Wildcard Removal (NEEDS REVIEW)
 
 ### Breaking Change
 Wildcard (`*`) is no longer supported as an SSH destination.
@@ -223,7 +474,7 @@ Add a warning in the UI near SSH rule editing that wildcards are not supported.
 
 ---
 
-## 8. ⚠️ SSH Policy Validation (NEEDS REVIEW)
+## 9. ⚠️ SSH Policy Validation (NEEDS REVIEW)
 
 ### Breaking Change
 SSH source/destination validation now enforces Tailscale's security model:
@@ -593,7 +844,10 @@ Display: "Will be renamed to: my-laptop" or "Will be rejected: invalid-a1b2c3"
 
 ## Conclusion
 
-**Current Status**: Fully compatible with Headscale 0.27 and 0.28
+**Current Status**: Partially compatible - CRITICAL issue with tags-as-identity
+
+### 🚨 CRITICAL ISSUES (0.28)
+1. **Tags as Identity** - Node.user must be optional, UI will crash with tagged nodes
 
 ### ✅ Fully Addressed (0.28)
 1. Node Tags API - Fixed in commit `4fb6c26`
@@ -609,4 +863,7 @@ Display: "Will be renamed to: my-laptop" or "Will be rejected: invalid-a1b2c3"
 2. **SSH Wildcard Removal** - Could add client-side warnings
 3. **SSH Policy Validation** - Could add client-side rule validation
 
-**Priority**: All critical changes are handled. Optional improvements are UX enhancements only.
+**Priority**: 
+- 🚨 **URGENT**: Fix tags-as-identity (Node.user nullable) - UI will crash without this
+- ⚠️ **Important**: Verify changeNodeOwner() behavior with tagged nodes
+- 💡 **Optional**: SSH validation and hostname pre-validation are UX improvements only
