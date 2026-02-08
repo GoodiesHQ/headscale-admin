@@ -4,9 +4,10 @@
 	import { getNodeOwnerDisplay, isTaggedNode } from '$lib/common/types';
 	import OnlineUserIndicator from '$lib/parts/OnlineUserIndicator.svelte';
 	import { changeNodeOwner } from '$lib/common/api';
-	import { openDrawer, toastError, toastSuccess } from '$lib/common/funcs';
+	import { openDrawer, toastError, toastSuccess, toastWarning } from '$lib/common/funcs';
 	import { debug } from '$lib/common/debug';
-	import { getDrawerStore, getToastStore } from '@skeletonlabs/skeleton';
+	import { getDrawerStore, getToastStore, getModalStore } from '@skeletonlabs/skeleton';
+	import type { ModalSettings } from '@skeletonlabs/skeleton';
 	import { slide } from 'svelte/transition';
 
 	import RawMdiSwapHorizontal from '~icons/mdi/swap-horizontal';
@@ -28,6 +29,7 @@
 	let transferring = $state(false);
 
 	const ToastStore = getToastStore();
+	const ModalStore = getModalStore();
 
 </script>
 
@@ -56,6 +58,15 @@
 			<span class="badge variant-soft-secondary">
 				Tagged: {node.tags.map(t => t.replace('tag:', '')).join(', ')}
 			</span>
+			<button
+				type="button"
+				class="btn-sm btn-icon-sm ml-0"
+				onclick={() => {
+					showTransfer = !showTransfer;
+				}}
+			>
+				<RawMdiSwapHorizontal />
+			</button>
 		{:else}
 			<span class="text-surface-500">No Owner</span>
 		{/if}
@@ -75,24 +86,52 @@
 				class="btn-sm btn-icon-sm"
 				disabled={transferring || transferUser == ''}
 				onclick={async () => {
-					transferring = true;
-					try {
-						const oldUserName = node.user?.name || 'tagged node';
-						const n = await changeNodeOwner(node, transferUser);
-						App.updateValue(App.nodes, n);
-						showTransfer = false;
-						toastSuccess(
-							`Changed owner of ${node.givenName} from "${oldUserName}" to "${n.user?.name || 'tagged node'}"`,
-							ToastStore,
-						);
-					} catch (error) {
-						if (error instanceof Error) {
-							toastError('', ToastStore, error);
-						} else {
-							debug(error);
+					// Warn if changing from tagged node to user (removes tags)
+					if (isTagged && node.tags.length > 0) {
+						const modal: ModalSettings = {
+							type: 'confirm',
+							title: 'Remove Tags?',
+							body: `<p class="mb-2">Assigning a user to this tagged node will <strong>remove all tags</strong>.</p>
+								   <p class="mb-2">Current tags: <strong>${node.tags.map(t => t.replace('tag:', '')).join(', ')}</strong></p>
+								   <p>Tags and user accounts are mutually exclusive.</p>`,
+							response: async (confirmed: boolean) => {
+								if (confirmed) {
+									await performOwnerChange();
+								}
+							},
+						};
+						ModalStore.trigger(modal);
+					} else {
+						await performOwnerChange();
+					}
+
+					async function performOwnerChange() {
+						transferring = true;
+						try {
+							const oldUserName = node.user?.name || 'tagged node';
+							const hadTags = node.tags.length > 0;
+							const n = await changeNodeOwner(node, transferUser);
+							App.updateValue(App.nodes, n);
+							showTransfer = false;
+							toastSuccess(
+								`Changed owner of ${node.givenName} from "${oldUserName}" to "${n.user?.name || 'tagged node'}"`,
+								ToastStore,
+							);
+							if (hadTags && n.tags.length === 0) {
+								toastWarning(
+									`Tags removed from ${node.givenName} (tags and users are mutually exclusive).`,
+									ToastStore,
+								);
+							}
+						} catch (error) {
+							if (error instanceof Error) {
+								toastError('', ToastStore, error);
+							} else {
+								debug(error);
+							}
+						} finally {
+							transferring = false;
 						}
-					} finally {
-						transferring = false;
 					}
 				}}
 			>

@@ -121,6 +121,9 @@ export async function deletePreAuthKey(pak: PreAuthKey): Promise<boolean> {
 ### Breaking Change
 In Headscale 0.28, tags and user ownership are **mutually exclusive**. This is a fundamental architectural change:
 
+**Official Documentation (from Headscale docs):**
+> Tags are parallel to user authentication. They serve the same role as a user account, except they're intended for service-based devices, such as a web server or an app connector. As a result, it's impossible for a user account identity and a tag identity to exist on the same device. **Applying a tag to a device previously authenticated with a user account removes the user account.** Similarly, **authenticating a device with a user account removes all tags from the device.**
+
 **Key Changes:**
 - Devices can be EITHER user-owned OR tagged (not both)
 - Tagged devices receive identity from tags, not users
@@ -233,7 +236,52 @@ export function getNodeOwnerDisplay(node: Node): string {
 }
 ```
 
-#### 3. Update All Components to Handle Null User
+#### 3. Add User Warnings for Destructive Operations
+
+**CRITICAL UX IMPROVEMENT:** Users must be warned when performing operations that remove user/tag ownership:
+
+`src/lib/cards/node/NodeTags.svelte`:
+```typescript
+async function saveTags() {
+    // Warn user if they're about to remove user ownership by applying tags
+    if (node.user && tags.length > 0 && node.tags.length === 0) {
+        const modal: ModalSettings = {
+            type: 'confirm',
+            title: 'Remove User Ownership?',
+            body: `Applying tags to this node will remove user ownership.
+                   Current owner: ${node.user.name}
+                   Tags and user accounts are mutually exclusive.`,
+            response: (confirmed: boolean) => {
+                if (confirmed) {
+                    applyTags();
+                }
+            },
+        };
+        ModalStore.trigger(modal);
+    }
+}
+```
+
+`src/lib/cards/node/NodeOwner.svelte`:
+```typescript
+// Warn when assigning user to tagged node (removes tags)
+if (isTagged && node.tags.length > 0) {
+    const modal: ModalSettings = {
+        type: 'confirm',
+        title: 'Remove Tags?',
+        body: `Assigning a user to this tagged node will remove all tags.
+               Current tags: ${node.tags.join(', ')}`,
+        response: async (confirmed: boolean) => {
+            if (confirmed) {
+                await performOwnerChange();
+            }
+        },
+    };
+    ModalStore.trigger(modal);
+}
+```
+
+#### 4. Update All Components to Handle Null User
 
 **Critical files requiring null checks:**
 
@@ -292,7 +340,7 @@ function filterUser(user: User, filterString: string, onlineStatus: OnlineStatus
 }
 ```
 
-#### 4. Update changeNodeOwner Function
+#### 5. Update changeNodeOwner Function
 
 `src/lib/common/api/modify.ts`:
 ```typescript
@@ -308,7 +356,7 @@ export async function changeNodeOwner(n: Node, newUserID: string): Promise<Node>
 
 **Note:** This function may not work for tagged nodes in Headscale 0.28. Need to verify if the endpoint exists and what it does.
 
-#### 5. Update Dashboard Stats
+#### 6. Update Dashboard Stats
 
 `src/routes/+page.svelte`:
 ```typescript
@@ -327,33 +375,40 @@ const onlineUserNodes = App.nodes.value
 **Severity:** 🚨 **CRITICAL** - Application will crash when displaying tagged nodes
 
 **Affected Features:**
-- ❌ Node list/tile display
-- ❌ Node detail pages
-- ❌ User node counts
-- ❌ Dashboard statistics
-- ❌ Node ownership display
-- ❌ Online status indicators
-- ❌ Node filtering by user
+- ✅ Node list/tile display (FIXED)
+- ✅ Node detail pages (FIXED)
+- ✅ User node counts (FIXED)
+- ✅ Dashboard statistics (FIXED)
+- ✅ Node ownership display (FIXED)
+- ✅ Online status indicators (FIXED)
+- ✅ Node filtering by user (FIXED)
+- ⚠️ UX: Users need warnings for destructive operations (ADDED)
 
-**Risk:** High - Any installation with tagged nodes will experience crashes
+**Risk:** Mitigated with proper null-checking. UX warnings prevent accidental data loss.
 
 ### Testing Required
 
-- [ ] Create a tagged node via PreAuthKey with tags
-- [ ] Verify node list displays correctly
-- [ ] Verify node detail page shows tags instead of user
-- [ ] Verify dashboard doesn't crash
-- [ ] Verify user page doesn't show tagged nodes
-- [ ] Test changing tags on a user-owned node (should remove user)
-- [ ] Test removing all tags from tagged node (behavior unclear)
-- [ ] Verify changeNodeOwner() with tagged nodes
+- [x] Create a tagged node via PreAuthKey with tags
+- [x] Verify node list displays correctly
+- [x] Verify node detail page shows tags instead of user
+- [x] Verify dashboard doesn't crash
+- [x] Verify user page doesn't show tagged nodes
+- [ ] Test changing tags on a user-owned node (should show warning modal)
+- [ ] Verify warning appears and tags remove user after confirmation
+- [ ] Test assigning user to tagged node (should show warning modal)
+- [ ] Verify tags are removed after user assignment
+- [ ] Test removing all tags from tagged node (behavior: node has no owner?)
+- [ ] Verify changeNodeOwner() endpoint works with Headscale 0.28
 
 ### Migration Path for Users
 
 Users upgrading to this version need to know:
-1. Tagged nodes will no longer show a user owner
-2. Applying tags to user-owned nodes removes user ownership
-3. Tags are now the primary identity for infrastructure nodes
+1. Tagged nodes will no longer show a user owner (displays tags instead)
+2. **WARNING:** Applying tags to user-owned nodes removes user ownership (destructive)
+3. **WARNING:** Assigning a user to tagged nodes removes all tags (destructive)
+4. Tags are now the primary identity for service/infrastructure nodes
+5. User accounts are for end-user devices (laptops, phones)
+6. The UI will show confirmation modals for destructive operations
 
 ---
 
