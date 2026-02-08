@@ -17,17 +17,11 @@ export function focus(el: HTMLElement | null) {
 }
 
 export function arraysEqual<T>(a: T[], b: T[]): boolean {
-	if(a.length !== b.length){
-		return false
-	}
-
-	return JSON.stringify(a) == JSON.stringify(b)
-
-	if (a === b){
+	if (a === b) {
 		return true;
 	}
 
-	if (a == null || b == null){
+	if (a == null || b == null) {
 		return false;
 	}
 
@@ -35,8 +29,8 @@ export function arraysEqual<T>(a: T[], b: T[]): boolean {
 		return false;
 	}
 
-	for (var i = 0; i < a.length; ++i) {
-		if (a[i] !== b[i]){
+	for (let i = 0; i < a.length; ++i) {
+		if (a[i] !== b[i]) {
 			return false;
 		}
 	}
