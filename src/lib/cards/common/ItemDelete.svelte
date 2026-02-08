@@ -37,7 +37,7 @@
 				DrawerStore.close()
 			} else {
 				let msg = `Failed to Delete User "${name}" (${id}).`;
-				if(App.nodes.value.some((node) => node.user.id === item.id)){
+				if(App.nodes.value.some((node) => node.user?.id === item.id)){
 					msg += " Still has nodes."
 				}
 				toastError(msg, ToastStore);

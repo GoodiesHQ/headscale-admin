@@ -371,8 +371,8 @@ export function getSortedNodes(nodes: Node[], sortMethod: string, sortDirection:
 export function filterUser(user: User, filterString: string, onlineStatus: OnlineStatus = "all"): boolean {
 	try {
 		if (
-			(onlineStatus === 'online' && !App.nodes.value.filter((n) => n.user.id === user.id).some((n) => n.online)) ||
-			(onlineStatus === 'offline' && App.nodes.value.filter((n) => n.user.id === user.id).some((n) => n.online))
+			(onlineStatus === 'online' && !App.nodes.value.filter((n) => n.user?.id === user.id).some((n) => n.online)) ||
+			(onlineStatus === 'offline' && App.nodes.value.filter((n) => n.user?.id === user.id).some((n) => n.online))
 		) {
 			return false;
 		}

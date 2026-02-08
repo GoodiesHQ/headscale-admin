@@ -37,7 +37,7 @@
 				value: App.users.value.filter((user) =>
 					App.nodes.value
 						.filter((node) => node.online)
-						.some((node) => node.user.id === user.id),
+						.some((node) => node.user?.id === user.id),
 				).length,
 				path: '/users',
 			},

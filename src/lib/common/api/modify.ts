@@ -32,7 +32,9 @@ export async function renameNode(n: Node, nameNew: string): Promise<Node> {
 export async function changeNodeOwner(n: Node, newUserID: string): Promise<Node> {
 	const path = `${API_URL_NODE}/${n.id}/user`;
 	const { node } = await apiPost<ApiNode>(path, {user: newUserID});
-	debug('Re-assigned Node from "' + n.user.name + '" to "' + node.user.name + '"');
+	const oldOwner = n.user ? n.user.name : 'tagged node';
+	const newOwner = node.user ? node.user.name : 'tagged node';
+	debug('Re-assigned Node from "' + oldOwner + '" to "' + newOwner + '"');
 	return node;
 }
 

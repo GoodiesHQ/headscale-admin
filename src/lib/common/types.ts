@@ -131,7 +131,7 @@ export type Node = {
 	discoKey: string;
 	ipAddresses: string[];
 	name: string;
-	user: User;
+	user: User | null;
 	lastSeen: string | null;
 	lastSuccessfulUpdate: string | null;
 	expiry: string | null;
@@ -149,6 +149,24 @@ export type Node = {
 	availableRoutes: string[];
 	subnetRoutes: string[];
 };
+
+export function isTaggedNode(node: Node): boolean {
+	return node.user === null && node.tags.length > 0;
+}
+
+export function isUserOwnedNode(node: Node): boolean {
+	return node.user !== null;
+}
+
+export function getNodeOwnerDisplay(node: Node): string {
+	if (node.user) {
+		return node.user.name;
+	}
+	if (node.tags.length > 0) {
+		return node.tags.map(t => t.replace('tag:', '')).join(', ');
+	}
+	return 'Unknown';
+}
 
 export type ApiNodes = {
 	nodes: Node[];
