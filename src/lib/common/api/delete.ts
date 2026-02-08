@@ -1,7 +1,7 @@
 import { apiDelete, apiPost } from './base';
-import type { User, Node } from '$lib/common/types';
+import type { User, Node, PreAuthKey } from '$lib/common/types';
 import { debug } from '../debug';
-import { API_URL_APIKEY, API_URL_NODE, API_URL_USER } from './url';
+import { API_URL_APIKEY, API_URL_NODE, API_URL_PREAUTHKEY, API_URL_USER } from './url';
 import { App } from '$lib/States.svelte';
 
 export async function expireApiKey(apiKey: string) {
@@ -37,6 +37,18 @@ export async function deleteNode(node: Node): Promise<boolean> {
 		await apiDelete(`${API_URL_NODE}/${node.id}`);
 		App.nodes.value = App.nodes.value.filter((n: Node) => n.id != node.id);
 		debug('Deleted Node "' + node.name + '"');
+		return true;
+	} catch (error) {
+		debug(error);
+		return false;
+	}
+}
+
+export async function deletePreAuthKey(pak: PreAuthKey): Promise<boolean> {
+	try {
+		await apiDelete(`${API_URL_PREAUTHKEY}/${pak.id}`);
+		App.preAuthKeys.value = App.preAuthKeys.value.filter((p: PreAuthKey) => p.id != pak.id);
+		debug('Deleted PreAuthKey ID "' + pak.id + '"');
 		return true;
 	} catch (error) {
 		debug(error);

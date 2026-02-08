@@ -14,30 +14,18 @@ export async function getPreAuthKeys(
 	user_ids?: string[],
 	init?: RequestInit,
 ): Promise<PreAuthKey[]> {
-	if (user_ids == undefined) {
-		user_ids = (await getUsers(init)).map((u) => u.id);
+	// In Headscale 0.28, list endpoint returns all keys without user filter
+	const { preAuthKeys } = await apiGet<ApiPreAuthKeys>(API_URL_PREAUTHKEY, init);
+
+	// If user_ids provided, filter client-side for backwards compatibility
+	if (user_ids !== undefined && user_ids.length > 0) {
+		return preAuthKeys.filter(pak => user_ids.includes(pak.user.id));
 	}
-	const promises: Promise<ApiPreAuthKeys>[] = [];
-	let preAuthKeysAll: PreAuthKey[] = [];
 
-	user_ids.forEach(async (user_id: string) => {
-		if(user_id != ""){
-			promises.push(
-				apiGet<ApiPreAuthKeys>(API_URL_PREAUTHKEY + '?user=' + user_id, init),
-			);
-		}
-	});
-
-	promises.forEach(async (p) => {
-		const { preAuthKeys } = await p;
-		preAuthKeysAll = preAuthKeysAll.concat(preAuthKeys);
-	});
-
-	await Promise.all(promises);
-	return preAuthKeysAll;
+	return preAuthKeys;
 }
 
-type GetUserOptions = 
+type GetUserOptions =
 	{id: string, name?: never, email?: never} |
 	{id?: never, name: string, email?: never} |
 	{id?: never, name?: never, email: string}
