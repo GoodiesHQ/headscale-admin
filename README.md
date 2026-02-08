@@ -227,7 +227,7 @@ And the othr will need **Zone:Read**:
 ```yml
 services:
   headscale:
-    image: headscale/headscale:0.24
+    image: headscale/headscale:0.28
     container_name: headscale
     restart: unless-stopped
     environment:
@@ -258,7 +258,7 @@ services:
       traefik.http.routers.headscale.middlewares: headscale-cors
 
   headscale-admin:
-    image: goodieshq/headscale-admin:0.24
+    image: goodieshq/headscale-admin:0.28
     container_name: headscale-admin
     restart: unless-stopped
     networks:
