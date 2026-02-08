@@ -32,14 +32,16 @@ export async function renameNode(n: Node, nameNew: string): Promise<Node> {
 export async function changeNodeOwner(n: Node, newUserID: string): Promise<Node> {
 	const path = `${API_URL_NODE}/${n.id}/user`;
 	const { node } = await apiPost<ApiNode>(path, {user: newUserID});
-	debug('Re-assigned Node from "' + n.user.name + '" to "' + node.user.name + '"');
+	const oldOwner = n.user ? n.user.name : 'tagged node';
+	const newOwner = node.user ? node.user.name : 'tagged node';
+	debug('Re-assigned Node from "' + oldOwner + '" to "' + newOwner + '"');
 	return node;
 }
 
 export async function expirePreAuthKey(pak: PreAuthKey) {
-	const path = `${API_URL_PREAUTHKEY}/expire`;
-	const data = { user: pak.user.id, key: pak.key };
-	await apiPost(path, data);
+	const path = `${API_URL_PREAUTHKEY}/${pak.id}/expire`;
+	await apiPost(path, undefined);
+	debug('Expired PreAuthKey ID "' + pak.id + '"');
 }
 
 export async function expireNode(n: Node): Promise<Node> {

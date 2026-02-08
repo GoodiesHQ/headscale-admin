@@ -64,8 +64,16 @@
 	</CardTileEntry>
 	<CardTileEntry title="User:">
 		<div class="flex flex-row gap-3 items-center">
-			{node.user.name}
-			<OnlineUserIndicator bind:user={node.user} />
+			{#if node.user}
+				{node.user.name}
+				<OnlineUserIndicator bind:user={node.user} />
+			{:else if node.tags.length > 0}
+				<span class="badge variant-soft-secondary">
+					Tagged: {node.tags.map(t => t.replace('tag:', '')).join(', ')}
+				</span>
+			{:else}
+				<span class="text-surface-500">No Owner</span>
+			{/if}
 		</div>
 	</CardTileEntry>
 	<CardTileEntry title="IPv4 Address:">

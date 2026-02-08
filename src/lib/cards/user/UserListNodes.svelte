@@ -19,7 +19,7 @@
 
 	const filteredNodes = $derived.by(() => {
 		if (App.users.value.filter((u) => u.id == user.id).length == 1) {
-			return App.nodes.value.filter((n) => n.user.id == user.id);
+			return App.nodes.value.filter((n) => n.user?.id == user.id);
 		}
 		return [];
 	});

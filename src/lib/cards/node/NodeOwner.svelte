@@ -1,6 +1,7 @@
 <script lang="ts">
 	import CardListEntry from '../CardListEntry.svelte';
 	import type { Node } from '$lib/common/types';
+	import { getNodeOwnerDisplay, isTaggedNode } from '$lib/common/types';
 	import OnlineUserIndicator from '$lib/parts/OnlineUserIndicator.svelte';
 	import { changeNodeOwner } from '$lib/common/api';
 	import { openDrawer, toastError, toastSuccess } from '$lib/common/funcs';
@@ -18,7 +19,9 @@
 		node: Node,
 	}
 	let { node }: NodeOwnerProps = $props()
-	
+
+	const isTagged = $derived(isTaggedNode(node));
+
 	const drawerStore = getDrawerStore();
 	let transferUser = $state('');
 	let showTransfer = $state(false);
@@ -30,26 +33,32 @@
 
 <CardListEntry title="Owner:" top>
 	<div class="flex flex-row items-center gap-3 justify-end">
-		<!--button type="button" class="btn-sm ml-0"-->
-		<a
-			href=" "
-			onclick={() => {
-				openDrawer(drawerStore, 'userDrawer-' + node.user.id, node.user);
-			}}
-		>
-			{node.user.name}
-		</a>
-		<!--/button-->
-		<OnlineUserIndicator user={node.user} />
-		<button
-			type="button"
-			class="btn-sm btn-icon-sm ml-0"
-			onclick={() => {
-				showTransfer = !showTransfer;
-			}}
-		>
-			<RawMdiSwapHorizontal />
-		</button>
+		{#if node.user}
+			<a
+				href=" "
+				onclick={() => {
+					openDrawer(drawerStore, 'userDrawer-' + node.user.id, node.user);
+				}}
+			>
+				{node.user.name}
+			</a>
+			<OnlineUserIndicator user={node.user} />
+			<button
+				type="button"
+				class="btn-sm btn-icon-sm ml-0"
+				onclick={() => {
+					showTransfer = !showTransfer;
+				}}
+			>
+				<RawMdiSwapHorizontal />
+			</button>
+		{:else if node.tags.length > 0}
+			<span class="badge variant-soft-secondary">
+				Tagged: {node.tags.map(t => t.replace('tag:', '')).join(', ')}
+			</span>
+		{:else}
+			<span class="text-surface-500">No Owner</span>
+		{/if}
 	</div>
 	{#if showTransfer}
 		<div class="flex flex-row items-center justify-end pt-5" transition:slide>
@@ -68,12 +77,12 @@
 				onclick={async () => {
 					transferring = true;
 					try {
-						const oldUserName = node.user.name;
+						const oldUserName = node.user?.name || 'tagged node';
 						const n = await changeNodeOwner(node, transferUser);
 						App.updateValue(App.nodes, n);
 						showTransfer = false;
 						toastSuccess(
-							`Changed owner of ${node.givenName} from "${oldUserName}" to "${n.user.name}"`,
+							`Changed owner of ${node.givenName} from "${oldUserName}" to "${n.user?.name || 'tagged node'}"`,
 							ToastStore,
 						);
 					} catch (error) {
