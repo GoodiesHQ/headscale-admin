@@ -8,6 +8,7 @@
 	import CardTileContainer from '../CardTileContainer.svelte';
 	import CardTileEntry from '../CardTileEntry.svelte';
 	import OnlineNodeIndicator from '$lib/parts/OnlineNodeIndicator.svelte';
+	import { _ } from 'svelte-i18n';
 	import RouteInfo from './RouteInfo.svelte';
 
 	type RouteTileCardProps = {
@@ -33,7 +34,7 @@
 	<div class="flex justify-between items-center mb-4 mt-2 align-text-top">
 		<div class="flex items-center">
 			<OnlineNodeIndicator bind:node />
-			<span class="ml-2 text-lg font-semibold">ID: {node.id}</span>
+			<span class="ml-2 text-lg font-semibold">{$_('common.id')}: {node.id}</span>
 		</div>
 		<div class="flex items-center font-bold">
 			{node.givenName}

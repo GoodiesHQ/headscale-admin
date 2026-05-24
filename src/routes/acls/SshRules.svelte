@@ -3,6 +3,7 @@
 	import { ACLBuilder, saveConfig, type AclSshRules, type AclSshRulesIndexed } from '$lib/common/acl.svelte';
 	import { debug } from '$lib/common/debug';
 	import { toastSuccess } from '$lib/common/funcs';
+	import { _ } from 'svelte-i18n';
 	import CardListPage from '$lib/cards/CardListPage.svelte';
 	import RawMdiSave from '~icons/mdi/content-save-outline'
 
@@ -50,7 +51,7 @@
 		acl.createSshRule(ACLBuilder.DefaultSshRule())
 		if (acl.ssh !== undefined){
 			debug("created new SSH rule at index " + (acl.ssh.length - 1).toString())
-			toastSuccess('Created SSH Rule #' + acl.acls.length, ToastStore)
+			toastSuccess($_('acls.sshRuleCreated', { values: { count: acl.acls.length } }), ToastStore)
 		}
 	}
 </script>
@@ -64,7 +65,7 @@
 				<RawMdiSave />
 			</button>
 			<button class="btn-sm rounded-md variant-filled-success" onclick={newSshRule}>
-				Create SSH Rule
+				{$_('acls.createSshRule')}
 			</button>
 		</div>
 	</div>

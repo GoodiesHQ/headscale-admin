@@ -1,14 +1,18 @@
 <script lang="ts">
-	import { InputChip, getToastStore, popup, type PopupSettings } from '@skeletonlabs/skeleton';
-
+	import { InputChip, getToastStore, getModalStore, type ModalSettings } from '@skeletonlabs/skeleton';
+	import { untrack } from 'svelte';
 	import type { Node } from '$lib/common/types';
 	import { setNodeTags } from '$lib/common/api';
-	import { toastError } from '$lib/common/funcs';
+	import { toastError, toastSuccess, isValidTag } from '$lib/common/funcs';
+	import { localizeError } from '$lib/common/errors';
+	import { debug } from '$lib/common/debug';
 	import CardListEntry from '../CardListEntry.svelte';
-
-	import RawMdiWarning from '~icons/mdi/warning-outline';
+	import { _ } from 'svelte-i18n';
 
 	import { App } from '$lib/States.svelte';
+	import { getPolicy } from '$lib/common/api';
+	import JWCC from 'json5';
+	import { ACLBuilder, type ACL } from '$lib/common/acl.svelte';
 
 	type NodeTagsProps = {
 		node: Node,
@@ -18,98 +22,125 @@
 		node = $bindable(),
 	}: NodeTagsProps = $props()
 
-	const tagsForced = $derived(node.forcedTags.map((tag) => tag.replace('tag:', '')));
-	const tagsValid = $derived(node.validTags.map((tag) => tag.replace('tag:', '')));
-	const tagsInvalid = $derived(node.invalidTags.map((tag) => tag.replace('tag:', '')));
+	let tags = $state(node.tags.map((tag) => tag.replace('tag:', '')));
+
+	$effect(() => {
+		const nodeTagsShort = node.tags.map((tag) => tag.replace('tag:', ''));
+		untrack(() => {
+			if (JSON.stringify(nodeTagsShort) !== JSON.stringify(tags)) {
+				tags = nodeTagsShort;
+			}
+		});
+	});
 
 	let disabled = $state(false);
-	let popupInvalidTagsShow = $state(false);
-
-	const popupInfo: PopupSettings = {
-		event: 'hover',
-		target: 'popupInvalidTags',
-		placement: 'top',
-	};
-
 	const ToastStore = getToastStore();
+	const ModalStore = getModalStore();
 
 	async function saveTags() {
+		// If adding the first tag to a node with no tags, warn about ownership change (v0.28+)
+		if (node.tags.length === 0 && tags.length > 0) {
+			const modal: ModalSettings = {
+				type: 'confirm',
+				title: $_('common.confirm'),
+				body: $_('cards.tagOwnershipWarning'),
+				response: (r: boolean) => {
+					if (r) {
+						performSave();
+					} else {
+						// Revert tags
+						tags = node.tags.map((tag) => tag.replace('tag:', ''));
+					}
+				}
+			};
+			ModalStore.trigger(modal);
+		} else {
+			performSave();
+		}
+	}
+
+	async function performSave() {
+		if (tags.length === 0 && node.tags.length > 0) {
+			toastError($_('cards.invalidTags') + ' ' + $_('cards.cannotRemoveAllTags'), ToastStore);
+			tags = node.tags.map((tag) => tag.replace('tag:', ''));
+			return;
+		}
+
+		// Check if any tags are missing from ACL policy
+		try {
+			const policy = await getPolicy();
+			const acl = ACLBuilder.fromPolicy(JWCC.parse<ACL>(policy));
+			const missingTags = tags.filter(t => !acl.getTagNames(false).includes(t));
+
+			if (missingTags.length > 0) {
+				const tagLabel = missingTags.length > 1 ? $_('cards.tags') : $_('cards.tag');
+				const modal: ModalSettings = {
+					type: 'confirm',
+					title: $_('common.confirm'),
+					body: `${$_('cards.tagsMissingInACL', { values: { tags: missingTags.join(', ') } })}<br><br>${$_('cards.autoCreateTagsPrompt')}`,
+					response: async (r: boolean) => {
+						if (r) {
+							// Create missing tags
+							for (const t of missingTags) {
+								acl.createTag(t);
+							}
+							try {
+								await App.setPolicy(acl);
+								toastSuccess($_('cards.tagsCreatedInACL'), ToastStore);
+								proceedWithSave();
+								} catch (err) {
+									toastError(
+										$_('cards.failedToCreateTags'),
+										ToastStore,
+										err instanceof Error ? err : undefined
+									);
+								tags = node.tags.map((tag) => tag.replace('tag:', ''));
+							}
+						} else {
+							// Revert tags
+							tags = node.tags.map((tag) => tag.replace('tag:', ''));
+						}
+					}
+				};
+				ModalStore.trigger(modal);
+				return;
+			}
+		} catch (err) {
+			debug('Failed to check ACL for tags:', err);
+			// Fallback to normal save if ACL check fails
+		}
+
+		proceedWithSave();
+	}
+
+	async function proceedWithSave() {
 		disabled = true;
 		try {
-			const n = await setNodeTags(node, tagsForced);
-			n.validTags = [...tagsValid];
-			n.invalidTags = [...tagsInvalid];
-			App.updateValue(App.nodes, n);
+			const n = await setNodeTags(node, tags);
+			node = n;
+			untrack(() => {
+				App.updateValue(App.nodes, n);
+			})
 		} catch (e) {
-			toastError('Invalid Tags: ' + e, ToastStore);
+			toastError($_('cards.invalidTags') + ' ' + localizeError(e), ToastStore);
+			tags = node.tags.map((tag) => tag.replace('tag:', ''));
 		} finally {
 			disabled = false;
 		}
 	}
-
-	let timerInfo: ReturnType<typeof setTimeout>;
-
-	function handleMouseEnter() {
-		timerInfo = setTimeout(() => {
-			popupInvalidTagsShow = true;
-		}, 333);
-	}
-
-	function handleMouseLeave() {
-		popupInvalidTagsShow = false;
-		clearTimeout(timerInfo);
-	}
 </script>
 
-<div
-	class="card p-3 rounded-md variant-filled-warning {popupInvalidTagsShow ? '' : 'invisible'}"
-	data-popup="popupInvalidTags"
->
-	<p>The following tags have been prevented by the current ACL:</p>
-	<p class="space-y-2 mt-2 text-left">
-		{#if popupInvalidTagsShow == true}
-			{#each tagsInvalid as tag}
-				<button type="button" class="chip variant-filled-error mr-2">{tag}</button>
-			{/each}
-		{/if}
-	</p>
-	<div class="arrow variant-filled-warning"></div>
-</div>
-
 <div class="space-y-4">
-	<CardListEntry top title="Tags:">
+	<CardListEntry top title={$_('cards.tags')}>
 		<InputChip
-			name="tags-forced-node-{node.id}"
+			name="tags-node-{node.id}"
+			bind:value={tags}
 			{disabled}
-			value={tagsForced}
+			validation={isValidTag}
 			class="w-full"
-			chips="variant-filled-success"
+			chips="variant-filled-surface"
 			on:add={saveTags}
 			on:remove={saveTags}
 		/>
-	</CardListEntry>
-	<CardListEntry top>
-		{#snippet childTitle()}
-		<span class="flex flex-row items-center">
-			Advertised Tags:
-			{#if tagsInvalid.length > 0}
-				<button
-					class="btn ml-2 btn-icon w-6 h-6 [&>*]:pointer-events-none"
-					use:popup={popupInfo}
-					onmouseenter={handleMouseEnter}
-					onmouseleave={handleMouseLeave}
-				>
-					<span class="text-warning-500">
-						<RawMdiWarning />
-					</span>
-				</button>
-			{/if}
-		</span>
-		{/snippet}
-		<div class="space-x-2 space-y-1">
-			{#each tagsValid as tag}
-				<button type="button" class="chip variant-filled-success">{tag}</button>
-			{/each}
-		</div>
 	</CardListEntry>
 </div>

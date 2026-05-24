@@ -3,6 +3,7 @@
 	import type { Node } from '$lib/common/types';
 	import { onMount } from 'svelte';
 	import CardListEntry from '../CardListEntry.svelte';
+	import { _ } from 'svelte-i18n';
 
 	type NodeLastSeenProps = {
 		node: Node,
@@ -21,9 +22,9 @@
 	});
 </script>
 
-<CardListEntry title="Last Seen:">
+<CardListEntry title={$_('cards.lastSeen')}>
 	{#if node.online}
-		Online Now
+		{$_('cards.onlineNow')}
 	{:else}
 		{lastSeen}
 	{/if}

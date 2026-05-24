@@ -16,6 +16,7 @@
 	import { slide } from 'svelte/transition';
 
 	import { App } from '$lib/States.svelte';
+	import { _ } from 'svelte-i18n';
 
 	const ToastStore = getToastStore();
 
@@ -64,12 +65,12 @@
 </script>
 
 <Page>
-	<PageHeader title="Deploy" buttonText={''} show={true}>
+	<PageHeader title={$_('navigation.deploy')} buttonText={''} show={true}>
 		{#snippet button()}
 			<button
 				class="bg-gray-400/30 dark:bg-gray-800/70 border border-dashed border-slate-200 border-1 pr-0 pl-4 rounded-lg justify-start text-left w-[90%]"
 				onclick={() =>
-					copyToClipboard(craftCommand(deployment), ToastStore, 'Copied Command to Clipboard!')}
+					copyToClipboard(craftCommand(deployment), ToastStore, $_('deploy.copyCommand'))}
 				><code class="text-black dark:text-white text-sm block py-4 w-full"
 					>{craftCommand(deployment)}</code
 				>
@@ -78,46 +79,46 @@
 	</PageHeader>
 
 	<div class="grid grid-cols-12">
-		<p class="text-xl col-span-12">General:</p>
+		<p class="text-xl col-span-12">{$_('deploy.general')}</p>
 		<DeployCheck
 			bind:checked={deployment.shieldsUp}
-			name="Shields Up"
-			help="Block incoming connections"
+			name={$_('deploy.shieldsUp')}
+			help={$_('deploy.shieldsUpHelp')}
 		/>
 		<DeployCheck
 			bind:checked={deployment.generateQR}
-			name="Generate QR Code"
-			help="Create a scannable QR code to import into TailScale client"
+			name={$_('deploy.generateQR')}
+			help={$_('deploy.generateQRHelp')}
 		/>
 		<DeployCheck
 			bind:checked={deployment.reset}
-			name="Reset"
-			help="Reset unspecified settings to default values"
+			name={$_('deploy.reset')}
+			help={$_('deploy.resetHelp')}
 		/>
 		<DeployCheck
 			bind:checked={deployment.operator}
-			name="Operator"
-			help="(Unix Only) Run as a different user"
+			name={$_('deploy.operator')}
+			help={$_('deploy.operatorHelp')}
 		>
-			<input type="text" class="input text-sm rounded-md" bind:value={deployment.operatorValue} />
+			<input id="deploy-operator-value" name="deploy-operator-value" type="text" class="input text-sm rounded-md" bind:value={deployment.operatorValue} />
 		</DeployCheck>
 		<DeployCheck
 			bind:checked={deployment.forceReauth}
-			name="Force Reauthentication"
-			help="Force user to re-authenticate to Headscale server"
+			name={$_('deploy.forceReauth')}
+			help={$_('deploy.forceReauthHelp')}
 		/>
 		<DeployCheck
 			bind:checked={deployment.sshServer}
-			name="SSH Server"
-			help="Run a local SSH server accessible by administrators"
+			name={$_('deploy.sshServer')}
+			help={$_('deploy.sshServerHelp')}
 		/>
 		<DeployCheck
 			bind:checked={deployment.usePreAuthKey}
-			name="PreAuth Key"
-			help="A generated key to automatically authenticate the node for a given user"
+			name={$_('deploy.preAuthKey')}
+			help={$_('deploy.preAuthKeyHelp')}
 		>
 			<div class="flex flex-col gap-2">
-				<select bind:value={deployment.preAuthKeyUser} class="input rounded-md">
+				<select id="deploy-preauthkey-user" name="deploy-preauthkey-user" bind:value={deployment.preAuthKeyUser} class="input rounded-md">
 					<option value=""></option>
 					{#each App.users.value as user}
 						<option value={user.id}>{user.name}</option>
@@ -125,9 +126,9 @@
 				</select>
 				{#if deployment.preAuthKeyUser}
 					<div transition:slide>
-						<select bind:value={deployment.preAuthKey} class="input rounded-md">
+						<select id="deploy-preauthkey-select" name="deploy-preauthkey-select" bind:value={deployment.preAuthKey} class="input rounded-md">
 							<option value=""
-								>{App.preAuthKeys.value.filter(createFilter(deployment.preAuthKeyUser)).length} Valid Key(s)</option
+								>{App.preAuthKeys.value.filter(createFilter(deployment.preAuthKeyUser)).length} {$_('deploy.validKeys')}</option
 							>
 							{#each App.preAuthKeys.value.filter(createFilter(deployment.preAuthKeyUser)) as preAuthKey}
 								<option value={preAuthKey.key}>{preAuthKey.key}</option>
@@ -139,68 +140,68 @@
 		</DeployCheck>
 		<DeployCheck
 			bind:checked={deployment.unattended}
-			name="Unattended"
-			help="Run the tailscale client in unattended mode (on startup)"
+			name={$_('deploy.unattended')}
+			help={$_('deploy.unattendedHelp')}
 		/>
 		<DeployCheck 
 			bind:checked={deployment.advertiseExitNodeLocalAccess}
-			name="Allow LAN Access"
-			help="Allow local network access while connected to the TailNet and using an exit node"
+			name={$_('deploy.allowLANAccess')}
+			help={$_('deploy.allowLANAccessHelp')}
 		/>
 
-		<p class="text-xl col-span-12 py-4">Advertise:</p>
+		<p class="text-xl col-span-12 py-4">{$_('deploy.advertise')}</p>
 		<DeployCheck
 			bind:checked={deployment.advertiseExitNode}
-			name="Advertise Exit Node"
-			help="Allow other nodes on the TailNet to use this node as a gateway"
+			name={$_('deploy.advertiseExitNode')}
+			help={$_('deploy.advertiseExitNodeHelp')}
 		/>
 		<DeployCheck
 			bind:checked={deployment.advertiseTags}
-			name="Advertise Tags"
-			help="List of advertised tags to apply to a machine on provisioning"
+			name={$_('deploy.advertiseTags')}
+			help={$_('deploy.advertiseTagsHelp')}
 		>
 			<InputChip
-				name="advertiseRoutesValues"
+				name="advertiseTagsValues"
 				bind:value={deployment.advertiseTagsValues}
 				validation={isValidTag}
 				on:invalid={() => {
-					toastError('Tag should be a lowercase alphanumeric word', ToastStore);
+					toastError($_('deploy.tagError'), ToastStore);
 				}}
 			/>
 		</DeployCheck>
 		<DeployCheck
 			bind:checked={deployment.advertiseRoutes}
-			name="Advertise Routes"
-			help="List of subnets which are reachable via this node"
+			name={$_('deploy.advertiseRoutes')}
+			help={$_('deploy.advertiseRoutesHelp')}
 		>
 			<InputChip
 				name="advertiseRoutesValues"
 				bind:value={deployment.advertiseRoutesValues}
 				validation={isValidCIDR}
 				on:invalid={() => {
-					toastError('Invalid CIDR Format', ToastStore);
+					toastError($_('deploy.cidrError'), ToastStore);
 				}}
 			/>
 		</DeployCheck>
 
-		<p class="text-xl col-span-12 py-4">Accept:</p>
+		<p class="text-xl col-span-12 py-4">{$_('deploy.accept')}</p>
 		<DeployCheck
 			bind:checked={deployment.acceptDns}
-			name="Accept DNS"
-			help="Accept the HeadScale-provided DNS settings"
+			name={$_('deploy.acceptDNS')}
+			help={$_('deploy.acceptDNSHelp')}
 		/>
 		<DeployCheck
 			bind:checked={deployment.acceptRoutes}
-			name="Accept Routes"
-			help="Accept other nodes' advertised subnets"
+			name={$_('deploy.acceptRoutes')}
+			help={$_('deploy.acceptRoutesHelp')}
 		/>
 		<DeployCheck
 			bind:checked={deployment.acceptExitNode}
-			name="Exit Node"
-			help="Use this node as a gateway (target node must advertise exit node)"
+			name={$_('deploy.exitNode')}
+			help={$_('deploy.exitNodeHelp')}
 		>
 			<label class="label">
-				<select class="select" bind:value={deployment.acceptExitNodeValue}>
+				<select id="deploy-accept-exitnode" name="deploy-accept-exitnode" class="select" bind:value={deployment.acceptExitNodeValue}>
 					{#each App.nodes.value as node}
 						<option value={node.ipAddresses.filter((s) => /^\d+\.\d+\.\d+\.\d+$/.test(s))[0]}
 							>{node.givenName} ({node.name})</option
@@ -212,8 +213,8 @@
 	</div>
 		<button class="btn rounded-md variant-filled-secondary mt-4" onclick={() => {
 			App.saveDeploymentDefaults(deployment)
-			toastSuccess('Saved Deployment Defaults', ToastStore)
+			toastSuccess($_('deploy.savedDefaults'), ToastStore)
 		}}>
-			Save Defaults
+			{$_('deploy.saveDefaults')}
 		</button>
 </Page>

@@ -15,6 +15,7 @@
 	let { name, help, checked = $bindable(), children = undefined }: DeployCheckTypes = $props()
 
 	const popupId = xxHash32(name).toString();
+	const uniqueId = Math.random().toString(36).substring(2, 9);
 	let popupShow = $state(false);
 
 	let timerInfo: ReturnType<typeof setTimeout>;
@@ -57,8 +58,8 @@
 				<RawMdiInfo />
 			</button>
 		{/if}
-		<input id={"checkbox-" + name} class="checkbox" type="checkbox" bind:checked />
-		<label for={"checkbox-" + name}>{name}</label>
+		<input id={"checkbox-" + uniqueId} class="checkbox" type="checkbox" bind:checked />
+		<label for={"checkbox-" + uniqueId}>{name}</label>
 	</div>
 	{#if children != undefined && checked}
 		<div transition:slide class="pt-4">

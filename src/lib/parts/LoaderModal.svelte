@@ -33,6 +33,8 @@
     <header class="text-2xl font-bold">{title}</header>
     <article>{body}</article>
     <textarea 
+        id="loader-modal-data"
+        name="loader-modal-data"
         class="input rounded-md"
         rows=10
         onchange={() => { errorMessage = '' }}

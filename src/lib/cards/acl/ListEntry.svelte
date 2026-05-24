@@ -27,7 +27,7 @@
 <AccordionItem
 	bind:open
 	id={id}
-	class="backdrop-brightness-100 bg-white/25 dark:bg-white/5 rounded-md overflow-visible"
+	class="backdrop-brightness-100 bg-surface-50-900-token border border-surface-500/30 rounded-md overflow-visible"
 	padding="py-4 px-4"
 	regionControl="!rounded-none"
 >

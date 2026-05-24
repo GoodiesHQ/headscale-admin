@@ -3,6 +3,7 @@
 	import { saveConfig, type ACLBuilder } from '$lib/common/acl.svelte';
 	import { debug } from '$lib/common/debug';
 	import { toastError, toastSuccess } from '$lib/common/funcs';
+	import { _ } from 'svelte-i18n';
 	import CardListPage from '$lib/cards/CardListPage.svelte';
 	import GroupListCard from '$lib/cards/acl/GroupListCard.svelte';
 	import RawMdiSave from '~icons/mdi/content-save-outline'
@@ -37,7 +38,7 @@
 		loading = true;
 		try {
 			acl.createGroup(newGroupName);
-			toastSuccess(`Group '${newGroupName}' created`, ToastStore);
+			toastSuccess($_('acls.groupCreated', { values: { name: newGroupName } }), ToastStore);
 			newGroupName = '';
 			showCreateGroup = false;
 		} catch (e) {
@@ -64,7 +65,7 @@
 				<RawMdiSave />
 			</button>
 			<button class="btn-sm rounded-md variant-filled-success" onclick={toggleShowCreateGroup}>
-				Create Group
+				{$_('acls.createGroup')}
 			</button>
 		</div>
 		{#if showCreateGroup}

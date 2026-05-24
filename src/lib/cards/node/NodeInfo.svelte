@@ -38,8 +38,10 @@
 	<CardSeparator />
 	<NodeAddresses {node} />
 	<CardSeparator />
-	<NodeRoutes {node} />
-	<CardSeparator />
+	{#if node.availableRoutes.length > 0}
+		<NodeRoutes {node} />
+		<CardSeparator />
+	{/if}
 	<NodeRegistrationMethod {node} />
 	<CardSeparator />
 	<NodeTags {node} />

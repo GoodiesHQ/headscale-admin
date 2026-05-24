@@ -9,6 +9,7 @@ export const ALL_THEMES = [
 	'hamlindigo',
 	'gold-nouveau',
 	'crimson',
+	'decula',
 ];
 
 export function setTheme(theme: string) {

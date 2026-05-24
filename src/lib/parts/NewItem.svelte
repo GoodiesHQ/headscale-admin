@@ -20,6 +20,7 @@
 	}: NewItemProps = $props()
 
 	const ToastStore = getToastStore();
+	const uid = Math.random().toString(36).substring(2, 9);
 </script>
 
 <form
@@ -40,6 +41,8 @@
 	class="flex flex-row w-full my-2 items-center space-x-2"
 >
 	<input
+		id="new-{uid}-name"
+		name="new-name"
 		autocomplete="off"
 		class="input rounded-md text-sm"
 		type="text"
@@ -50,6 +53,8 @@
 	/>
 	{#if value !== undefined}
 		<input
+			id="new-{uid}-value"
+			name="new-value"
 			class="input rounded-md text-sm"
 			type="text"
 			placeholder="{title} Value..."

@@ -3,6 +3,7 @@
 	import { ACLBuilder, HAMetaDefault, saveConfig, type AclPolicies, type AclPoliciesIndexed } from '$lib/common/acl.svelte';
 	import { debug } from '$lib/common/debug';
 	import { toastSuccess } from '$lib/common/funcs';
+	import { _ } from 'svelte-i18n';
 	import CardListPage from '$lib/cards/CardListPage.svelte';
 	import RawMdiSave from '~icons/mdi/content-save-outline'
 
@@ -39,7 +40,7 @@
 
 		acl.createPolicy(policy)
 		debug("created new policy at index " + (acl.acls.length - 1).toString())
-		toastSuccess('Created Policy #' + acl.acls.length, ToastStore)
+		toastSuccess($_('acls.policyCreated', { values: { count: acl.acls.length } }), ToastStore)
 	}
 
 	function makeReorderFunc(idx: number, direction: 'up' | 'down'): () => void {
@@ -68,7 +69,7 @@
 				<RawMdiSave />
 			</button>
 			<button class="btn-sm rounded-md variant-filled-success" onclick={newPolicy}>
-				Create Policy
+				{$_('acls.createPolicy')}
 			</button>
 		</div>
 	</div>

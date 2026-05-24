@@ -5,8 +5,13 @@ import type { User, Node, PreAuthKey, ApiKeyInfo, ApiApiKeys, Deployment } from 
 import { getUsers, getPreAuthKeys, getNodes } from '$lib/common/api/get';
 import type { ToastStore } from '@skeletonlabs/skeleton';
 import { apiGet } from './common/api';
+import { setPolicy } from '$lib/common/api/modify';
+import type { ACLBuilder } from '$lib/common/acl.svelte';
 import { arraysEqual, clone, toastError, toastWarning } from './common/funcs';
 import { debug } from './common/debug';
+import { _ } from 'svelte-i18n';
+import { get } from 'svelte/store';
+import { getInitialLocale, persistLocalePreference, type SupportedLocale } from '$lib/i18n';
 
 export type LayoutStyle = 'tile' | 'list';
 
@@ -40,12 +45,12 @@ export class State<T> {
 }
 
 
-// state that is wrapped in LocalStorage
+// state that is wrapped in LocalStorage or SessionStorage
 export class StateLocal<T> {
     #key: string;
     #value = $state<T>() as T;
     #effect?: (value?: T) => void;
-    // #saver = $derived(this.save(this.#value))
+    #session: boolean;
 
     get key() {
         return this.#key;
@@ -57,33 +62,50 @@ export class StateLocal<T> {
 
     set value(value: T) {
         this.#value = value;
-        // this.save(this.#value);
         if(this.#effect !== undefined) {
             this.#effect(value);
         }
     }
 
+    get storage(): Storage | null {
+        if (!browser) return null;
+        return this.#session ? sessionStorage : localStorage;
+    }
+
     save(value: T) {
-        debug(`Saving '${this.#key}' in localStorage...`);
-        localStorage.setItem(this.#key, this.serialize(value));
+        debug(`Saving '${this.#key}' in ${this.#session ? 'sessionStorage' : 'localStorage'}...`);
+        this.storage?.setItem(this.#key, this.serialize(value));
     }
 
 
-    constructor(key: string, valueDefault: T, effect?: (value?: T) => void) {
+    constructor(
+        key: string,
+        valueDefault: T,
+        effect?: (value?: T) => void,
+        session: boolean = false,
+        saveDefaultOnInit: boolean = true,
+    ) {
         this.#key = key;
         this.#effect = effect;
+        this.#value = valueDefault;
+        this.#session = session;
 
         if(browser){
-            const storedValue = localStorage.getItem(this.#key);
+            const storedValue = this.storage?.getItem(this.#key);
+            const hasStoredValue = storedValue !== null;
             if (storedValue) {
                 this.#value = this.deserialize(storedValue);
-            } else {
-                this.#value = valueDefault;
             }
-        
-            // how do I clean this up?
+
+            let initialSaveSkipped = false;
             $effect.root(()=>{
                 $effect(()=>{
+                    if (!saveDefaultOnInit && !hasStoredValue && !initialSaveSkipped) {
+                        initialSaveSkipped = true;
+                        return;
+                    }
+
+                    initialSaveSkipped = true;
                     this.save(this.#value);
                 })
             })
@@ -95,7 +117,16 @@ export class StateLocal<T> {
     }
 
     deserialize(item: string): T {
-        return JSON.parse(item);
+        try {
+            return JSON.parse(item) as T;
+        } catch (error) {
+            if (typeof this.#value === 'string') {
+                return item as T;
+            }
+
+            debug(`Failed to deserialize '${this.#key}', falling back to default value.`, error);
+            return this.#value;
+        }
     }
 }
 
@@ -116,10 +147,40 @@ export class HeadscaleAdmin {
         }
     })
 
+    // language settings  
+    language = new StateLocal<SupportedLocale>(
+        'locale',
+        getInitialLocale(),
+        (language) => {
+            if (language !== undefined) {
+                persistLocalePreference(language);
+            }
+        },
+        false,
+        false,
+    )
+
     // api info
     apiValid = $state<boolean>(false);
     apiUrl = new StateLocal<string>('apiUrl', '');
-    apiKey = new StateLocal<string>('apiKey', '');
+    
+    #apiKey = new StateLocal<string>('apiKey', '');
+    #apiKeySession = new StateLocal<string>('apiKey', '', undefined, true);
+
+    get apiKey(): StateLocal<string> {
+        const key = this.apiRememberMe.value ? this.#apiKey : this.#apiKeySession;
+        // If we switched from remember to not remember, or vice versa, ensure the key is transferred
+        if (this.apiRememberMe.value && !this.#apiKey.value && this.#apiKeySession.value) {
+            this.#apiKey.value = this.#apiKeySession.value;
+            this.#apiKeySession.value = '';
+        } else if (!this.apiRememberMe.value && !this.#apiKeySession.value && this.#apiKey.value) {
+            this.#apiKeySession.value = this.#apiKey.value;
+            this.#apiKey.value = '';
+        }
+        return key;
+    }
+
+    apiRememberMe = new StateLocal<boolean>('apiRememberMe', false);
     apiTtl = new StateLocal<number>('apiTTL', 10000);
     apiKeyInfo = new StateLocal<ApiKeyInfo>('apiKeyInfo', {
         authorized: null,
@@ -127,8 +188,8 @@ export class HeadscaleAdmin {
         informedUnauthorized: false,
         informedExpiringSoon: false,
     })
-    hasApiKey = $derived<boolean>(isInitialized() && !!this.apiKey.value)
-    hasApiUrl = $derived<boolean>(isInitialized() && !!this.apiUrl.value)
+    hasApiKey = $derived(isInitialized() && !!this.apiKey.value)
+    hasApiUrl = $derived(isInitialized() && !!this.apiUrl.value)
     hasApi = $derived(this.hasApiKey && this.hasApiUrl)
     hasValidApi = $derived(this.hasApi && this.apiKeyInfo.value.authorized === true)
 
@@ -212,6 +273,28 @@ export class HeadscaleAdmin {
         if (preAuthKeys === undefined) {
             preAuthKeys = await getPreAuthKeys()
         }
+
+        // Keep full keys (no asterisks) for a given ID if the new one is masked
+        // This preserves the initially shown full key when API refreshes show masked version
+        preAuthKeys = preAuthKeys.map((newKey) => {
+            const existingKey = this.preAuthKeys.value.find(k => k.id === newKey.id);
+            
+            // Safety checks for key field
+            if (existingKey && 
+                newKey.key && existingKey.key &&
+                typeof newKey.key === 'string' && 
+                typeof existingKey.key === 'string') {
+                
+                // If new key is masked (has asterisks) and existing is not, keep the full key
+                if (newKey.key.includes('*') && !existingKey.key.includes('*')) {
+                    debug('Preserving full key for ID', newKey.id, '- old:', existingKey.key.substring(0, 20), 'new:', newKey.key.substring(0, 20));
+                    return existingKey;
+                }
+            }
+            
+            return newKey;
+        });
+
         if(!arraysEqual(this.preAuthKeys.value, preAuthKeys)){
             this.preAuthKeys.value = [...preAuthKeys]
             return true
@@ -221,25 +304,46 @@ export class HeadscaleAdmin {
 
     async populateApiKeyInfo(): Promise<boolean> {
         const { apiKeys } = await apiGet<ApiApiKeys>(`/api/v1/apikey`);
-        const myKey = apiKeys.filter((key) => this.apiKey.value.startsWith(key.prefix))[0];
+        const myKey = apiKeys.find((key) => {
+            const cleanPrefix = key.prefix.replace(/\*+$/, '');
+            return this.apiKey.value.startsWith(cleanPrefix);
+        });
+
         const apiKeyInfo = this.apiKeyInfo.value
-        apiKeyInfo.expires = myKey.expiration;
         apiKeyInfo.authorized = true;
+        if (myKey) {
+            apiKeyInfo.expires = myKey.expiration;
+        }
+        
         this.apiKeyInfo.value = {...apiKeyInfo};
         return true;
     }
 
     async populateAll(handler?: (err: unknown) => void, repeat: boolean = true){
-        if (this.hasValidApi) {
-            const promises = []
-            promises.push(this.populateUsers());
-            promises.push(this.populateNodes());
-            promises.push(this.populatePreAuthKeys());
-            // promises.push(this.populateRoutes());
-            promises.push(this.populateApiKeyInfo());
-            await Promise.allSettled(promises);
-            promises.forEach((p) => p.catch(handler));
-            debug('Completed all store population requests.');
+        if (this.hasApi) {
+            try {
+                await this.populateApiKeyInfo();
+            } catch (err) {
+                handler?.(err);
+            }
+
+            if (this.hasValidApi) {
+                const results = await Promise.allSettled([
+                    this.populateUsers(),
+                    this.populateNodes(),
+                    this.populatePreAuthKeys(),
+                    // this.populateRoutes(),
+                    this.populateApiKeyInfo(),
+                ]);
+
+                results.forEach((result) => {
+                    if (result.status === 'rejected') {
+                        handler?.(result.reason);
+                    }
+                });
+
+                debug('Completed all store population requests.');
+            }
         }
 
         if (repeat === true) {
@@ -247,6 +351,10 @@ export class HeadscaleAdmin {
                 this.populateAll(handler, true)
             }, this.apiTtl.value)
         }
+    }
+
+    async setPolicy(acl: ACLBuilder) {
+        await setPolicy(acl);
     }
 
     toggleLayout(layout?: Valued<LayoutStyle>) {
@@ -267,7 +375,7 @@ export class HeadscaleAdmin {
     }
 }
 
-export const App = $state<HeadscaleAdmin>(new HeadscaleAdmin())
+export const App = new HeadscaleAdmin()
 
 
 function isInitialized(): boolean {
@@ -293,7 +401,7 @@ export function informUserUnauthorized(toastStore: ToastStore) {
 		}
 		App.apiKeyInfo.value.informedUnauthorized = true;
 		App.apiKeyInfo.value.authorized = false;
-		toastError('API Key is Unauthorized or Invalid', toastStore);
+		toastError(get(_)( 'settings.unauthorizedMessage' ), toastStore);
 	});
 }
 
@@ -302,8 +410,7 @@ export function informUserExpiringSoon(toastStore: ToastStore) {
 		if (App.apiKeyInfo.value.informedExpiringSoon === true) {
 			return;
 		}
-		App.apiKeyInfo.value.informedUnauthorized = true;
-		App.apiKeyInfo.value.authorized = false;
-		toastWarning('API Key Expires Soon', toastStore);
+		App.apiKeyInfo.value.informedExpiringSoon = true;
+		toastWarning(get(_)( 'settings.expiringSoonMessage' ), toastStore);
 	});
 }

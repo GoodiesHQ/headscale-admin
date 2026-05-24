@@ -30,22 +30,26 @@ export async function renameNode(n: Node, nameNew: string): Promise<Node> {
 }
 
 export async function changeNodeOwner(n: Node, newUserID: string): Promise<Node> {
-	const path = `${API_URL_NODE}/${n.id}/user`;
-	const { node } = await apiPost<ApiNode>(path, {user: newUserID});
-	debug('Re-assigned Node from "' + n.user.name + '" to "' + node.user.name + '"');
-	return node;
+	throw new Error(
+		`Headscale 0.28.0 does not expose a public node owner reassignment endpoint (${n.id} -> ${newUserID}).`,
+	);
 }
 
 export async function expirePreAuthKey(pak: PreAuthKey) {
 	const path = `${API_URL_PREAUTHKEY}/expire`;
-	const data = { user: pak.user.id, key: pak.key };
+	const data = { id: pak.id };
 	await apiPost(path, data);
 }
 
-export async function expireNode(n: Node): Promise<Node> {
-	const path = `${API_URL_NODE}/${n.id}/expire`;
-	const { node } = await apiPost<ApiNode>(path, undefined);
-	debug('Expired Node "' + n.givenName + '"');
+export async function expireNode(n: Node, date?: string): Promise<Node> {
+	const params = new URLSearchParams();
+	if (date) {
+		params.set('expiry', date);
+	}
+	const suffix = params.size > 0 ? `?${params.toString()}` : '';
+	const path = `${API_URL_NODE}/${n.id}/expire${suffix}`;
+	const { node } = await apiPost<ApiNode>(path);
+	debug('Expired Node "' + n.givenName + '"' + (date ? ' at ' + date : ''));
 	return node;
 }
 
@@ -107,4 +111,14 @@ export async function refreshApiKey() {
 	App.apiKey.value = apiKeyNew
 	App.apiKeyInfo.value.informedExpiringSoon = false
 	App.apiKeyInfo.value.informedUnauthorized = false
+}
+
+export async function backfillNodeIPs(confirmed: boolean = false): Promise<string[]> {
+	const params = new URLSearchParams({
+		confirmed: String(confirmed),
+	});
+	const path = `${API_URL_NODE}/backfillips?${params.toString()}`;
+	const { changes } = await apiPost<{ changes: string[] }>(path);
+	debug('BackfillNodeIPs:', confirmed ? 'Applied' : 'Dry run', '- Changes:', changes.length);
+	return changes;
 }

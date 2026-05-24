@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { User } from '$lib/common/types';
 	import CardListEntry from '../CardListEntry.svelte';
+	import { _ } from 'svelte-i18n';
 
 	type ItemCreatedAtProps = {
 		user: User,
@@ -10,6 +11,6 @@
 
 </script>
 
-<CardListEntry title="Email:">
+<CardListEntry title={$_('cards.email')}>
 	{user.email}
 </CardListEntry>

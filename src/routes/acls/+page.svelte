@@ -23,6 +23,7 @@
 	import Policies from './Policies.svelte';
 	import TagOwners from './TagOwners.svelte'
 	import SshRules from './SshRules.svelte';
+	import { _ } from 'svelte-i18n';
 
 	const ToastStore = getToastStore()
 
@@ -32,12 +33,12 @@
 	// Navigation tabs
 	let tabSet: number = $state(0);
 	const tabs = [
-		{ name: 'groups', title: 'Groups', logo: RawMdiGroups },
-		{ name: 'tag-owners', title: 'Tag Owners', logo: RawMdiTag },
-		{ name: 'hosts', title: 'Hosts', logo: RawMdiDevices },
-		{ name: 'policies', title: 'Policies', logo: RawMdiSecurity },
-		{ name: 'ssh', title: 'SSH', logo: RawMdiConsole },
-		{ name: 'config', title: 'Config', logo: RawMdiCodeJSON },
+		{ name: 'groups', titleKey: 'acls.groups', logo: RawMdiGroups },
+		{ name: 'tag-owners', titleKey: 'acls.tagOwners', logo: RawMdiTag },
+		{ name: 'hosts', titleKey: 'acls.hosts', logo: RawMdiDevices },
+		{ name: 'policies', titleKey: 'acls.policies', logo: RawMdiSecurity },
+		{ name: 'ssh', titleKey: 'acls.sshRules', logo: RawMdiConsole },
+		{ name: 'config', titleKey: 'acls.config', logo: RawMdiCodeJSON },
 	];
 
 	onMount(() => {
@@ -51,7 +52,7 @@
 </script>
 
 <Page>
-	<PageHeader title="ACL Builder" />
+	<PageHeader title={$_('acls.title')} />
 	<TabGroup
 		justify="justify-left"
 		active="variant-filled-secondary"

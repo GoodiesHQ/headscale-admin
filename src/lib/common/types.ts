@@ -22,7 +22,21 @@ export type ExpirationMessage = {
 	message: string;
 	color: string;
 };
+export type SystemStats = {
+	totalUsers: number;
+	totalNodes: number;
+	onlineNodes: number;
+	offlineNodes: number;
+	totalRoutes: number;
+	enabledRoutes: number;
+	totalPreAuthKeys: number;
+	validPreAuthKeys: number;
+};
 
+export type HealthStatus = {
+	databaseConnectivity: boolean;
+	lastChecked: Date;
+};
 export function isNamed(item: unknown): item is Named {
 	if (item != null && typeof item === 'object') {
 		return (
@@ -133,18 +147,15 @@ export type Node = {
 	name: string;
 	user: User;
 	lastSeen: string | null;
-	lastSuccessfulUpdate: string | null;
 	expiry: string | null;
-	preAuthKey: string | null;
+	preAuthKey: PreAuthKey | null;
 	createdAt: string;
 	registerMethod:
 	| 'REGISTER_METHOD_UNSPECIFIED'
 	| 'REGISTER_METHOD_AUTH_KEY'
 	| 'REGISTER_METHOD_CLI'
 	| 'REGISTER_METHOD_OIDC';
-	forcedTags: string[];
-	invalidTags: string[];
-	validTags: string[];
+	tags: string[];
 	givenName: string;
 	online: boolean;
 	approvedRoutes: string[];
@@ -169,7 +180,7 @@ export type ApiKey = {
 	createdAt: string;
 	prefix: string;
 	expiration: string;
-	lastSeen: string;
+	lastSeen: string | null;
 };
 export type ApiApiKey = {
 	apiKey: string;

@@ -5,6 +5,7 @@
 	import { openDrawer } from '$lib/common/funcs';
 	import { getDrawerStore } from '@skeletonlabs/skeleton';
 	import { App } from '$lib/States.svelte';
+	import { _ } from 'svelte-i18n';
 
 	type UserListNodesProps = {
 		user: User,
@@ -12,17 +13,12 @@
 	}
 	let {
 		user = $bindable(),
-		title = 'Nodes:',
+		title = $_('cards.nodes'),
 	}: UserListNodesProps = $props();
 
 	const drawerStore = getDrawerStore();
 
-	const filteredNodes = $derived.by(() => {
-		if (App.users.value.filter((u) => u.id == user.id).length == 1) {
-			return App.nodes.value.filter((n) => n.user.id == user.id);
-		}
-		return [];
-	});
+	const filteredNodes = $derived(App.nodes.value.filter((n) => n.user.id == user.id));
 </script>
 
 <CardListEntry {title}>

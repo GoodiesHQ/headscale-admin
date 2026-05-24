@@ -56,6 +56,7 @@
         >
         <input
             id={selectInputID}
+            name={selectInputID}
             class="input variant-soft rounded-md"
             placeholder={placeholder}
             bind:value={selectItem}

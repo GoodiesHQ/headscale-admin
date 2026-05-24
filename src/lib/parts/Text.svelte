@@ -23,6 +23,7 @@
 	}: TextProps = $props()
 
 	let showModify = $state(false);
+	const inputId = Math.random().toString(36).substring(2, 9);
 </script>
 
 {#if !showModify}
@@ -50,6 +51,8 @@
 	>
 		<input
 			use:focus
+			id="rename-{inputId}"
+			name="rename"
 			type="text"
 			class="input {classes} p-0 m-0 text-sm"
 			bind:value={valueNew}

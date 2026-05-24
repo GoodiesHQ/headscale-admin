@@ -3,6 +3,7 @@
 	import { saveConfig, type ACLBuilder } from '$lib/common/acl.svelte';
 	import { debug } from '$lib/common/debug';
 	import { toastError, toastSuccess } from '$lib/common/funcs';
+	import { _ } from 'svelte-i18n';
 	import CardListPage from '$lib/cards/CardListPage.svelte';
 	import TagOwnerListCard from '$lib/cards/acl/TagOwnerListCard.svelte';
 	import NewItem from '$lib/parts/NewItem.svelte';
@@ -21,7 +22,7 @@
 		loading = true;
 		try {
 			acl.createTag(newTagName);
-			toastSuccess(`Tag Ownership of '${newTagName}' created`, ToastStore);
+			toastSuccess($_('acls.tagCreated', { values: { name: newTagName } }), ToastStore);
 			newTagName = '';
 			showCreateTag = false;
 		} catch (e) {
@@ -59,7 +60,7 @@
 				<RawMdiSave />
 			</button>
 			<button class="btn-sm rounded-md variant-filled-success" onclick={toggleShowCreateTag}>
-				Create Tag
+				{$_('acls.createTag')}
 			</button>
 		</div>
 		{#if showCreateTag}

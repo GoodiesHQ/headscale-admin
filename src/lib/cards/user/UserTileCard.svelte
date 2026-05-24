@@ -6,6 +6,7 @@
 	import CardTileContainer from '../CardTileContainer.svelte';
 	import OnlineUserIndicator from '$lib/parts/OnlineUserIndicator.svelte';
 	import { App } from '$lib/States.svelte';
+	import { _ } from 'svelte-i18n';
 
 	type UserTileCardProps = {
 		user: User,
@@ -25,20 +26,20 @@
 	<div class="flex justify-between items-center mb-4 mt-2">
 		<div class="flex items-center">
 			<OnlineUserIndicator bind:user />
-			<span class="ml-2 text-lg font-semibold">ID: {user.id}</span>
+			<span class="ml-2 text-lg font-semibold">{$_('common.id')}: {user.id}</span>
 		</div>
 		<div class="flex items-center font-bold">
 			{getUserDisplay(user)}
 		</div>
 	</div>
 	<div class="flex justify-between items-center mb-2 mt-2">
-		<div class="flex items-center font-semibold">Created:</div>
+		<div class="flex items-center font-semibold">{$_('cards.created')}</div>
 		<div class="flex items-center">
 			{dateToStr(new Date(user.createdAt))}
 		</div>
 	</div>
 	<div class="flex justify-between items-center mb-2 mt-2">
-		<div class="flex items-center font-semibold">Nodes:</div>
+		<div class="flex items-center font-semibold">{$_('cards.nodes')}</div>
 		<div class="flex items-center">
 			{nodeCount}
 		</div>

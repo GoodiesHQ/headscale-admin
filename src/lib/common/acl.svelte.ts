@@ -12,8 +12,8 @@ export type AclTagOwners = { [key: string]: TagOwners }
 export type AclHosts = { [key: string]: string }
 export type AclPolicies = AclPolicy[]
 export type AclSshRules = AclSshRule[]
-export type AclPoliciesIndexed = {policy: AclPolicy, idx: number}[]
-export type AclSshRulesIndexed = {rule: AclSshRule, idx: number}[]
+export type AclPoliciesIndexed = { policy: AclPolicy, idx: number }[]
+export type AclSshRulesIndexed = { rule: AclSshRule, idx: number }[]
 
 // metadata for ACL policy entries
 export type HAMeta = {
@@ -72,7 +72,7 @@ export class ACLBuilder implements ACL {
     tagOwners = $state<AclTagOwners>({})
     hosts = $state<AclHosts>({})
     acls = $state<AclPolicies>([])
-    ssh = $state<AclSshRules|undefined>(undefined)
+    ssh = $state<AclSshRules | undefined>(undefined)
 
     constructor(
         groups: AclGroups,
@@ -112,26 +112,71 @@ export class ACLBuilder implements ACL {
     }
 
     static addPolicyMeta(policy: AclPolicy): boolean {
-		if (policy["#ha-meta"] === undefined){
-			policy["#ha-meta"] = HAMetaDefault
-		}
+        if (policy["#ha-meta"] === undefined) {
+            policy["#ha-meta"] = HAMetaDefault
+        }
         return policy["#ha-meta"] !== undefined
     }
 
     static fromPolicy(acl: ACL | string): ACLBuilder {
-        if (typeof acl === "string"){
+        if (typeof acl === "string") {
             return this.fromPolicy(JWCC.parse<ACL>(acl))
         }
 
         const ssh = acl.ssh ? [...acl.ssh] : []
 
-        return new ACLBuilder(
-            {...acl.groups},
-            {...acl.tagOwners},
-            {...acl.hosts},
+        const builder = new ACLBuilder(
+            { ...acl.groups },
+            { ...acl.tagOwners },
+            { ...acl.hosts },
             [...acl.acls],
             [...ssh],
         )
+        builder.normalize()
+        return builder
+    }
+
+    // Ensures all user identifiers contain an '@' to satisfy Headscale's Go v2 parser requirements.
+    // This is especially important for local users like 'echo' which must be 'echo@'.
+    normalize() {
+        const hostNames = new Set(Object.keys(this.hosts));
+        const isHost = (id: string) => hostNames.has(id);
+
+        // Normalize Tag Owners
+        for (const tag in this.tagOwners) {
+            this.tagOwners[tag] = this.tagOwners[tag].map(id => ACLBuilder.normalizeIdentifier(id, false));
+        }
+
+        // Normalize ACL Policies
+        for (const acl of this.acls) {
+            acl.src = acl.src.map(id => ACLBuilder.normalizeIdentifier(id, isHost(id)));
+            acl.dst = acl.dst.map(dst => {
+                const hostPart = ACLBuilder.getPolicyDstHost(dst);
+                const ports = ACLBuilder.getPolicyDstPorts(dst);
+                if (hostPart === dst) { // No ports specified
+                    return ACLBuilder.normalizeIdentifier(dst, isHost(dst));
+                }
+                return ACLBuilder.normalizeIdentifier(hostPart, isHost(hostPart)) + ":" + ports;
+            });
+        }
+
+        // Normalize SSH Rules
+        if (this.ssh) {
+            for (const rule of this.ssh) {
+                rule.src = rule.src.map(id => ACLBuilder.normalizeIdentifier(id, isHost(id)));
+                rule.dst = rule.dst.map(id => ACLBuilder.normalizeIdentifier(id, isHost(id)));
+                // Note: rule.users are Unix usernames, they don't need @
+            }
+        }
+    }
+
+    private static normalizeIdentifier(id: string, isHost: boolean): string {
+        if (!id || id === "*" || id.includes("@") || id.includes("/") || id.startsWith("autogroup:") || ACLBuilder.getPrefix(id) !== null || isValidIP(id) || isHost) {
+            return id;
+        }
+        // If it's a bare name (not group:, not tag:, no @, not wildcard, not CIDR, not IP, not a defined host), it's a user.
+        // Headscale/Tailscale Go v2 parser requires an @ for user identifiers.
+        return id + "@";
     }
 
     private static getPrefix(name: string): PrefixType | null {
@@ -164,11 +209,11 @@ export class ACLBuilder implements ACL {
         return { prefixed, stripped }
     }
 
-    static normalizeTag(tag: string): {prefixed: string, stripped: string} {
+    static normalizeTag(tag: string): { prefixed: string, stripped: string } {
         return ACLBuilder.normalizePrefix(tag, "tag")
     }
 
-    static normalizeGroup(group: string): {prefixed: string, stripped: string} {
+    static normalizeGroup(group: string): { prefixed: string, stripped: string } {
         return ACLBuilder.normalizePrefix(group, "group")
     }
 
@@ -203,10 +248,10 @@ export class ACLBuilder implements ACL {
     }
 
     static validateHostValue(value: string): string {
-        if(isValidIP(value)) {
+        if (isValidIP(value)) {
             return value
         }
-        if(isValidCIDR(value)) {
+        if (isValidCIDR(value)) {
             return value
         }
         throw new Error("Invalid Host IP or CIDR")
@@ -232,7 +277,7 @@ export class ACLBuilder implements ACL {
 
 
     createHost(name: string, cidr: string) {
-        if(this.getHostCIDR(name) !== undefined) {
+        if (this.getHostCIDR(name) !== undefined) {
             throw new Error(`host "${name}" already exists`)
         }
         this.setHost(name, cidr)
@@ -259,7 +304,7 @@ export class ACLBuilder implements ACL {
         }
 
         const hosts: AclHosts = {}
-        Object.entries(this.hosts).forEach(([name, value])=>{
+        Object.entries(this.hosts).forEach(([name, value]) => {
             hosts[name === nameOld ? nameNew : name] = value
         })
         this.hosts = hosts
@@ -292,7 +337,7 @@ export class ACLBuilder implements ACL {
         }
 
         // remove group from SSH
-        if (this.ssh !== undefined){
+        if (this.ssh !== undefined) {
             for (const ssh of this.ssh) {
                 ssh.src = ssh.src.filter(s => s !== name)
                 ssh.dst = ssh.dst.filter(d => d !== name)
@@ -356,18 +401,19 @@ export class ACLBuilder implements ACL {
         const { prefixed } = ACLBuilder.normalizePrefix(name, 'tag')
         const ownersAll = [...owners]
         this.tagOwners[prefixed] = ownersAll
+        this.normalize()
     }
 
     getTagNames(withPrefix: boolean = false): string[] {
         return Object.keys(this.tagOwners).map(name => {
-            let {stripped, prefixed} = ACLBuilder.normalizePrefix(name, 'tag')
+            let { stripped, prefixed } = ACLBuilder.normalizePrefix(name, 'tag')
             return withPrefix ? prefixed : stripped
         })
     }
 
-    getTagOwners(name: string): string[]{
+    getTagOwners(name: string): string[] {
         const { stripped, prefixed } = ACLBuilder.normalizePrefix(name, 'tag')
-        const owners = this.tagOwners[prefixed] 
+        const owners = this.tagOwners[prefixed]
         if (owners === undefined) {
             throw new Error(`Tag ${stripped} does not exist`)
         }
@@ -414,13 +460,13 @@ export class ACLBuilder implements ACL {
         }
 
         // remove tag from ACLs
-        for (const acl of this.acls){
+        for (const acl of this.acls) {
             acl.src = acl.src.filter(s => s !== prefixed);
             acl.dst = acl.dst.filter(d => d !== prefixed);
         }
 
         // remove tag from SSH
-        if (this.ssh !== undefined){
+        if (this.ssh !== undefined) {
             for (const ssh of this.ssh) {
                 ssh.src = ssh.src.filter(s => s !== prefixed)
                 ssh.dst = ssh.dst.filter(d => d !== prefixed)
@@ -495,6 +541,7 @@ export class ACLBuilder implements ACL {
         const { prefixed } = ACLBuilder.normalizePrefix(name, 'group')
 
         this.groups[prefixed] = [...members]
+        this.normalize()
     }
 
     getGroupByName(name: string): string[] {
@@ -541,7 +588,7 @@ export class ACLBuilder implements ACL {
         }
 
         // remove group from SSH policies
-        if (this.ssh !== undefined){
+        if (this.ssh !== undefined) {
             for (const ssh of this.ssh) {
                 ssh.src = ssh.src.filter(s => s !== prefixed)
             }
@@ -562,15 +609,15 @@ export class ACLBuilder implements ACL {
      * setPolicyProto(idx, proto)
      */
 
-	public static getPolicyDstHost(dst: string): string {
-		const i = dst.lastIndexOf(':')
-		return i < 0 ? dst : dst.substring(0, i)
-	}
+    public static getPolicyDstHost(dst: string): string {
+        const i = dst.lastIndexOf(':')
+        return i < 0 ? dst : dst.substring(0, i)
+    }
 
-	public static getPolicyDstPorts(dst: string): string {
-		const i = dst.lastIndexOf(':')
-		return i < 0 ? dst : dst.substring(i+1, dst.length)
-	}
+    public static getPolicyDstPorts(dst: string): string {
+        const i = dst.lastIndexOf(':')
+        return i < 0 ? dst : dst.substring(i + 1, dst.length)
+    }
 
 
     createPolicy(policy: AclPolicy) {
@@ -611,19 +658,21 @@ export class ACLBuilder implements ACL {
             "#ha-meta": HAMetaDefault,
             action: "accept",
             proto: undefined,
-            src: [ "*" ],
-            dst: [ "*:*" ],
+            src: ["*"],
+            dst: ["*:*"],
         }
     }
 
     setPolicySrc(idx: number, src: string[]) {
         this.validatePolicyIndex(idx)
         this.acls[idx].src = src
+        this.normalize()
     }
 
     setPolicyDst(idx: number, dst: string[]) {
         this.validatePolicyIndex(idx)
         this.acls[idx].dst = dst
+        this.normalize()
     }
 
     setPolicyProto(idx: number, proto: string | undefined) {
@@ -660,19 +709,19 @@ export class ACLBuilder implements ACL {
      */
 
     createSshRule(rule: AclSshRule) {
-        if (this.ssh === undefined){
+        if (this.ssh === undefined) {
             this.ssh = []
         }
         this.ssh.push(rule)
     }
 
-    getAllSshRules(): AclSshRules|undefined {
+    getAllSshRules(): AclSshRules | undefined {
         return this.ssh
     }
 
     getSshRule(idx: number): AclSshRule {
         this.validateSshRuleIndex(idx)
-        if (this.ssh !== undefined){
+        if (this.ssh !== undefined) {
             return this.ssh[idx]
         }
         throw new Error("No SSH Rules defined")
@@ -694,17 +743,18 @@ export class ACLBuilder implements ACL {
     }
 
     public static getPolicyTitle(pol: AclPolicy, idx: number): string {
-		const pfx = "#" + (idx + 1) + ": "
-		if (pol["#ha-meta"] === undefined || pol["#ha-meta"].name === "") {
-			return pfx + "Policy #" + (idx + 1)
-		}
-		return pfx + pol["#ha-meta"].name
-	}
+        const pfx = "#" + (idx + 1) + ": "
+        if (pol["#ha-meta"] === undefined || pol["#ha-meta"].name === "") {
+            return pfx + "Policy #" + (idx + 1)
+        }
+        return pfx + pol["#ha-meta"].name
+    }
 
     setSshRuleSrc(idx: number, src: string[]) {
         this.validateSshRuleIndex(idx)
         if (this.ssh != undefined) {
             this.ssh[idx].src = src
+            this.normalize()
         }
     }
 
@@ -712,6 +762,7 @@ export class ACLBuilder implements ACL {
         this.validateSshRuleIndex(idx)
         if (this.ssh !== undefined) {
             this.ssh[idx].dst = dst
+            this.normalize()
         }
     }
 
@@ -742,25 +793,28 @@ export class ACLBuilder implements ACL {
     }
 }
 
-export async function saveConfig(acl: ACLBuilder, ToastStore: ToastStore, loading?: {setLoadingTrue: ()=>void, setLoadingFalse: ()=>void}) {
-    if(loading !== undefined){
+import { get } from 'svelte/store';
+import { _ } from 'svelte-i18n';
+
+export async function saveConfig(acl: ACLBuilder, ToastStore: ToastStore, loading?: { setLoadingTrue: () => void, setLoadingFalse: () => void }) {
+    if (loading !== undefined) {
         loading.setLoadingTrue()
     }
     //loading = true
     try {
         await setPolicy(acl)
-        if(ToastStore !== undefined){
-            toastSuccess('Saved ACL Configuration', ToastStore)
+        if (ToastStore !== undefined) {
+            toastSuccess(get(_)( 'acls.configSaved' ), ToastStore)
         }
-    } catch(err) {
-        if (err instanceof Error){
-            if(ToastStore !== undefined){
+    } catch (err) {
+        if (err instanceof Error) {
+            if (ToastStore !== undefined) {
                 toastError('', ToastStore, err)
             }
         }
         debug(err)
     } finally {
-        if(loading !== undefined){
+        if (loading !== undefined) {
             loading.setLoadingFalse()
         }
     }

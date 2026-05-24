@@ -9,6 +9,7 @@
 	import { toastError, toastSuccess } from '$lib/common/funcs';
 	import Delete from '$lib/parts/Delete.svelte';
 	import { App } from '$lib/States.svelte';
+	import { _ } from 'svelte-i18n';
 
 	type ItemDeleteProps = {
 		item: Named,
@@ -33,27 +34,27 @@
 
 		if (isUser(item)) {
 			if (await deleteUser(item)) {
-				toastSuccess(`Deleted User "${name}" (ID: ${id})`, ToastStore);
+				toastSuccess($_('cards.deletedUser', { values: { name, id } }), ToastStore);
 				DrawerStore.close()
 			} else {
-				let msg = `Failed to Delete User "${name}" (${id}).`;
+				let msg = $_('cards.failedDeleteUser', { values: { name, id } });
 				if(App.nodes.value.some((node) => node.user.id === item.id)){
-					msg += " Still has nodes."
+					msg += $_('cards.stillHasNodes');
 				}
 				toastError(msg, ToastStore);
 			}
 		}
 		if (isNode(item)) {
 			if (await deleteNode(item)) {
-				toastSuccess(`Deleted machine "${name}" (${id})`, ToastStore);
+				toastSuccess($_('cards.deletedMachine', { values: { name, id } }), ToastStore);
 				DrawerStore.close()
 			} else {
-				toastError(`Failed to Delete Nachine "${name}" (${id})`, ToastStore);
+				toastError($_('cards.failedDeleteMachine', { values: { name, id } }), ToastStore);
 			}
 		}
 	}
 </script>
 
-<CardListEntry title={`Delete ${titleCase(prefix)}:`}>
+<CardListEntry title={$_('cards.delete') + ' ' + titleCase(prefix) + ':'}>
 	<Delete func={deleteItem} />
 </CardListEntry>

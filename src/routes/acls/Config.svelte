@@ -6,6 +6,7 @@
 	import { getPolicy } from "$lib/common/api";
 	import { debug } from "$lib/common/debug";
 	import { toastError, toastSuccess } from "$lib/common/funcs";
+	import { _ } from 'svelte-i18n';
 	import { CodeBlock, /*getModalStore,*/ getToastStore, modeCurrent, type ModalSettings } from "@skeletonlabs/skeleton";
     
 	// import LoaderModal from "$lib/parts/LoaderModal.svelte";
@@ -57,10 +58,10 @@
         loading = true
 		getPolicy().then(policy => {
 			acl = ACLBuilder.fromPolicy(JWCC.parse<ACL>(policy))
-            toastSuccess("Loaded ACL policy from server", ToastStore)
+            toastSuccess($_('acls.configLoaded'), ToastStore)
 		}).catch(reason => {
 			debug("failed to get policy:", reason)
-			toastError(`Unable to get ACL policy from server.`, ToastStore, reason)
+			toastError($_('acls.configLoadFailed'), ToastStore, reason)
 		}).finally(() => {
             loading = false
         })
@@ -83,10 +84,10 @@
 		<button disabled={loading || editing} class="btn-sm rounded-md variant-filled-success disabled:opacity-50 w-32" onclick={() => { 
             saveConfig(acl, ToastStore, {setLoadingTrue: () => { loading = true}, setLoadingFalse: ()=> { loading = false }})
         }}>
-			Save Config
+			{$_('acls.saveConfig')}
 		</button>
 		<button disabled={loading || editing} class="btn-sm rounded-md variant-filled-secondary disabled:opacity-50 w-32" onclick={() => { loadConfig() }}>
-			Load Config
+			{$_('acls.loadConfig')}
 		</button>
 		<button 
             disabled={loading}
@@ -101,18 +102,18 @@
             }}
         >
             {#if editing}
-                Apply Config
+                {$_('acls.applyConfig')}
             {:else}
-                Edit Config
+                {$_('acls.editConfig')}
             {/if}
 		</button>
         {#if editing}
             <button disabled={loading} class="btn-sm rounded-md variant-filled-error disabled:opacity-50 w-32" onclick={() => { editing = false }}>
-                Cancel Editing
+                {$_('acls.cancelEditing')}
             </button>
         {:else}
             <button disabled={loading || editing} class="btn-sm rounded-md variant-filled-error disabled:opacity-50 w-32" onclick={() => { resetConfig() }}>
-                Reset Config
+                {$_('acls.resetConfig')}
             </button>
         {/if}
 		<!--button disabled={loading} class="btn-sm rounded-md variant-filled-success" onclick={() => { if(aclEditJSON !== undefined) applyConfig(aclEditJSON) }}>

@@ -2,12 +2,13 @@
 	import { getToastStore } from '@skeletonlabs/skeleton';
 	import type { ACLBuilder } from '$lib/common/acl.svelte';
 	import type { User } from '$lib/common/types';
-	import { toastSuccess, toastError } from '$lib/common/funcs';
+	import { toastSuccess, toastError, getUserAclName } from '$lib/common/funcs';
 	import MultiSelect from '$lib/parts/MultiSelect.svelte';
 	import Delete from '$lib/parts/Delete.svelte';
 	import CardListContainer from '$lib/cards/CardListContainer.svelte';
 	import { debug } from '$lib/common/debug';
 	import { get } from 'svelte/store';
+	import { _ } from 'svelte-i18n';
 
 	import RawMdiTag from '~icons/mdi/tag';
 	import Text from '$lib/parts/Text.svelte';
@@ -34,7 +35,7 @@
 	let loading = $state(false);
 	let deleting = $state(false);
 	const options = $derived.by(() => {
-		const us = App.users.value.map(u => u.name)
+		const us = App.users.value.map(getUserAclName)
 		us.sort()
 
 		const gs = acl.getGroupNames(true)
@@ -57,7 +58,7 @@
 		try {
 			if (tag.name !== tagNameNew) {
 				acl.renameTag(tag.name, tagNameNew);
-				toastSuccess(`Tag renamed from '${tag.name}' to '${tagNameNew}'`, ToastStore);
+				toastSuccess($_('cards.tagRenamedSuccess', { values: { oldName: tag.name, newName: tagNameNew } }), ToastStore);
 				tagName = tagNameNew;
 			}
 			return true;
@@ -76,7 +77,7 @@
 		loading = true
 		try{
 			acl.deleteTag(tag.name);
-			toastSuccess(`Tag '${tag.name}' deleted`, ToastStore)
+			toastSuccess($_('cards.tagDeleted', { values: { name: tag.name } }), ToastStore)
 		}catch(e){
 			if(e instanceof Error){
 				toastError('', ToastStore, e);
@@ -101,7 +102,7 @@
 	{#snippet children()}
 	<CardListContainer>
 		<h3 class="font-mono mb-4 flex flex-row items-center">
-			<span>Owners of</span>
+			<span>{$_('cards.ownersOf')}</span>
 			<Text
 				bind:value={tag.name}
 				bind:valueNew={tagNameNew}
@@ -114,7 +115,7 @@
 			id={"tag-" + tagName + "-select"}
 			bind:items={tag.owners}
 			options={options}
-			placeholder={"Select owners of " + tagName + "..."}
+			placeholder={$_('cards.selectOwners', { values: { tagName } })}
 			onItemClick={removeMember}
 		/>
 		<div class="pt-4">

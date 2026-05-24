@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { Autocomplete, getToastStore, InputChip, popup, Tab, TabGroup, type PopupSettings } from '@skeletonlabs/skeleton';
 	import { ACLBuilder, type AclPolicy, type AclSshRule } from '$lib/common/acl.svelte';
-	import { toastSuccess, toastError, toOptions } from '$lib/common/funcs';
+	import { toastSuccess, toastError, toOptions, getUserAclName } from '$lib/common/funcs';
 	import MultiSelect from '$lib/parts/MultiSelect.svelte';
 	import Delete from '$lib/parts/Delete.svelte';
 	import CardListContainer from '$lib/cards/CardListContainer.svelte';
 	import { debug } from '$lib/common/debug';
 	import { get } from 'svelte/store';
+	import { _ } from 'svelte-i18n';
 
 	import RawMdiGroups from '~icons/mdi/account-group';
 	import RawMdiPencil from '~icons/mdi/pencil';
@@ -33,7 +34,7 @@
 		loading = $bindable(false),
 	}: PolicyListCardProps = $props()
 
-	const userNames = $derived(App.users.value.map((u) => u.name).toSorted());
+	const userNames = $derived(App.users.value.map(getUserAclName).toSorted());
 	const userNamesOptions = $derived(toOptions(userNames))
 	const tagNames = $derived(acl.getTagNames(true))
 	const tagNamesOptions = $derived(toOptions(tagNames))
@@ -53,21 +54,32 @@
 	});
 
 	let deleting = $state(false);
+	
+	const autogroupNames = [
+		'autogroup:self',
+		'autogroup:member',
+		'autogroup:tagged',
+		'autogroup:admin',
+		'autogroup:internet',
+	];
+	const autogroupOptions = $derived(toOptions(autogroupNames));
 
 	let tabSetSrc = $state(0)
-	const tabsSrc = [
-		{ name: "custom", title: "Custom", logo: RawMdiPencil },
-		{ name: "user", title: "User", logo: RawMdiTag },
-		{ name: "group", title: "Group", logo: RawMdiGroups },
-		{ name: "tag", title: "Tag", logo: RawMdiTag },
-	]
+	const tabsSrc = $derived([
+		{ name: "custom", title: $_('cards.custom'), logo: RawMdiPencil },
+		{ name: "user", title: $_('cards.user'), logo: RawMdiTag },
+		{ name: "group", title: $_('cards.group'), logo: RawMdiGroups },
+		{ name: "tag", title: $_('cards.tag'), logo: RawMdiTag },
+		{ name: "autogroup", title: $_('cards.autogroup'), logo: RawMdiSecurity },
+	])
 
 	let tabSetDst = $state(0)
-	const tabsDst = [
-		{ name: "custom", title: "Custom", logo: RawMdiPencil },
-		{ name: "user", title: "User", logo: RawMdiTag },
-		{ name: "tag", title: "Tag", logo: RawMdiTag },
-	]
+	const tabsDst = $derived([
+		{ name: "custom", title: $_('cards.custom'), logo: RawMdiPencil },
+		{ name: "user", title: $_('cards.user'), logo: RawMdiTag },
+		{ name: "tag", title: $_('cards.tag'), logo: RawMdiTag },
+		{ name: "autogroup", title: $_('cards.autogroup'), logo: RawMdiSecurity },
+	])
 	
 	const srcNewType = $derived(tabsSrc[tabSetSrc].name)
 	let srcNewHost = $state('')
@@ -81,12 +93,14 @@
 		srcNewType == "user" ? userNamesOptions :
 		srcNewType == "group" ? groupNamesOptions:
 		srcNewType == "tag" ? tagNamesOptions:
+		srcNewType == "autogroup" ? autogroupOptions :
 		undefined
 	)
 
 	const optionsDst = $derived(
 		dstNewType == "user" ? userNamesOptions :
 		dstNewType == "tag" ? tagNamesOptions:
+		dstNewType == "autogroup" ? autogroupOptions :
 		undefined
 	)
 
@@ -94,7 +108,7 @@
 		deleting = true;
 		try {
 			acl.delSshRule(idx)
-			toastSuccess(`SSH Rule #'${idx+1}' has been deleted`, ToastStore);
+			toastSuccess($_('cards.sshRuleDeleted', { values: { number: idx+1 } }), ToastStore);
 		} catch (e) {
 			if (e instanceof Error) {
 				toastError('', ToastStore, e);
@@ -115,7 +129,7 @@
 
 	function addSrc(host: string) {
 		if (host.length === 0) {
-			throw new Error("Invailid Host Provided")
+			throw new Error($_('cards.invalidHost'))
 		}
 
 		rule.src.push(host)
@@ -123,7 +137,7 @@
 
 	function addDst(host: string) {
 		if (host.length === 0) {
-			throw new Error("Invailid Host Provided")
+			throw new Error($_('cards.invalidHost'))
 		}
 
 		rule.dst.push(host)
@@ -134,11 +148,11 @@
 	}
 </script>
 
-<ListEntry id={idx.toString()} name={"SSH Rule #" + (idx + 1)} logo={RawMdiSecurity} bind:open>
+<ListEntry id={idx.toString()} name={$_('cards.sshRule') + " #" + (idx + 1)} logo={RawMdiSecurity} bind:open>
 	{#snippet children()}
 	<CardListContainer>
 		<h3 class="font-mono mb-2 flex flex-row items-center">
-			<span>Sources:</span>
+			<span>{$_('cards.sources')}</span>
 		</h3>
 		<div>
 			<TabGroup
@@ -169,7 +183,7 @@
 				<input
 					autocomplete="off"
 					class="input rounded-md mt-2"
-					placeholder="Src Object..."
+					placeholder={$_('cards.srcObject')}
 					bind:value={srcNewHost}
 					disabled={!srcNewHostEditable} />
 				<button
@@ -186,13 +200,13 @@
 						}
 					}}
 				>
-					Add
+					{$_('cards.add')}
 				</button>
 			</div>
 		</div>
 		{#each rule.src as src, i}
 		<div
-			class="card py-3 px-4 grid grid-cols-12 backdrop-brightness-100 bg-white/25 dark:bg-white/5 rounded-md"
+			class="card py-3 px-4 grid grid-cols-12 backdrop-brightness-100 bg-surface-50-900-token border border-surface-500/30 rounded-md"
 		>
 			<div class="col-span-10 text-wrap hyphens-auto flex flex-row">
 				<span class="font-extralight rounded-md">{src}</span>
@@ -204,7 +218,7 @@
 		{/each}
 		<!-- --- -->
 		<h3 class="font-mono mb-2 mt-6 flex flex-row items-center">
-			<span>Destinations:</span>
+			<span>{$_('cards.destinations')}</span>
 		</h3>
 		<div>
 			<TabGroup
@@ -235,7 +249,7 @@
 				<input
 					autocomplete="off"
 					class="input rounded-md mt-2"
-					placeholder="Dst Object..."
+					placeholder={$_('cards.dstObject')}
 					bind:value={dstNewHost}
 					disabled={!dstNewHostEditable} />
 				<button
@@ -252,13 +266,13 @@
 						}
 					}}
 				>
-					Add
+					{$_('cards.add')}
 				</button>
 			</div>
 		</div>
 		{#each rule.dst as dst, i}
 		<div
-			class="card py-3 px-4 grid grid-cols-12 backdrop-brightness-100 bg-white/25 dark:bg-white/5 rounded-md"
+			class="card py-3 px-4 grid grid-cols-12 backdrop-brightness-100 bg-surface-50-900-token border border-surface-500/30 rounded-md"
 		>
 			<div class="col-span-10 text-wrap hyphens-auto flex flex-row">
 				<span class="font-extralight rounded-md">{dst}</span>
@@ -269,7 +283,7 @@
 		</div>
 		{/each}
 		<h3 class="font-mono mb-2 mt-4 flex flex-row items-center">
-			<span>Usernames:</span>
+			<span>{$_('cards.usernames')}</span>
 		</h3>
 		<MultiSelect
 			id={"ssh-rule-users-" + idx.toString()}
