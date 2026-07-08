@@ -4,10 +4,10 @@
 	import type { Snippet } from 'svelte';
 
 	type DrawerEntryProps = {
-		title: string,
-		children: Snippet,
-	}
-	let { title, children }: DrawerEntryProps = $props()
+		title: string;
+		children: Snippet;
+	};
+	let { title, children }: DrawerEntryProps = $props();
 
 	const DrawerStore = getDrawerStore();
 </script>

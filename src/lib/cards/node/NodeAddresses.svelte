@@ -3,10 +3,10 @@
 	import type { Node } from '$lib/common/types';
 
 	type NodeAddressesProps = {
-		node: Node,
-	}
+		node: Node;
+	};
 
-	let { node }: NodeAddressesProps = $props()
+	let { node }: NodeAddressesProps = $props();
 </script>
 
 <CardListEntry title="IP Addresses:" top>

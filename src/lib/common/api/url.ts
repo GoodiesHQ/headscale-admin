@@ -10,6 +10,7 @@ export type ApiEndpoints = {
 
 export const API_URL_USER = '/api/v1/user';
 export const API_URL_NODE = '/api/v1/node';
+export const API_URL_AUTH = '/api/v1/auth';
 export const API_URL_POLICY = '/api/v1/policy';
 export const API_URL_MACHINE = '/api/v1/machine';
 export const API_URL_APIKEY = '/api/v1/apikey';

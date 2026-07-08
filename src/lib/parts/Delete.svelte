@@ -6,12 +6,12 @@
 	import RawMdiCloseCircleOutline from '~icons/mdi/close-circle-outline';
 
 	type DeleteProps = {
-		func: () => void,
-		show?: boolean,
-		disabled?: boolean,
-	}
+		func: () => void;
+		show?: boolean;
+		disabled?: boolean;
+	};
 
-	let { func, show = false, disabled = false }: DeleteProps = $props()
+	let { func, show = false, disabled = false }: DeleteProps = $props();
 </script>
 
 <div class="flex flex-row items-center justify-end py-0 my-0 pl-0 ml-4">

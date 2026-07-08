@@ -1,18 +1,84 @@
-<!DOCTYPE html>
-<html lang="en" class="dark">
+<!doctype html>
+<html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
+		<link rel="icon" type="image/png" href="%sveltekit.assets%/favicon.png" />
 		<meta name="viewport" content="width=device-width" />
+		<meta
+			http-equiv="Content-Security-Policy"
+			content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' *;"
+		/>
+
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover" data-theme="skeleton">
 		<script>
-            document.body.dataset['theme'] = localStorage.getItem('theme') ?? 'skeleton';
+			// Theme (Colors)
+			try {
+				const theme = localStorage.getItem('theme');
+				if (theme) {
+					document.body.dataset['theme'] = JSON.parse(theme);
+				} else {
+					document.body.dataset['theme'] = 'skeleton';
+				}
+			} catch (e) {
+				document.body.dataset['theme'] = 'skeleton';
+			}
+
+			// Mode (Dark/Light) - Restore Skeleton LightSwitch state
+			try {
+				const legacyModeUserPref = localStorage.getItem('modeUserPref');
+				const modeUserPrefersKey = 'modeUserPrefers';
+				const modeUserPrefers =
+					localStorage.getItem(modeUserPrefersKey) ??
+					(legacyModeUserPref !== null ? legacyModeUserPref : null);
+
+				// Migrate the old incorrect key to Skeleton's current key.
+				if (localStorage.getItem(modeUserPrefersKey) === null && legacyModeUserPref !== null) {
+					localStorage.setItem(modeUserPrefersKey, legacyModeUserPref);
+				}
+
+				// Skeleton semantics:
+				// - 'false' => dark mode
+				// - missing preference + dark OS preference => dark mode
+				const prefersDarkOsMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+				const shouldUseDarkMode =
+					modeUserPrefers === 'false' || (modeUserPrefers === null && prefersDarkOsMode);
+
+				document.documentElement.classList.toggle('dark', shouldUseDarkMode);
+			} catch (e) {
+				console.error(e);
+			}
+
+			try {
+				const localeCookie = document.cookie.match(/(?:^|;\\s*)locale=([^;]+)/);
+				const localeStorage = localStorage.getItem('locale');
+				const normalizeLocale = (value) => {
+					if (!value) return null;
+
+					let candidate = value;
+					try {
+						candidate = JSON.parse(candidate);
+					} catch (e) {}
+
+					candidate = String(candidate).trim().toLowerCase();
+
+					if (candidate === 'zh' || candidate.startsWith('zh-')) return 'zh';
+					if (candidate === 'en' || candidate.startsWith('en-')) return 'en';
+					return null;
+				};
+
+				const lang =
+					normalizeLocale(localeCookie ? decodeURIComponent(localeCookie[1]) : null) ??
+					normalizeLocale(localeStorage) ??
+					'en';
+
+				document.documentElement.lang = lang;
+			} catch (e) {
+				document.documentElement.lang = 'en';
+			}
 		</script>
-		<div style="display: contents" class="h-full overflow-hidden">
-			%sveltekit.body%
-		</div>
+		<div style="display: contents" class="h-full overflow-hidden">%sveltekit.body%</div>
 	</body>
 </html>
 

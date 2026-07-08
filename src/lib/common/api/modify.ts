@@ -1,4 +1,5 @@
 import type {
+	ApiCheckPolicyResponse,
 	ApiNode,
 	ApiPolicy,
 	ApiUser,
@@ -30,22 +31,39 @@ export async function renameNode(n: Node, nameNew: string): Promise<Node> {
 }
 
 export async function changeNodeOwner(n: Node, newUserID: string): Promise<Node> {
-	const path = `${API_URL_NODE}/${n.id}/user`;
-	const { node } = await apiPost<ApiNode>(path, {user: newUserID});
-	debug('Re-assigned Node from "' + n.user.name + '" to "' + node.user.name + '"');
-	return node;
+	throw new Error(
+		`Headscale 0.29.x does not expose a public node owner reassignment endpoint (${n.id} -> ${newUserID}).`,
+	);
 }
 
 export async function expirePreAuthKey(pak: PreAuthKey) {
 	const path = `${API_URL_PREAUTHKEY}/expire`;
-	const data = { user: pak.user.id, key: pak.key };
+	const data = { id: pak.id };
 	await apiPost(path, data);
 }
 
-export async function expireNode(n: Node): Promise<Node> {
-	const path = `${API_URL_NODE}/${n.id}/expire`;
-	const { node } = await apiPost<ApiNode>(path, undefined);
-	debug('Expired Node "' + n.givenName + '"');
+export async function expireNode(n: Node, date?: string, disableExpiry?: boolean): Promise<Node> {
+	if (date && disableExpiry === true) {
+		throw new Error('Cannot set both node expiry and disableExpiry');
+	}
+
+	const params = new URLSearchParams();
+	if (date) {
+		params.set('expiry', date);
+	}
+	if (disableExpiry === true) {
+		params.set('disableExpiry', 'true');
+	}
+	const suffix = params.size > 0 ? `?${params.toString()}` : '';
+	const path = `${API_URL_NODE}/${n.id}/expire${suffix}`;
+	const { node } = await apiPost<ApiNode>(path);
+	debug(
+		'Expired Node "' +
+			n.givenName +
+			'"' +
+			(disableExpiry ? ' (never expire)' : '') +
+			(date ? ' at ' + date : ''),
+	);
 	return node;
 }
 
@@ -96,15 +114,31 @@ export async function disableRoutes(node: Node, ...routes: string[]): Promise<st
 }
 
 export async function setPolicy(acl: ACLBuilder) {
-	const path = `${API_URL_POLICY}`
-	await apiPut<ApiPolicy>(path, {"policy": acl.JSON(4)})
+	const path = `${API_URL_POLICY}`;
+	await apiPut<ApiPolicy>(path, { policy: acl.JSON(4) });
 }
 
 export async function refreshApiKey() {
 	const apiKeyNew = await createApiKey();
-	const apiKeyOld = App.apiKey.value
+	const apiKeyOld = App.apiKey.value;
 	await expireApiKey(apiKeyOld);
-	App.apiKey.value = apiKeyNew
-	App.apiKeyInfo.value.informedExpiringSoon = false
-	App.apiKeyInfo.value.informedUnauthorized = false
+	App.apiKey.value = apiKeyNew;
+	App.apiKeyInfo.value.informedExpiringSoon = false;
+	App.apiKeyInfo.value.informedUnauthorized = false;
+}
+
+export async function checkPolicy(policy: string): Promise<void> {
+	const path = `${API_URL_POLICY}/check`;
+	await apiPost<ApiCheckPolicyResponse>(path, { policy });
+	debug('Policy validation passed');
+}
+
+export async function backfillNodeIPs(confirmed: boolean = false): Promise<string[]> {
+	const params = new URLSearchParams({
+		confirmed: String(confirmed),
+	});
+	const path = `${API_URL_NODE}/backfillips?${params.toString()}`;
+	const { changes } = await apiPost<{ changes: string[] }>(path);
+	debug('BackfillNodeIPs:', confirmed ? 'Applied' : 'Dry run', '- Changes:', changes.length);
+	return changes;
 }

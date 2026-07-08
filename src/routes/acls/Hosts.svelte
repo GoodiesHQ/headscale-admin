@@ -1,19 +1,21 @@
 <script lang="ts">
 	import CardListPage from '$lib/cards/CardListPage.svelte';
 	import { saveConfig, type ACLBuilder } from '$lib/common/acl.svelte';
-	import { toastError, toastSuccess } from '$lib/common/funcs';
+	import { toastError, toastSuccess, getUserAclName } from '$lib/common/funcs';
+	import { _ } from 'svelte-i18n';
 	import { getToastStore } from '@skeletonlabs/skeleton';
 	import NewItem from '$lib/parts/NewItem.svelte';
 	import HostListCard from '$lib/cards/acl/HostListCard.svelte';
 	import { debug } from '$lib/common/debug';
 	import { App } from '$lib/States.svelte';
-	import RawMdiSave from '~icons/mdi/content-save-outline'
+	import RawMdiSave from '~icons/mdi/content-save-outline';
 
 	const ToastStore = getToastStore();
 
-	let {acl = $bindable(), loading = $bindable(false)}: {acl: ACLBuilder, loading?: boolean} = $props();
+	let { acl = $bindable(), loading = $bindable(false) }: { acl: ACLBuilder; loading?: boolean } =
+		$props();
 
-	const userNames = $derived(App.users.value.map(u => u.name))
+	const userNames = $derived(App.users.value.map(getUserAclName));
 
 	let showCreateHost = $state(false);
 	let newHostName = $state('');
@@ -21,7 +23,7 @@
 
 	let hostsFilter = $state('');
 
-	function toggleShowCreateHost(){
+	function toggleShowCreateHost() {
 		showCreateHost = !showCreateHost;
 	}
 
@@ -29,12 +31,12 @@
 		loading = true;
 		try {
 			acl.createHost(newHostName, newHostCIDR);
-			toastSuccess(`Host '${newHostName}' created`, ToastStore);
+			toastSuccess($_('acls.hostCreated', { values: { name: newHostName } }), ToastStore);
 			newHostName = '';
 			newHostCIDR = '';
 			showCreateHost = false;
 		} catch (e) {
-			debug(e)
+			debug(e);
 			if (e instanceof Error) {
 				toastError('', ToastStore, e);
 			}
@@ -44,14 +46,14 @@
 	}
 
 	const filteredHosts = $derived.by(() => {
-		const hosts = acl.getHosts()
+		const hosts = acl.getHosts();
 		if (hostsFilter === '') {
-			return hosts
+			return hosts;
 		}
 
 		try {
 			const r = RegExp(hostsFilter);
-			return hosts.filter(([k, _]) => r.test(k))
+			return hosts.filter(([k, _]) => r.test(k));
 		} catch {
 			debug(`Host Regex "${hostsFilter}" is invalid`);
 			return hosts;
@@ -59,17 +61,27 @@
 	});
 </script>
 
-
 <CardListPage>
 	<div class="mb-2">
 		<div class="flex flex-row space-x-2">
-			<button disabled={loading} class="btn-icon rounded-md variant-filled-success disabled:opacity-50 w-8 text-xl" onclick={() => { 
-				saveConfig(acl, ToastStore, {setLoadingTrue: () => { loading = true}, setLoadingFalse: ()=> { loading = false }})
-			}}>
+			<button
+				disabled={loading}
+				class="btn-icon rounded-md variant-filled-success disabled:opacity-50 w-8 text-xl"
+				onclick={() => {
+					saveConfig(acl, ToastStore, {
+						setLoadingTrue: () => {
+							loading = true;
+						},
+						setLoadingFalse: () => {
+							loading = false;
+						},
+					});
+				}}
+			>
 				<RawMdiSave />
 			</button>
 			<button class="btn-sm rounded-md variant-filled-success" onclick={toggleShowCreateHost}>
-				Create Host
+				{$_('acls.createHost')}
 			</button>
 		</div>
 		{#if showCreateHost}

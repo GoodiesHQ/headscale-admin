@@ -4,8 +4,8 @@
 	import NodeRoutes from '../node/NodeRoutes.svelte';
 
 	type RouteInfoProps = {
-		node: Node,
-	}
+		node: Node;
+	};
 
 	let { node = $bindable() }: RouteInfoProps = $props();
 </script>

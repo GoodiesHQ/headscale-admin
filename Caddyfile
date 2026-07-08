@@ -1,5 +1,10 @@
 :{$PORT:80}
 root * /app
 encode gzip zstd
-try_files {path}.html {path}
+
+# SPA fallback for /admin path
+handle /admin* {
+	try_files {path} /admin/index.html
+}
+
 file_server

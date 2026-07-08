@@ -2,9 +2,9 @@
 	import RawMdiWindowClose from '~icons/mdi/window-close';
 
 	type CloseBtnProps = {
-		closeable: Closeable,
-	}
-	let { closeable }: CloseBtnProps = $props()
+		closeable: Closeable;
+	};
+	let { closeable }: CloseBtnProps = $props();
 
 	interface Closeable {
 		close: () => void;

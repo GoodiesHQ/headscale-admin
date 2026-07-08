@@ -15,12 +15,11 @@
 	import NodeLastSeen from './NodeLastSeen.svelte';
 
 	type NodeInfoProps = {
-		node: Node,
-		loading?: boolean,
-	}
+		node: Node;
+		loading?: boolean;
+	};
 
-	let { node, loading = $bindable(false)}: NodeInfoProps = $props()
-
+	let { node, loading = $bindable(false) }: NodeInfoProps = $props();
 </script>
 
 <CardListContainer>
@@ -38,8 +37,10 @@
 	<CardSeparator />
 	<NodeAddresses {node} />
 	<CardSeparator />
-	<NodeRoutes {node} />
-	<CardSeparator />
+	{#if node.availableRoutes.length > 0}
+		<NodeRoutes {node} />
+		<CardSeparator />
+	{/if}
 	<NodeRegistrationMethod {node} />
 	<CardSeparator />
 	<NodeTags {node} />

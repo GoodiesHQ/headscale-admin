@@ -6,6 +6,7 @@
 	import RawMdiRename from '~icons/mdi/rename';
 	import RawMdiCheckCircleOutline from '~icons/mdi/check-circle-outline';
 	import RawMdiCloseCircleOutline from '~icons/mdi/close-circle-outline';
+	import { _ } from 'svelte-i18n';
 	import { renameNode, renameUser } from '$lib/common/api';
 	import { toastError, focus } from '$lib/common/funcs';
 	import { getToastStore } from '@skeletonlabs/skeleton';
@@ -13,14 +14,11 @@
 	import { App } from '$lib/States.svelte';
 
 	type ItemListNameProps = {
-		item: Named,
-		allowed?: boolean,
-	}
+		item: Named;
+		allowed?: boolean;
+	};
 
-	let {
-		item = $bindable(),
-		allowed = false,
-	}: ItemListNameProps = $props()
+	let { item = $bindable(), allowed = false }: ItemListNameProps = $props();
 
 	const prefix: ItemTypeName = getTypeName(item);
 
@@ -30,9 +28,23 @@
 
 	const fadeDuration = 200;
 	const ToastStore = getToastStore();
+
+	function validateNodeGivenName(name: string): string | undefined {
+		if (name.length === 0) {
+			return $_('cards.nodeNameEmpty');
+		}
+		if (name.length > 63) {
+			return $_('cards.nodeNameTooLong');
+		}
+		if (!/^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$/.test(name)) {
+			return $_('cards.nodeNameInvalidDnsLabel');
+		}
+
+		return undefined;
+	}
 </script>
 
-<CardListEntry title="Name:">
+<CardListEntry title={$_('cards.name')}>
 	<div class="grid text-right overlap-children">
 		{#if showRename}
 			<div
@@ -43,6 +55,7 @@
 					<div class="flex">
 						<input
 							id={`rename-${prefix}-${item.id}`}
+							name={`rename-${prefix}-${item.id}`}
 							class="input text-sm rounded-md py-0 pr-2"
 							bind:value={newName}
 							disabled={disableRename}
@@ -58,12 +71,12 @@
 								try {
 									switch (prefix) {
 										case 'user':
-											if(newName === ''){
-												toastError('User name must not be empty', ToastStore)
-												return
+											if (newName === '') {
+												toastError($_('cards.userNameEmpty'), ToastStore);
+												return;
 											}
 											if (isUser(item)) {
-												const oldName = item.name
+												const oldName = item.name;
 												const u = await renameUser(item, newName);
 												for (let i = 0; i < App.users.value.length; i++) {
 													if (App.users.value[i].id == u.id) {
@@ -78,10 +91,14 @@
 													}
 												}
 											}
+											break;
 										case 'node':
-											if(newName === ''){
-												toastError('Node name must not be empty', ToastStore)
-												return
+											{
+												const validationError = validateNodeGivenName(newName);
+												if (validationError) {
+													toastError(validationError, ToastStore);
+													return;
+												}
 											}
 											if (isNode(item)) {
 												const m = await renameNode(item, newName);
@@ -92,6 +109,7 @@
 													}
 												}
 											}
+											break;
 									}
 									showRename = false;
 								} catch (error) {
@@ -112,7 +130,9 @@
 							type="button"
 							class="btn-sm btn-icon-sm"
 							disabled={disableRename}
-							onclick={() => { showRename = false; }}
+							onclick={() => {
+								showRename = false;
+							}}
 						>
 							<RawMdiCloseCircleOutline />
 						</button>
@@ -127,15 +147,15 @@
 				<div>
 					{item.givenName ?? item.name}
 					{#if allowed}
-					<button
-						class="btn-sm btn-icon-sm"
-						onclick={() => {
-							newName = item.givenName ?? item.name;
-							showRename = true;
-						}}
-					>
-						<RawMdiRename />
-					</button>
+						<button
+							class="btn-sm btn-icon-sm"
+							onclick={() => {
+								newName = item.givenName ?? item.name;
+								showRename = true;
+							}}
+						>
+							<RawMdiRename />
+						</button>
 					{/if}
 				</div>
 			</div>

@@ -1,6 +1,6 @@
 # headscale-admin
 
-headscale-admin is meant to be a simple, modern, and useful web interface for [juanfont/headscale](https://github.com/juanfont/headscale) - *"An open source, self-hosted implementation of the Tailscale control server."*
+headscale-admin is meant to be a simple, modern, and useful web interface for [juanfont/headscale](https://github.com/juanfont/headscale) - _"An open source, self-hosted implementation of the Tailscale control server."_
 
 headscale-admin is still in active development and will evolve in tandem with headscale. It should not be treated as a final product, but when used properly, it should be safe to run in a production environment.
 
@@ -13,16 +13,17 @@ headscale-admin is still in active development and will evolve in tandem with he
 ### Securing headscale-admin
 
 Please note that headscale-admin is an entirely stateless application. The static files hosted on a server do not perform any interaction with the headscale API or backend. headscale-admin only provides the application scaffolding which facilitates interactions from the client's browser to the headscale API. There are no sessions, API tokens, or any other sensitive information passed to or from the web server hosting headscale-admin. For this reason, security beyond SSL certificates is unnecessary, though you may choose to do so simply for the sake of hiding the application. Any static headscale UI offers functionality that can be trivially replicated with cURL or other web request utilities. **The security of headscale lies in your API token being securely preserved.** That said, here are some common recommendations:
+
 - Using proper TLS (e.g. using a frontend proxy) to protect headscale-admin can successfully prevent HTML injection of the application in an active MITM attack. This is highly recommended.
 - If you decide to host headscale-admin on a different subdomain than headscale, please make sure you allow your headscale-admin domain in the CORS headers of headscale to allow the requests.
 - Password protection or SSO is not required to secure headscale-admin. All API key information is solely stored on your browser and is not found in cookies or session information, but you may want to obscure the fact that you have an admin utility in place just for increased anonymity. This does not prevent an attacker from using a compromised API key from interacting with your headscale API, so ensure that your keys stay protected.
-
 
 ### Building
 
 headscale-admin was built using the [Skeleton](https://github.com/skeletonlabs/skeleton) framework on top of [SvelteKit](https://svelte.dev/tutorial/kit/introducing-sveltekit) + [TailwindCSS](https://tailwindcss.com/). It uses svelte/adapter-static to produce only static files when built. They can be hosted on nearly any server or environment as they are not contingent upon any specific runtime library.
 
 #### Endpoint
+
 **Note:** If you are building headscale-admin from source and want to host it on an endpoint other than the base of the domain, (e.g. `headscale.example.com/admin`) then you must set the `ENDPOINT` environment variable when building. Otherwise, it will default to expecting to be hosted on the root path "myheadscale.com/" and redirects and resource loading will not work correctly if you place them in a child folder. Once built, it is recommended to rename the `build` directory to the same name as your `$ENDPOINT` variable so the requests can follow the folder structure and not have to be stripped or rewritten by a front end proxy. The provided Dockerfile shows this in practice.
 
 The default endpoint for the [headscale-admin Docker container](https://hub.docker.com/r/goodieshq/headscale-admin) is always `/admin` as this does not clash with any URL endpoints provided by the headscale API and can safely be hosted on the same subdomain.
@@ -70,6 +71,7 @@ You can create the production build by running:
 ```
 npm run build
 ```
+
 This will create a `build` directory that expects to be hosted at the provided `ENDPOINT` variable relative to the root domain.
 
 #### Host Files
@@ -81,6 +83,7 @@ If you are hosting the static files locally, it is recommended that you replicat
 The recommended way to deploy headscale-admin is by utilizing docker. Pre-built images are provided and always use the `/admin` endpoint by default. If you want to build an image for a different endpoint, you must use Docker build args.
 
 Examples:
+
 ```
 # Using default endpoint (/admin)
 docker build . -t headscale-admin
@@ -111,7 +114,8 @@ docker run -p 8000:80 goodieshq/headscale-admin:latest
 ```
 
 #### Docker Versioning
-Due to the dynamic nature of the headscale API, starting with version `v0.24`, headscale-admin will no longer attempt to maintain compatibility with multiple version of headscale (previously there was a *"Legacy API"* option). Instead, headscale-admin versions will track the major versions of headscale itself. This means that the tag for `goodieshq/headscale-admin:0.24` of headscale-admin will be compatible with version `headscale/headscale:0.24` of headscale. Minor versions will not track headscale as there may be a need for bugfixes outside of headscale's release schedule.
+
+Due to the dynamic nature of the headscale API, starting with version `v0.24`, headscale-admin will no longer attempt to maintain compatibility with multiple version of headscale (previously there was a _"Legacy API"_ option). Instead, headscale-admin versions will track the major versions of headscale itself. This means that the tag for `goodieshq/headscale-admin:0.24` of headscale-admin will be compatible with version `headscale/headscale:0.24` of headscale. Minor versions will not track headscale as there may be a need for bugfixes outside of headscale's release schedule.
 
 The `goodieshq/headscale-admin:latest` tag will only be used for the latest stable release of headscale-admin that is compatible with a recent stable release of headscale. Because these are not guaranteed to track, it is recommended to explicitly tag the major version of headscale that you are using.
 
@@ -137,12 +141,12 @@ For larger deployments, it is recommended to use [PostgreSQL](https://www.postgr
   - Assign the headscale service to both "proxy" and "backend" networks to allow it to be reachable over the internet and also to reach the database without exposing the database to the public proxy network.
 - Setting the Postgres settings in your config.yaml file
 
-
 ### Traefik Configuration
 
-The first thing you will need is a functional Traefik installation. I am using Traefik v3.3 which is the newest version as of January, 2025. 
+The first thing you will need is a functional Traefik installation. I am using Traefik v3.3 which is the newest version as of January, 2025.
 
 #### Create a `proxy` network
+
 Create a new, external network called `proxy`. Anything on this network, even if it is in a different `docker-compose.yml` configuration file, will reachable by Traefik and can therefore be reached over the Internet based on your Traefik labels and configuration.
 
 ```
@@ -152,6 +156,7 @@ docker network create proxy
 Next, set up a `docker-compose.yml` configuration file in a directory called `traefik` somewhere safe (e.g. `/opt/traefik`) to keep it separate from other containers or software that you may deploy.
 
 Contents of `traefik/docker-compose.yml`:
+
 ```yaml
 services:
   traefik:
@@ -183,7 +188,7 @@ services:
     env_file:
       - ./env/cloudflare.env
     labels:
-      traefik.enable: "true"
+      traefik.enable: 'true'
       traefik.docker.network: proxy
       traefik.http.routers.traefik.tls.certresolver: myresolver
       traefik.http.routers.traefik.rule: Host(`traefik.exampe.com`)
@@ -199,9 +204,11 @@ volumes:
 ```
 
 #### Certificate Resolvers
+
 Traefik using LetsEncrypt to automatically provision SSL certificates for your provisioned services. You may need to play with your `certresolvers` settings to get the right domain and SSL support working for you. This line in the YML file should contain the email address used for Cloudflare:
+
 ```yml
-      - --certificatesresolvers.myresolver.acme.email=username@email.com
+- --certificatesresolvers.myresolver.acme.email=username@email.com
 ```
 
 This example uses the Cloudflare API to perform DNS verification and requires a `./env/cloudflare.env` file (relative to `docker-compose.yml`) to contain something like:
@@ -239,8 +246,8 @@ services:
     networks:
       - proxy
     labels:
-      traefik.enable: "true"
-      traefik.docker.network: "proxy"
+      traefik.enable: 'true'
+      traefik.docker.network: 'proxy'
       # Headscale Service Configuration
       traefik.http.services.headscale.loadbalancer.server.port: 8080
       traefik.http.services.headscale.loadbalancer.server.scheme: http
@@ -249,9 +256,9 @@ services:
       traefik.http.routers.headscale.tls.certresolver: myresolver
       traefik.http.routers.headscale.service: headscale
       # CORS Middleware Configuration
-      traefik.http.middlewares.headscale-cors.headers.accessControlAllowMethods: "GET,POST,PUT,PATCH,DELETE,OPTIONS"
-      traefik.http.middlewares.headscale-cors.headers.accessControlAllowHeaders: "Authorization,Content-Type"
-      traefik.http.middlewares.headscale-cors.headers.accessControlAllowOriginList: "https://headscale.example.com"
+      traefik.http.middlewares.headscale-cors.headers.accessControlAllowMethods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS'
+      traefik.http.middlewares.headscale-cors.headers.accessControlAllowHeaders: 'Authorization,Content-Type'
+      traefik.http.middlewares.headscale-cors.headers.accessControlAllowOriginList: 'https://headscale.example.com'
       traefik.http.middlewares.headscale-cors.headers.accessControlMaxAge: 100
       traefik.http.middlewares.headscale-cors.headers.addVaryHeader: true
       # Attach Middleware to Router
@@ -264,8 +271,8 @@ services:
     networks:
       - proxy
     labels:
-      traefik.enable: "true"
-      traefik.docker.network: "proxy"
+      traefik.enable: 'true'
+      traefik.docker.network: 'proxy'
       # Headscale Admin Service Configuration
       traefik.http.services.headscale-admin.loadbalancer.server.port: 80
       traefik.http.services.headscale-admin.loadbalancer.server.scheme: http
@@ -301,8 +308,6 @@ docker exec headscale headscale apikey create
 
 A brief overview of the headscale environment with the number of users, nodes, preauth keys, and routes.
 
-
-
 ### Users Page
 
 An overview of all headscale Users with a List or Tile layout.
@@ -314,7 +319,6 @@ An overview of all headscale Users with a List or Tile layout.
 <img width="1000" alt="image" src="./img/HA-Users-List.png">
 
 <img width="1000" alt="image" src="./img/HA-Users-Tile.png">
-
 
 ### Nodes Page
 
@@ -348,34 +352,39 @@ The ACL builder provides a GUI for loading, creating, modifying, and applying [h
 
 ```yml
 policy:
-  mode: "database"
+  mode: 'database'
 ```
 
 Renaming elements of an ACL should properly affect downstream elements (e.g. renaming a group should change all instances of the group name within the policies).
 
 #### Groups
+
 Create, modify, and rename groups of users.
 
 <img width="1000" alt="image" src="./img/HA-ACL-Groups.png">
 
 #### Tag Owners
+
 Assign users or groups as authorized owners of headscale node tags.
 
 <img width="1000" alt="image" src="./img/HA-ACL-Groups.png">
 
 #### Hosts
+
 Create, modify, or rename hosts used in policies. Hosts can be individual IP's or networks, but must always be in CIDR format. Simply click on a host name or value to modify it after creation.
 
 <img width="1000" alt="image" src="./img/HA-ACL-Hosts.png">
 
 #### Policies
-The policy entries allow you to create traffic restrictions based on the source and destination user, group, tag, host, or tag. These policies support ICMP, TCP, UDP, or Any protocol. Allowed values for ports are `*` or a comma-separated list of integers between 1-65535. 
+
+The policy entries allow you to create traffic restrictions based on the source and destination user, group, tag, host, or tag. These policies support ICMP, TCP, UDP, or Any protocol. Allowed values for ports are `*` or a comma-separated list of integers between 1-65535.
 
 <img width="1000" alt="image" src="./img/HA-ACL-Policies.png">
 
 <img width="1000" alt="image" src="./img/HA-ACL-Policies-Entry.png">
 
 #### SSH
+
 Create rules to permit SSH authentication using specific usernames based on the source user, group, or tag destined to a particular user or tag.
 
 <img width="1000" alt="image" src="./img/HA-ACL-SSH.png">
@@ -383,6 +392,7 @@ Create rules to permit SSH authentication using specific usernames based on the 
 <img width="1000" alt="image" src="./img/HA-ACL-SSH-Entry.png">
 
 #### Config
+
 Allows a user to save the ACL configuration to the headscale server or load a new configuration from an existing HuJSON file.
 
 <img width="1000" alt="image" src="./img/HA-ACL-Config.png">

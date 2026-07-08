@@ -22,17 +22,16 @@ async function toApiResponse<T>(response: Response): Promise<T> {
 			throw new ApiAuthErrorUnauthorized();
 		}
 
-		try{
-			const data = JSON.parse(text)
+		try {
+			const data = JSON.parse(text);
 			if (isApiError(data)) {
 				throw new Error(data.message);
 			}
-		} catch(e) {
+		} catch (e) {
 			if (!(e instanceof SyntaxError)) {
-				throw e
+				throw e;
 			}
 		}
-
 
 		// unspecified errors
 		throw new Error('Unspecified Error: ' + text);
@@ -58,19 +57,52 @@ function headers(): { headers: HeadersInit } {
 	};
 }
 
+function mergeHeaders(initHeaders?: HeadersInit, includeJsonBody: boolean = false): Headers {
+	const result = new Headers(headers().headers);
+
+	if (initHeaders !== undefined) {
+		const provided = new Headers(initHeaders);
+		provided.forEach((value, key) => {
+			result.set(key, value);
+		});
+	}
+
+	if (includeJsonBody && !result.has('Content-Type')) {
+		result.set('Content-Type', 'application/json');
+	}
+
+	return result;
+}
+
 export function toUrl(path: string): string {
-	return new URL(path, App.apiUrl.value).href
+	let base = App.apiUrl.value;
+	if (!base && typeof window !== 'undefined') {
+		base = window.location.origin;
+	}
+	if (!base.endsWith('/')) {
+		base += '/';
+	}
+	if (path.startsWith('/')) {
+		path = path.substring(1);
+	}
+	return new URL(path, base).href;
 }
 
 async function apiFetch<T>(path: string, init?: RequestInit, verbose: boolean = false): Promise<T> {
 	try {
-		const response = await fetch(toUrl(path), { ...headers(), ...init });
+		const response = await fetch(toUrl(path), {
+			...init,
+			headers: mergeHeaders(init?.headers, init?.body !== undefined),
+		});
 		if (verbose) {
 			debug(response);
 		}
 		const apiResponse = await toApiResponse<T>(response);
-		if (App.apiKeyInfo.value.authorized === null) {
-			App.apiKeyInfo.value.authorized = true
+		if (App.apiKeyInfo.value.authorized !== true) {
+			App.apiKeyInfo.value = {
+				...App.apiKeyInfo.value,
+				authorized: true,
+			};
 		}
 		return apiResponse;
 	} catch (err) {
@@ -95,22 +127,28 @@ export async function apiDelete<T>(path: string, init?: RequestInit): Promise<T>
 
 export async function apiPost<T>(
 	path: string,
-	data: unknown = null,
+	data?: unknown,
 	init?: RequestInit,
 	verbose: boolean = false,
 ): Promise<T> {
-	const body = JSON.stringify(data ?? {});
-	return await apiFetch<T>(path, { method: 'POST', body, ...init }, verbose);
+	const requestInit: RequestInit = { method: 'POST', ...init };
+	if (data !== undefined) {
+		requestInit.body = JSON.stringify(data);
+	}
+	return await apiFetch<T>(path, requestInit, verbose);
 }
 
 export async function apiPut<T>(
 	path: string,
-	data: unknown = null,
+	data?: unknown,
 	init?: RequestInit,
 	verbose: boolean = false,
 ): Promise<T> {
-	const body = JSON.stringify(data ?? {});
-	return await apiFetch<T>(path, { method: 'PUT', body, ...init }, verbose);
+	const requestInit: RequestInit = { method: 'PUT', ...init };
+	if (data !== undefined) {
+		requestInit.body = JSON.stringify(data);
+	}
+	return await apiFetch<T>(path, requestInit, verbose);
 }
 
 export async function apiTest(): Promise<boolean> {

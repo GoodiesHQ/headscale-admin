@@ -3,10 +3,10 @@
 	import { fade } from 'svelte/transition';
 
 	type PageProps = {
-		classes?: string,
-		children: Snippet,
-	}
-	let { classes = '', children }: PageProps = $props()
+		classes?: string;
+		children: Snippet;
+	};
+	let { classes = '', children }: PageProps = $props();
 
 	const time = 150;
 	const optsIn = { delay: time, duration: time };

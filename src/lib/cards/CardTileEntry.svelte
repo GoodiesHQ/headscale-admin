@@ -1,17 +1,13 @@
 <script lang="ts">
-	import type { Snippet } from "svelte";
+	import type { Snippet } from 'svelte';
 
 	type CardTileEntryProps = {
-		title?: string,
-		value?: any,
-		children?: Snippet,
-	}
+		title?: string;
+		value?: any;
+		children?: Snippet;
+	};
 
-	let {
-		title = undefined,
-		value = undefined,
-		children = undefined,
-	}: CardTileEntryProps = $props();
+	let { title = undefined, value = undefined, children = undefined }: CardTileEntryProps = $props();
 </script>
 
 <div class="flex justify-between items-center mb-2 mt-2">

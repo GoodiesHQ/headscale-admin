@@ -12,21 +12,21 @@
 	import type { User } from '$lib/common/types';
 
 	type UserInfoProps = {
-		user: User,
-	}
-	let { user = $bindable() }: UserInfoProps = $props()
+		user: User;
+	};
+	let { user = $bindable() }: UserInfoProps = $props();
 </script>
 
 <CardListContainer>
-	<ItemListName bind:item={user} allowed={user.provider.toLocaleLowerCase() !== "oidc"} />
+	<ItemListName bind:item={user} allowed={user.provider.toLocaleLowerCase() !== 'oidc'} />
 	<CardSeparator />
 	{#if user.displayName}
-	<UserDisplayName bind:user />
-	<CardSeparator />
+		<UserDisplayName bind:user />
+		<CardSeparator />
 	{/if}
 	{#if user.email}
-	<UserEmail bind:user />
-	<CardSeparator />
+		<UserEmail bind:user />
+		<CardSeparator />
 	{/if}
 	<UserProvider bind:user />
 	<CardSeparator />
@@ -35,8 +35,8 @@
 	<UserListNodes bind:user />
 	<CardSeparator />
 	{#if user.name || user.email}
-	<UserListPreAuthKeys bind:user />
-	<CardSeparator />
+		<UserListPreAuthKeys bind:user />
+		<CardSeparator />
 	{/if}
 	<ItemDelete bind:item={user} />
 </CardListContainer>

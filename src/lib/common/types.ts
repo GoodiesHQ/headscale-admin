@@ -22,7 +22,21 @@ export type ExpirationMessage = {
 	message: string;
 	color: string;
 };
+export type SystemStats = {
+	totalUsers: number;
+	totalNodes: number;
+	onlineNodes: number;
+	offlineNodes: number;
+	totalRoutes: number;
+	enabledRoutes: number;
+	totalPreAuthKeys: number;
+	validPreAuthKeys: number;
+};
 
+export type HealthStatus = {
+	databaseConnectivity: boolean;
+	lastChecked: Date;
+};
 export function isNamed(item: unknown): item is Named {
 	if (item != null && typeof item === 'object') {
 		return (
@@ -43,8 +57,8 @@ export function isUser(item: Named): item is User {
 }
 
 export function getUserDisplay(user: User): string {
-	if(user.displayName) {
-		return user.name + " (" + user.displayName + ")"
+	if (user.displayName) {
+		return user.name + ' (' + user.displayName + ')';
 	} else {
 		return user.name;
 	}
@@ -87,14 +101,14 @@ export class PreAuthKey {
 		public expiration: string,
 		public createdAt: string,
 		public aclTags: string[],
-	) { }
+	) {}
 	isExpired: () => boolean = () => {
 		return new Date() > new Date(this.expiration);
 	};
 }
 
 export class PreAuthKeys {
-	constructor(public preAuthKeys: PreAuthKey[]) { }
+	constructor(public preAuthKeys: PreAuthKey[]) {}
 }
 
 /*
@@ -122,7 +136,7 @@ export type ApiRoutes = {
 export type ApiPolicy = {
 	policy: string;
 	updatedAt?: string;
-}
+};
 
 export type Node = {
 	id: string;
@@ -133,18 +147,15 @@ export type Node = {
 	name: string;
 	user: User;
 	lastSeen: string | null;
-	lastSuccessfulUpdate: string | null;
 	expiry: string | null;
-	preAuthKey: string | null;
+	preAuthKey: PreAuthKey | null;
 	createdAt: string;
 	registerMethod:
-	| 'REGISTER_METHOD_UNSPECIFIED'
-	| 'REGISTER_METHOD_AUTH_KEY'
-	| 'REGISTER_METHOD_CLI'
-	| 'REGISTER_METHOD_OIDC';
-	forcedTags: string[];
-	invalidTags: string[];
-	validTags: string[];
+		| 'REGISTER_METHOD_UNSPECIFIED'
+		| 'REGISTER_METHOD_AUTH_KEY'
+		| 'REGISTER_METHOD_CLI'
+		| 'REGISTER_METHOD_OIDC';
+	tags: string[];
 	givenName: string;
 	online: boolean;
 	approvedRoutes: string[];
@@ -169,7 +180,7 @@ export type ApiKey = {
 	createdAt: string;
 	prefix: string;
 	expiration: string;
-	lastSeen: string;
+	lastSeen: string | null;
 };
 export type ApiApiKey = {
 	apiKey: string;
@@ -184,6 +195,34 @@ export type ApiKeyInfo = {
 	informedUnauthorized: boolean; // whether or not the user has been informed that the key is unauthorized
 	informedExpiringSoon: boolean; // whether or not the user has been informed that the key is expiring soon
 };
+
+// Auth endpoints (Headscale 0.29+)
+export type ApiAuthRegisterRequest = {
+	authId: string;
+	user: string;
+};
+
+export type ApiAuthRegisterResponse = {
+	node: Node;
+};
+
+export type ApiAuthApproveRequest = {
+	authId: string;
+};
+
+export type ApiAuthApproveResponse = Record<string, never>;
+
+export type ApiAuthRejectRequest = {
+	authId: string;
+};
+
+export type ApiAuthRejectResponse = Record<string, never>;
+
+export type ApiCheckPolicyRequest = {
+	policy: string;
+};
+
+export type ApiCheckPolicyResponse = Record<string, never>;
 
 export type Direction = 'up' | 'down';
 export type OnlineStatus = 'online' | 'offline' | 'all';

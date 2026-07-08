@@ -10,18 +10,18 @@
 	import { App } from '$lib/States.svelte';
 
 	type NodeRouteProps = {
-		route: string,
-		node: Node,
-		disable?: boolean,
-		loading?: boolean,
-	}
+		route: string;
+		node: Node;
+		disable?: boolean;
+		loading?: boolean;
+	};
 	let {
 		route,
 		node = $bindable(),
 		disable = false,
 		// showDelete = $bindable(false),
 		loading = $bindable(false),
-	}: NodeRouteProps = $props()
+	}: NodeRouteProps = $props();
 
 	const approved = $derived(node.approvedRoutes.includes(route));
 	const available = $derived(node.availableRoutes.includes(route));
@@ -30,11 +30,11 @@
 	// component is disabled
 	const disabled = $derived(
 		disable || // disabled by parent
-		loading || // route status is actively being changed
-		!route || // route is not advertised
-		isExpired(node.expiry || '') /* || // node is expired
-		!node.online; // node is not online */
-	)
+			loading || // route status is actively being changed
+			!route || // route is not advertised
+			isExpired(node.expiry || '') /* || // node is expired
+		!node.online; // node is not online */,
+	);
 </script>
 
 <div class="col-span-6 text-start items-center">

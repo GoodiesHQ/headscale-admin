@@ -1,26 +1,27 @@
 <script lang="ts">
 	import CardListEntry from '../CardListEntry.svelte';
 	import type { Node } from '$lib/common/types';
+	import { _ } from 'svelte-i18n';
 
 	type NodeRegistrationMethodProps = {
-		node: Node,
-	}
+		node: Node;
+	};
 
-	let { node }: NodeRegistrationMethodProps = $props()
+	let { node }: NodeRegistrationMethodProps = $props();
 	const nodeRegMethod = $derived.by(() => {
 		switch (node.registerMethod) {
 			case 'REGISTER_METHOD_AUTH_KEY':
-				return 'PreAuthKey';
+				return $_('cards.preAuthKey');
 			case 'REGISTER_METHOD_CLI':
-				return 'CLI';
+				return $_('cards.cli');
 			case 'REGISTER_METHOD_OIDC':
-				return "OIDC";
+				return $_('cards.oidc');
 			default:
-				return "Unspecified"
+				return $_('cards.unspecified');
 		}
 	});
 </script>
 
-<CardListEntry title="Register Method:">
+<CardListEntry title={$_('cards.registerMethod')}>
 	{nodeRegMethod}
 </CardListEntry>

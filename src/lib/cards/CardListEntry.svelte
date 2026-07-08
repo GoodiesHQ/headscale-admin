@@ -1,16 +1,16 @@
 <script lang="ts">
-	import type { Snippet } from "svelte";
+	import type { Snippet } from 'svelte';
 
 	type CardListEntryProps = {
-		title?: string,
-		value?: any,
-		top?: boolean,
-		titleClasses?: string,
-		valueClasses?: string,
-		childTitle?: Snippet,
-		childBottom?: Snippet,
-		children?: Snippet,
-	}
+		title?: string;
+		value?: any;
+		top?: boolean;
+		titleClasses?: string;
+		valueClasses?: string;
+		childTitle?: Snippet;
+		childBottom?: Snippet;
+		children?: Snippet;
+	};
 	let {
 		title = undefined,
 		value = undefined,
@@ -20,7 +20,7 @@
 		childTitle = undefined,
 		childBottom = undefined,
 		children = undefined,
-	}: CardListEntryProps = $props()
+	}: CardListEntryProps = $props();
 </script>
 
 <div class="grid py-0 grid-cols-12">
@@ -30,7 +30,7 @@
 			{#if title !== undefined}
 				{title}
 			{:else if childTitle !== undefined}
-			 	{@render childTitle()}
+				{@render childTitle()}
 			{/if}
 		</div>
 		<!-- Right-aligned slot or value -->
